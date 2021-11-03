@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  server:
+    build: .
+    depends_on:
+      - database
+    environment:
+      POSTGRES_URL: "postgres://root:root@database:5432/novo?sslmode=disable"
+    ports:
+      - "7001:8080"
+  database:
+    image: postgres:14.0
+    restart: always
+    volumes:
+      - pg-database:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: novo
+    ports:
+      - "5432:5432"
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      - database
+    volumes:
+      - ./static/migrations:/migrations
+    command: [ "-path", "/migrations", "-database",  "postgres://root:root@database:5432/novo?sslmode=disable", "up" ]
+
+volumes:
+  pg-database:

@@ -4,12 +4,17 @@ FROM golang:1.17.2-alpine3.14
 
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+# Cache dependencies files
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
 
-COPY *.go ./
-COPY server ./server
+# Copy server
+COPY . .
+
+# RUN go install github.com/kyleconroy/sqlc/cmd/sqlc@latest
+# RUN sqlc generate
+
 RUN go build -o /novo-server
 
 EXPOSE 8080
