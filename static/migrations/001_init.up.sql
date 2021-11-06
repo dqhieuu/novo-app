@@ -1,7 +1,7 @@
 
 CREATE TABLE IF NOT EXISTS book_groups
 (
-    id serial NOT NULL,
+    id int GENERATED ALWAYS AS IDENTITY,
     title text,
     description text,
     date_created timestamptz DEFAULT now(),
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS book_group_authors(
 );
 
 CREATE TABLE IF NOT EXISTS book_chapters(
-    id serial NOT NULL,
+    id int GENERATED ALWAYS AS IDENTITY,
     date_created timestamptz DEFAULT now(),
     chapter_number int NOT NULL,
     sub_chapter_number int,
@@ -135,7 +135,7 @@ CREATE TABLE IF NOT EXISTS book_comments(
 );
 
 CREATE TABLE IF NOT EXISTS book_authors(
-    id serial NOT NULL,
+    id int GENERATED ALWAYS AS IDENTITY,
     name text NOT NULL,
     description text,
     avatar_image_id int,
@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS book_authors(
 );
 
 CREATE TABLE IF NOT EXISTS genres(
-    id serial NOT NULL,
+    id int GENERATED ALWAYS AS IDENTITY,
     name text NOT NULL UNIQUE,
     description text,
     image_id int,
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS genres(
 );
 
 CREATE TABLE IF NOT EXISTS images(
-    id serial NOT NULL,
+    id int GENERATED ALWAYS AS IDENTITY,
     hash text NOT NULL,
     path text NOT NULL UNIQUE,
     name text,
@@ -175,7 +175,7 @@ CREATE TABLE IF NOT EXISTS temp_images(
 );
 
 CREATE TABLE IF NOT EXISTS users(
-    id serial,
+    id int GENERATED ALWAYS AS IDENTITY,
     date_created timestamptz NOT NULL DEFAULT now(),
     user_name text NOT NULL UNIQUE,
     password text NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS users(
 );
 
 CREATE TABLE IF NOT EXISTS roles(
-    id serial NOT NULL,
+    id int GENERATED ALWAYS AS IDENTITY,
     name text NOT NULL UNIQUE,
     description text,
     PRIMARY KEY (id)
