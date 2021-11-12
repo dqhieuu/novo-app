@@ -2,9 +2,124 @@
 
 package db
 
-import ()
+import (
+	"database/sql"
+	"time"
 
-type Test struct {
-	ID   int32  `json:"id"`
-	Data string `json:"data"`
+	"github.com/jackc/pgtype"
+)
+
+type BookAuthor struct {
+	ID            int32          `json:"id"`
+	Name          string         `json:"name"`
+	Description   sql.NullString `json:"description"`
+	AvatarImageID sql.NullInt32  `json:"avatar_image_id"`
+}
+
+type BookChapter struct {
+	ID            int32          `json:"id"`
+	DateCreated   time.Time      `json:"date_created"`
+	ChapterNumber pgtype.Numeric `json:"chapter_number"`
+	Description   sql.NullString `json:"description"`
+	TextContext   sql.NullString `json:"text_context"`
+	TypeID        int32          `json:"type_id"`
+	BookGroupID   int32          `json:"book_group_id"`
+	OwnerID       int32          `json:"owner_id"`
+}
+
+type BookChapterImage struct {
+	BookChapterID int32 `json:"book_chapter_id"`
+	ImageID       int32 `json:"image_id"`
+}
+
+type BookChapterType struct {
+	ID          int32          `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+}
+
+type BookChaptersView struct {
+	Count         sql.NullInt32 `json:"count"`
+	ViewDate      time.Time     `json:"view_date"`
+	BookChapterID int32         `json:"book_chapter_id"`
+}
+
+type BookComment struct {
+	Content       string        `json:"content"`
+	UserID        int32         `json:"user_id"`
+	BookGroupID   sql.NullInt32 `json:"book_group_id"`
+	BookChapterID sql.NullInt32 `json:"book_chapter_id"`
+}
+
+type BookGroup struct {
+	ID          int32          `json:"id"`
+	Title       string         `json:"title"`
+	Description sql.NullString `json:"description"`
+	DateCreated sql.NullTime   `json:"date_created"`
+	Ownerid     int32          `json:"ownerid"`
+}
+
+type BookGroupAltTitle struct {
+	Title  string `json:"title"`
+	BookID int32  `json:"book_id"`
+}
+
+type BookGroupArt struct {
+	BookGroupID int32 `json:"book_group_id"`
+	ImageID     int32 `json:"image_id"`
+}
+
+type BookGroupAuthor struct {
+	BookGroupID  int32 `json:"book_group_id"`
+	BookAuthorID int32 `json:"book_author_id"`
+}
+
+type BookGroupGenre struct {
+	BookGroupID int32 `json:"book_group_id"`
+	GenreID     int32 `json:"genre_id"`
+}
+
+type BookGroupLike struct {
+	Point       int32 `json:"point"`
+	UserID      int32 `json:"user_id"`
+	BookGroupID int32 `json:"book_group_id"`
+}
+
+type Genre struct {
+	ID          int32          `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+	ImageID     sql.NullInt32  `json:"image_id"`
+}
+
+type Image struct {
+	ID          int32          `json:"id"`
+	Md5         string         `json:"md5"`
+	Sha1        string         `json:"sha1"`
+	Path        string         `json:"path"`
+	Name        sql.NullString `json:"name"`
+	Description sql.NullString `json:"description"`
+}
+
+type Role struct {
+	ID          int32          `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+}
+
+type TempImage struct {
+	ImageID     int32     `json:"image_id"`
+	DateCreated time.Time `json:"date_created"`
+}
+
+type User struct {
+	ID            int32          `json:"id"`
+	DateCreated   time.Time      `json:"date_created"`
+	UserName      string         `json:"user_name"`
+	Password      string         `json:"password"`
+	Email         string         `json:"email"`
+	Summary       sql.NullString `json:"summary"`
+	AvatarImageID sql.NullInt32  `json:"avatar_image_id"`
+	RoleID        int32          `json:"role_id"`
+	FavoriteList  sql.NullString `json:"favorite_list"`
 }
