@@ -20,6 +20,12 @@ services:
       POSTGRES_DB: novo
     ports:
       - "5432:5432"
+  sqlc:
+    image: kjconroy/sqlc
+    volumes:
+      - ./:/src
+    working_dir: /src
+    command: "generate"
   migrate:
     image: migrate/migrate
     depends_on:
