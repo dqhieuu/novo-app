@@ -4,10 +4,31 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/jackc/pgtype"
 )
+
+type PermissionScope string
+
+const (
+	PermissionScopeNone PermissionScope = "none"
+	PermissionScopeSelf PermissionScope = "self"
+	PermissionScopeAll  PermissionScope = "all"
+)
+
+func (e *PermissionScope) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PermissionScope(s)
+	case string:
+		*e = PermissionScope(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PermissionScope: %T", src)
+	}
+	return nil
+}
 
 type BookAuthor struct {
 	ID            int32          `json:"id"`
@@ -22,7 +43,7 @@ type BookChapter struct {
 	ChapterNumber pgtype.Numeric `json:"chapter_number"`
 	Description   sql.NullString `json:"description"`
 	TextContext   sql.NullString `json:"text_context"`
-	TypeID        int32          `json:"type_id"`
+	Type          string         `json:"type"`
 	BookGroupID   int32          `json:"book_group_id"`
 	OwnerID       int32          `json:"owner_id"`
 }
@@ -30,12 +51,6 @@ type BookChapter struct {
 type BookChapterImage struct {
 	BookChapterID int32 `json:"book_chapter_id"`
 	ImageID       int32 `json:"image_id"`
-}
-
-type BookChapterType struct {
-	ID          int32          `json:"id"`
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
 }
 
 type BookChaptersView struct {
@@ -102,9 +117,18 @@ type Image struct {
 }
 
 type Role struct {
-	ID          int32          `json:"id"`
-	Name        string         `json:"name"`
-	Description sql.NullString `json:"description"`
+	ID                   int32           `json:"id"`
+	Name                 string          `json:"name"`
+	Description          sql.NullString  `json:"description"`
+	CanModifyRole        bool            `json:"can_modify_role"`
+	CanModifyBookAuthor  bool            `json:"can_modify_book_author"`
+	CanModifyBookGenre   bool            `json:"can_modify_book_genre"`
+	CanModifyBookGroup   PermissionScope `json:"can_modify_book_group"`
+	CanModifyBookChapter PermissionScope `json:"can_modify_book_chapter"`
+	CanCreateComment     PermissionScope `json:"can_create_comment"`
+	CanUpdateComment     PermissionScope `json:"can_update_comment"`
+	CanDeleteComment     PermissionScope `json:"can_delete_comment"`
+	CanModifyD           PermissionScope `json:"can_modify_d"`
 }
 
 type TempImage struct {
@@ -115,7 +139,7 @@ type TempImage struct {
 type User struct {
 	ID            int32          `json:"id"`
 	DateCreated   time.Time      `json:"date_created"`
-	UserName      string         `json:"user_name"`
+	Username      string         `json:"username"`
 	Password      string         `json:"password"`
 	Email         string         `json:"email"`
 	Summary       sql.NullString `json:"summary"`

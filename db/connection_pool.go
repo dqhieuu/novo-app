@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"os"
 )
 
 var pool *pgxpool.Pool
@@ -24,9 +25,9 @@ func ValidateVersion(ctx context.Context) {
 		panic("Can't read database version.")
 	}
 
-	var version uint64
+	var dbVersion uint64
 	var isDirty bool
-	err = rows.Scan(&version, &isDirty)
+	err = rows.Scan(&dbVersion, &isDirty)
 	defer rows.Close()
 
 	if err != nil {
@@ -37,7 +38,27 @@ func ValidateVersion(ctx context.Context) {
 		panic("Dirty database. Not good. Consider fixing it?")
 	}
 
-	if version != DbVersion {
-		panic(fmt.Sprintf("Incorrect database version (Current: %d != Supported: %d)", version, DbVersion))
+	if dbVersion != CodeVersion {
+		panic(fmt.Sprintf("Incorrect database version (Current: %d != Supported: %d)", dbVersion, CodeVersion))
 	}
+}
+
+func Init() {
+	ctx := context.Background()
+	// Verifies if env to db location exists
+	pgUrl, ok := os.LookupEnv("POSTGRES_URL")
+	if !ok {
+		panic(`Environmental variable "POSTGRES_URL" is not set. This program will now exit.`)
+	}
+
+	// Creates a connection pool, supporting concurrency
+	dbPool, err := pgxpool.Connect(ctx, pgUrl)
+	if err != nil {
+		panic(err)
+	}
+	// Assigns the database pool to package's var
+	SetPool(dbPool)
+
+	// Checks current migrated version
+	ValidateVersion(ctx)
 }

@@ -20,11 +20,22 @@ CREATE TABLE IF NOT EXISTS temp_images
             REFERENCES images (id)
 );
 
+CREATE TYPE permission_scope AS ENUM ('none', 'self', 'all');
+
 CREATE TABLE IF NOT EXISTS roles
 (
-    id          int GENERATED ALWAYS AS IDENTITY,
-    name        text NOT NULL UNIQUE,
-    description text,
+    id                      int GENERATED ALWAYS AS IDENTITY,
+    name                    text             NOT NULL UNIQUE,
+    description             text,
+    can_modify_role         boolean          NOT NULL DEFAULT false,
+    can_modify_book_author  boolean          NOT NULL DEFAULT false,
+    can_modify_book_genre   boolean          NOT NULL DEFAULT false,
+    can_modify_book_group   permission_scope NOT NULL DEFAULT 'self',
+    can_modify_book_chapter permission_scope NOT NULL DEFAULT 'self',
+    can_create_comment      permission_scope          DEFAULT 'self',
+    can_update_comment      permission_scope          DEFAULT 'self',
+    can_delete_comment      permission_scope          DEFAULT 'self',
+    can_modify_d            permission_scope          DEFAULT 'self',
     PRIMARY KEY (id)
 );
 
@@ -32,9 +43,9 @@ CREATE TABLE IF NOT EXISTS users
 (
     id              int GENERATED ALWAYS AS IDENTITY,
     date_created    timestamptz NOT NULL DEFAULT now(),
-    user_name       text        NOT NULL UNIQUE,
+    username        text        NOT NULL UNIQUE,
     password        text        NOT NULL,
-    email           text        NOT NULL,
+    email           text        NOT NULL UNIQUE,
     summary         text,
     avatar_image_id int,
     role_id         int         NOT NULL,
@@ -61,13 +72,13 @@ CREATE TABLE IF NOT EXISTS genres
             REFERENCES images (id)
 );
 
-CREATE TABLE IF NOT EXISTS book_chapter_types
-(
-    id          int GENERATED ALWAYS AS IDENTITY,
-    name        text NOT NULL,
-    description text,
-    PRIMARY KEY (id)
-);
+-- CREATE TABLE IF NOT EXISTS book_chapter_types
+-- (
+--     id          int GENERATED ALWAYS AS IDENTITY,
+--     name        text NOT NULL,
+--     description text,
+--     PRIMARY KEY (id)
+-- );
 
 CREATE TABLE IF NOT EXISTS book_authors
 (
@@ -163,16 +174,16 @@ CREATE TABLE IF NOT EXISTS book_chapters
     chapter_number decimal     NOT NULL,
     description    text,
     text_context   text,
-    type_id        int         NOT NULL,
+    type           text        NOT NULL CHECK (type IN ('image', 'hypertext')),
     book_group_id  int         NOT NULL,
     owner_id       int         NOT NULL,
     PRIMARY KEY (id),
     CONSTRAINT fk_book_chapters_book_groups
         FOREIGN KEY (book_group_id)
             REFERENCES book_groups (id),
-    CONSTRAINT fk_book_chapters_types
-        FOREIGN KEY (type_id)
-            REFERENCES book_chapter_types (id),
+--     CONSTRAINT fk_book_chapters_types
+--         FOREIGN KEY (type_id)
+--             REFERENCES book_chapter_types (id),
     CONSTRAINT fk_book_chapters_users
         FOREIGN KEY (owner_id)
             REFERENCES users (id)
