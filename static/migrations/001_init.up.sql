@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     id              int GENERATED ALWAYS AS IDENTITY,
     date_created    timestamptz NOT NULL DEFAULT now(),
-    username        text        NOT NULL UNIQUE,
+    user_name        text        NOT NULL UNIQUE,
     password        text        NOT NULL,
     email           text        NOT NULL UNIQUE,
     summary         text,

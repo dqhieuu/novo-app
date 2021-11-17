@@ -139,7 +139,7 @@ type TempImage struct {
 type User struct {
 	ID            int32          `json:"id"`
 	DateCreated   time.Time      `json:"date_created"`
-	Username      string         `json:"username"`
+	UserName      string         `json:"user_name"`
 	Password      string         `json:"password"`
 	Email         string         `json:"email"`
 	Summary       sql.NullString `json:"summary"`
