@@ -2,14 +2,12 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const maxInt32 = 2147483647
@@ -196,17 +194,6 @@ func CreateBookGroup(c *gin.Context) {
 		return
 	}
 
-	/*loc, _ := time.LoadLocation("Asia/Ho_Chi_Minh")
-	data.DateCreated = sql.NullTime{
-		Time:  time.Now().UTC().In(loc),
-		Valid: true,
-	}
-	fmt.Println(data.DateCreated.Time)*/
-
-	data.DateCreated = sql.NullTime{
-		Time:  time.Now().UTC(),
-		Valid: true,
-	}
 	queries := db.New(db.Pool())
 	err = queries.InsertBookGroup(context.Background(), data)
 	if err != nil {
@@ -249,13 +236,13 @@ func DeleteBookGroup(c *gin.Context) {
 	})
 }
 
-func BookGroupRun(r *gin.Engine)  {
-	r.GET("/getBookGroup",GetBookGroup)
-	r.GET("/getListBookGroup",GetListBookGroup)
-	r.GET("/searchBookGroup",SearchBookGroup)
-	r.PUT("/updateTitleBookGroup",UpdateTitleBookGroup)
-	r.PUT("/updateDescBookGroup",UpdateDescBookGroup)
-	r.PUT("/UpdateAuthorBookGroup",UpdateAuthorBookGroup)
-	r.POST("/createBookGroup",CreateBookGroup)
-	r.DELETE("/deleteBookGroup",DeleteBookGroup)
+func BookGroupRun(r *gin.Engine) {
+	r.GET("/getBookGroup", GetBookGroup)
+	r.GET("/getListBookGroup", GetListBookGroup)
+	r.GET("/searchBookGroup", SearchBookGroup)
+	r.PUT("/updateTitleBookGroup", UpdateTitleBookGroup)
+	r.PUT("/updateDescBookGroup", UpdateDescBookGroup)
+	r.PUT("/UpdateAuthorBookGroup", UpdateAuthorBookGroup)
+	r.POST("/createBookGroup", CreateBookGroup)
+	r.DELETE("/deleteBookGroup", DeleteBookGroup)
 }

@@ -27,8 +27,8 @@ SET ownerid = (SELECT id FROM users WHERE user_name = @new_user_name)
 WHERE title = @title;
 
 -- name: InsertBookGroup :exec
-INSERT INTO book_groups(title, description, date_created,ownerid)
-VALUES (@title, @description,@date_created,(SELECT id FROM users WHERE user_name = @owner_name));
+INSERT INTO book_groups(title, description,ownerid)
+VALUES (@title, @description,(SELECT id FROM users WHERE user_name = @owner_name));
 
 -- name: DeleteBookGroup :exec
 DELETE FROM book_groups

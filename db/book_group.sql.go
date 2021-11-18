@@ -85,24 +85,18 @@ func (q *Queries) GetListBookGroup(ctx context.Context, limit int32) ([]GetListB
 }
 
 const insertBookGroup = `-- name: InsertBookGroup :exec
-INSERT INTO book_groups(title, description, date_created,ownerid)
-VALUES ($1, $2,$3,(SELECT id FROM users WHERE user_name = $4))
+INSERT INTO book_groups(title, description,ownerid)
+VALUES ($1, $2,(SELECT id FROM users WHERE user_name = $3))
 `
 
 type InsertBookGroupParams struct {
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	DateCreated sql.NullTime   `json:"date_created"`
 	OwnerName   string         `json:"owner_name"`
 }
 
 func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) error {
-	_, err := q.db.Exec(ctx, insertBookGroup,
-		arg.Title,
-		arg.Description,
-		arg.DateCreated,
-		arg.OwnerName,
-	)
+	_, err := q.db.Exec(ctx, insertBookGroup, arg.Title, arg.Description, arg.OwnerName)
 	return err
 }
 
