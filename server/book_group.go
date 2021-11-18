@@ -195,6 +195,14 @@ func CreateBookGroup(c *gin.Context) {
 	}
 
 	queries := db.New(db.Pool())
+	check, _ := queries.GetBookGroup(context.Background(), data.Title)
+	if check != (db.GetBookGroupRow{}) {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Title of book group already exist",
+		})
+		return
+	}
+
 	err = queries.InsertBookGroup(context.Background(), data)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
