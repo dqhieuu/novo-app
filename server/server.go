@@ -39,7 +39,8 @@ func Run() {
 		log.Printf("NoRoute claims: %#v\n", claims)
 		c.JSON(404, gin.H{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
-
+  
+	BookGroupRun(r)
 	auth := r.Group("/auth")
 	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 

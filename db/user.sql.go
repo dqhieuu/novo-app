@@ -78,6 +78,29 @@ func (q *Queries) UserByEmail(ctx context.Context, email string) (User, error) {
 	return i, err
 }
 
+const userByEmail = `-- name: UserByEmail :one
+SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list FROM users
+WHERE email = $1
+    FETCH FIRST ROWS ONLY
+`
+
+func (q *Queries) UserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, userByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.DateCreated,
+		&i.UserName,
+		&i.Password,
+		&i.Email,
+		&i.Summary,
+		&i.AvatarImageID,
+		&i.RoleID,
+		&i.FavoriteList,
+	)
+	return i, err
+}
+
 const userByUsernameOrEmail = `-- name: UserByUsernameOrEmail :one
 SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list
 FROM users
