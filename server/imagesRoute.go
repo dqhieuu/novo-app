@@ -82,13 +82,10 @@ func generateHashes(f io.Reader) (string, string, error) {
 	return hex.EncodeToString(md5Hash.Sum(nil)), hex.EncodeToString(sha1Hash.Sum(nil)), nil
 }
 
-func ResizeImage(f multipart.File, w int, h int, outType string, outDst string) {
+func ResizeImage(f multipart.File, w int, h int, inType string, outType string, outDst string) {
 	var srcImg image.Image
-	fileType, err := getImageType(f)
-	if err != nil {
-		log.Fatalf("Error getting image type: %s\n", err)
-	}
-	switch fileType {
+	var err error
+	switch inType {
 	case "image/jpeg":
 		srcImg, err = jpeg.Decode(f)
 	case "image/png":
@@ -153,7 +150,20 @@ func GetImageById(c *gin.Context) {
 
 func ServeThumbnail(c *gin.Context) {
 	file, _ := c.FormFile("thumbnail")
+	fileData, _ := file.Open()
 	if checkFileSize(c, file.Size) {
+		return
+	}
+
+	fileType, err := getImageType(fileData)
+	if err != nil {
+		log.Fatalf("Error getting image type: %s\n", err)
+	}
+	ok := detectImageType(fileType)
+	if !ok {
+		c.JSON(415, gin.H{
+			"message": "Unsupported media type",
+		})
 		return
 	}
 
@@ -162,7 +172,6 @@ func ServeThumbnail(c *gin.Context) {
 	outType := c.PostForm("outType")
 	thumbnailType := c.PostForm("thumbnailType")
 	description := c.PostForm("description")
-	fileData, _ := file.Open()
 
 	switch outType {
 	case "image/jpeg", "image/png", "image/gif":
@@ -171,8 +180,8 @@ func ServeThumbnail(c *gin.Context) {
 	}
 	filename := newFileName(outType)
 
-	dst := "server/" + thumbnailType + "/" + filename
-	ResizeImage(fileData, width, height, outType, dst)
+	dst := "server/images/" + thumbnailType + "/" + filename
+	ResizeImage(fileData, width, height, fileType, outType, dst)
 	thumbnailFile, _ := os.Open(dst)
 	
 	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
@@ -279,7 +288,7 @@ func ReceiveImages(c *gin.Context) {
 		case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
 			//saving file to the server
 			filename := newFileName(fileType)
-			dst := "server/book_contents/" + filename
+			dst := "server/images/book_contents/" + filename
 
 			err = c.SaveUploadedFile(file, dst)
 			if err != nil {
