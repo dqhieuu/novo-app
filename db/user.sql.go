@@ -5,38 +5,77 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const deleteUser = `-- name: DeleteUser :exec
-DELETE FROM users
+DELETE
+FROM users
 WHERE user_name = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, userName string) error {
+func (q *Queries) DeleteUser(ctx context.Context, userName sql.NullString) error {
 	_, err := q.db.Exec(ctx, deleteUser, userName)
 	return err
 }
 
-const insertUser = `-- name: InsertUser :exec
+const insertUser = `-- name: InsertUser :one
 INSERT INTO users(user_name, password, email, role_id)
 VALUES ($1, $2, $3, (SELECT id FROM roles WHERE name = $4))
+RETURNING id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list
 `
 
 type InsertUserParams struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	RoleName string `json:"role_name"`
+	UserName sql.NullString `json:"user_name"`
+	Password sql.NullString `json:"password"`
+	Email    string         `json:"email"`
+	RoleName string         `json:"role_name"`
 }
 
-func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) error {
-	_, err := q.db.Exec(ctx, insertUser,
-		arg.Username,
+func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, error) {
+	row := q.db.QueryRow(ctx, insertUser,
+		arg.UserName,
 		arg.Password,
 		arg.Email,
 		arg.RoleName,
 	)
-	return err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.DateCreated,
+		&i.UserName,
+		&i.Password,
+		&i.Email,
+		&i.Summary,
+		&i.AvatarImageID,
+		&i.RoleID,
+		&i.FavoriteList,
+	)
+	return i, err
+}
+
+const userByEmail = `-- name: UserByEmail :one
+SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list
+FROM users
+WHERE email = $1
+    FETCH FIRST ROWS ONLY
+`
+
+func (q *Queries) UserByEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRow(ctx, userByEmail, email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.DateCreated,
+		&i.UserName,
+		&i.Password,
+		&i.Email,
+		&i.Summary,
+		&i.AvatarImageID,
+		&i.RoleID,
+		&i.FavoriteList,
+	)
+	return i, err
 }
 
 const userByEmail = `-- name: UserByEmail :one
@@ -63,13 +102,14 @@ func (q *Queries) UserByEmail(ctx context.Context, email string) (User, error) {
 }
 
 const userByUsernameOrEmail = `-- name: UserByUsernameOrEmail :one
-SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list FROM users
+SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list
+FROM users
 WHERE user_name = $1
-    OR email = $1
-FETCH FIRST ROWS ONLY
+   OR email = $1
+    FETCH FIRST ROWS ONLY
 `
 
-func (q *Queries) UserByUsernameOrEmail(ctx context.Context, userName string) (User, error) {
+func (q *Queries) UserByUsernameOrEmail(ctx context.Context, userName sql.NullString) (User, error) {
 	row := q.db.QueryRow(ctx, userByUsernameOrEmail, userName)
 	var i User
 	err := row.Scan(

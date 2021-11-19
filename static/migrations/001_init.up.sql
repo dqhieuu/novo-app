@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS users
 (
     id              int GENERATED ALWAYS AS IDENTITY,
     date_created    timestamptz NOT NULL DEFAULT now(),
-    user_name        text        NOT NULL UNIQUE,
-    password        text        NOT NULL,
+    user_name       text        UNIQUE,
+    password        text,
     email           text        NOT NULL UNIQUE,
     summary         text,
     avatar_image_id int,
@@ -202,7 +202,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
             REFERENCES images (id)
 );
 
-CREATE TABLE IF NOT EXISTS book_chapters_views
+CREATE TABLE IF NOT EXISTS book_chapter_views
 (
     count           int,
     view_date       date NOT NULL DEFAULT now(),
