@@ -66,7 +66,7 @@ func TestCreateAccount(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, user.UserName, username, "Compare username.")
+	assert.Equal(t, user.UserName.String, username, "Compare username.")
 
 	passwordHash, err := hex.DecodeString(user.Password.String)
 	if err != nil {

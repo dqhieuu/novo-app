@@ -53,7 +53,7 @@ type BookChapterImage struct {
 	ImageID       int32 `json:"image_id"`
 }
 
-type BookChaptersView struct {
+type BookChapterView struct {
 	Count         sql.NullInt32 `json:"count"`
 	ViewDate      time.Time     `json:"view_date"`
 	BookChapterID int32         `json:"book_chapter_id"`

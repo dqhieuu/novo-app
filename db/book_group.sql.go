@@ -30,7 +30,7 @@ type GetBookGroupRow struct {
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
 	DateCreated sql.NullTime   `json:"date_created"`
-	Ownername   string         `json:"ownername"`
+	Ownername   sql.NullString `json:"ownername"`
 }
 
 func (q *Queries) GetBookGroup(ctx context.Context, title string) (GetBookGroupRow, error) {
@@ -56,7 +56,7 @@ type GetListBookGroupRow struct {
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
 	DateCreated sql.NullTime   `json:"date_created"`
-	Ownername   string         `json:"ownername"`
+	Ownername   sql.NullString `json:"ownername"`
 }
 
 func (q *Queries) GetListBookGroup(ctx context.Context, limit int32) ([]GetListBookGroupRow, error) {
@@ -92,7 +92,7 @@ VALUES ($1, $2,(SELECT id FROM users WHERE user_name = $3))
 type InsertBookGroupParams struct {
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	OwnerName   string         `json:"owner_name"`
+	OwnerName   sql.NullString `json:"owner_name"`
 }
 
 func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) error {
@@ -107,8 +107,8 @@ WHERE title = $2
 `
 
 type UpdateAuthorBookGroupParams struct {
-	NewUserName string `json:"new_user_name"`
-	Title       string `json:"title"`
+	NewUserName sql.NullString `json:"new_user_name"`
+	Title       string         `json:"title"`
 }
 
 func (q *Queries) UpdateAuthorBookGroup(ctx context.Context, arg UpdateAuthorBookGroupParams) error {
