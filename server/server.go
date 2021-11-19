@@ -23,6 +23,15 @@ func Run() {
 	r.POST("/login", authMiddleware.LoginHandler)
 	r.GET("/login", authMiddleware.LoginHandler)
 
+
+	imageHandler := r.Group("/images")
+	{
+		imageHandler.POST("/upload", ReceiveImages)
+		imageHandler.POST("/submit", SubmitImages)
+		imageHandler.POST("/thumbnail", ServeThumbnail)
+		imageHandler.GET("/:imageId", GetImageById)
+	}
+
 	r.GET("/oauth/google", GoogleOauthRedirect)
 
 	r.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
