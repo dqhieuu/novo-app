@@ -30,8 +30,6 @@ type Image struct{
 	Id int32 `json:"id"`
 	Filename string `json:"filename"`
 	URL string `json:"url"`
-	Md5 string `json:"md_5"`
-	Sha1 string `json:"sha_1"`
 }
 
 func newFileName (fileType string) string {
@@ -311,8 +309,6 @@ func ReceiveImages(c *gin.Context) {
 				Id: imageId,
 				Filename: filename,
 				URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
-				Md5: md5Hash,
-				Sha1: sha1Hash,
 			})
 		default:
 			c.JSON(400, gin.H{
