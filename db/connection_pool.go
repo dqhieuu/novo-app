@@ -9,16 +9,12 @@ import (
 
 var pool *pgxpool.Pool
 
-func SetPool(p *pgxpool.Pool) {
-	pool = p
-}
-
 func Pool() *pgxpool.Pool {
 	return pool
 }
 
 // ValidateVersion validates current database version
-func ValidateVersion(ctx context.Context) {
+func validateVersion(ctx context.Context) {
 	rows, err := pool.Query(ctx, "SELECT * FROM schema_migrations")
 
 	if err != nil || !rows.Next() {
@@ -44,6 +40,10 @@ func ValidateVersion(ctx context.Context) {
 }
 
 func Init() {
+	if pool != nil {
+		return
+	}
+
 	ctx := context.Background()
 	// Verifies if env to db location exists
 	pgUrl, ok := os.LookupEnv("POSTGRES_URL")
@@ -57,8 +57,7 @@ func Init() {
 		panic(err)
 	}
 	// Assigns the database pool to package's var
-	SetPool(dbPool)
-
+	pool = dbPool
 	// Checks current migrated version
-	ValidateVersion(ctx)
+	validateVersion(ctx)
 }
