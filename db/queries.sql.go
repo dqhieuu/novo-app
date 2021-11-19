@@ -7,20 +7,27 @@ import (
 	"context"
 )
 
-const listTests = `-- name: ListTests :many
-SELECT id, data FROM tests
+const listBookGroups = `-- name: ListBookGroups :many
+SELECT id, title, description, date_created, ownerid FROM book_groups
+FETCH FIRST $1 ROWS ONLY
 `
 
-func (q *Queries) ListTests(ctx context.Context) ([]Test, error) {
-	rows, err := q.db.Query(ctx, listTests)
+func (q *Queries) ListBookGroups(ctx context.Context, limit int32) ([]BookGroup, error) {
+	rows, err := q.db.Query(ctx, listBookGroups, limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Test
+	var items []BookGroup
 	for rows.Next() {
-		var i Test
-		if err := rows.Scan(&i.ID, &i.Data); err != nil {
+		var i BookGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.DateCreated,
+			&i.Ownerid,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

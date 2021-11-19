@@ -1,8 +1,6 @@
 package server
 
 import (
-	"encoding/json"
-	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,13 +22,24 @@ func Run() {
 	})
 
 	r.GET("/test", func(c *gin.Context) {
+		/*
 		tests, _ := db.New(db.Pool()).ListTests(c)
+
 		res, _ := json.Marshal(tests)
 
 		c.JSON(200, gin.H{
 			"message": string(res),
 		})
+		*/
 	})
+
+	imageHandler := r.Group("/images")
+	{
+		imageHandler.POST("/upload", ReceiveImages)
+		imageHandler.POST("/submit", SubmitImages)
+		imageHandler.POST("/thumbnail", ServeThumbnail)
+		imageHandler.GET("/:imageId", GetImageById)
+	}
 
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
