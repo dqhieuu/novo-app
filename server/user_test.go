@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"encoding/hex"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +46,7 @@ func TestCreateAccount(t *testing.T) {
 		}
 	}()
 
-	err = CreateAccount(username, password, email, testRole)
+	_, err = CreateAccount(username, password, email, testRole)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,14 +58,17 @@ func TestCreateAccount(t *testing.T) {
 		}
 	}()
 
-	user, err := queries.UserByUsernameOrEmail(ctx, username)
+	user, err := queries.UserByUsernameOrEmail(ctx, sql.NullString{
+		String: username,
+		Valid:  true,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, user.Username, username, "Compare username.")
+	assert.Equal(t, user.UserName, username, "Compare username.")
 
-	passwordHash, err := hex.DecodeString(user.Password)
+	passwordHash, err := hex.DecodeString(user.Password.String)
 	if err != nil {
 		t.Fatal(err)
 	}

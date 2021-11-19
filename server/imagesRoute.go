@@ -6,33 +6,30 @@ import (
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
+	"github.com/disintegration/imaging"
 	"github.com/dqhieuu/novo-app/db"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
-
-	//"encoding/json"
-	//"github.com/dqhieuu/novo-app/db"
-	"github.com/disintegration/imaging"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"log"
 )
 
-const MaxSize = 1024 * 1024 * 10
-type Image struct{
-	Id int32 `json:"id"`
+const MaxSize = 1024 * 1024 * 10 // 10 MB
+type Image struct {
+	Id       int32  `json:"id"`
 	Filename string `json:"filename"`
-	URL string `json:"url"`
+	URL      string `json:"url"`
 }
 
-func newFileName (fileType string) string {
+func newFileName(fileType string) string {
 	var ext string
 	switch fileType {
 	case "image/jpeg":
@@ -45,17 +42,20 @@ func newFileName (fileType string) string {
 	return uuid.NewString() + ext
 }
 
-func getImageType(f multipart.File) (string, error) {
+func getImageType(fileStream multipart.File) (string, error) {
 	buffer := make([]byte, 512)
-	if _, err := f.Read(buffer); err != nil {
+	if _, err := fileStream.Read(buffer); err != nil {
+		return "", err
+	}
+	if _, err := fileStream.Seek(0, io.SeekStart); err != nil {
 		return "", err
 	}
 	imageType := http.DetectContentType(buffer)
-	f.Seek(0, io.SeekStart)
+
 	return imageType, nil
 }
 
-func detectImageType(imgType string) bool {
+func validImageType(imgType string) bool {
 	switch imgType {
 	case "image/jpeg", "image/png", "image/gif":
 		return true
@@ -63,9 +63,9 @@ func detectImageType(imgType string) bool {
 	return false
 }
 
-func generateHashes(f io.Reader) (string, string, error) {
+func generateHashes(fileStream io.Reader) (string, string, error) {
 	var sha1Stream bytes.Buffer
-	md5Stream := io.TeeReader(f, &sha1Stream)
+	md5Stream := io.TeeReader(fileStream, &sha1Stream)
 
 	md5Hash := md5.New()
 	sha1Hash := sha1.New()
@@ -79,6 +79,7 @@ func generateHashes(f io.Reader) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
+
 	return hex.EncodeToString(md5Hash.Sum(nil)), hex.EncodeToString(sha1Hash.Sum(nil)), nil
 }
 
@@ -100,7 +101,16 @@ func ResizeImage(f multipart.File, w int, h int, inType string, outType string, 
 
 	dstImg := imaging.Resize(srcImg, w, h, imaging.MitchellNetravali)
 
-	out, _ := os.Create(outDst)
+	out, err := os.Create(outDst)
+	if err != nil {
+		return
+	}
+	defer func() {
+		err := out.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	switch outType {
 	case "image/jpeg":
@@ -116,10 +126,10 @@ func ResizeImage(f multipart.File, w int, h int, inType string, outType string, 
 	if err != nil {
 		log.Fatalf("Error encoding image: %s\n", err)
 	}
-	out.Close()
+
 }
 
-func checkFileSize(c *gin.Context, size int64) bool {
+func validFileSize(c *gin.Context, size int64) bool {
 	if size > MaxSize {
 		c.JSON(413, gin.H{
 			"message": "File too large",
@@ -151,7 +161,7 @@ func GetImageById(c *gin.Context) {
 func ServeThumbnail(c *gin.Context) {
 	file, _ := c.FormFile("thumbnail")
 	fileData, _ := file.Open()
-	if checkFileSize(c, file.Size) {
+	if validFileSize(c, file.Size) {
 		return
 	}
 
@@ -159,7 +169,7 @@ func ServeThumbnail(c *gin.Context) {
 	if err != nil {
 		log.Fatalf("Error getting image type: %s\n", err)
 	}
-	ok := detectImageType(fileType)
+	ok := validImageType(fileType)
 	if !ok {
 		c.JSON(415, gin.H{
 			"message": "Unsupported media type",
@@ -183,7 +193,7 @@ func ServeThumbnail(c *gin.Context) {
 	dst := "server/images/" + thumbnailType + "/" + filename
 	ResizeImage(fileData, width, height, fileType, outType, dst)
 	thumbnailFile, _ := os.Open(dst)
-	
+
 	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
 	if err != nil {
 		log.Fatalf("Error generating hashes: %s\n", err)
@@ -211,7 +221,7 @@ func ServeThumbnail(c *gin.Context) {
 	if err != nil {
 		log.Fatalf("Error deleting temp image: %s\n", err)
 	}
-	
+
 	c.File(dst)
 }
 
@@ -253,7 +263,7 @@ func ReceiveImages(c *gin.Context) {
 	files := form.File["upload[]"]
 
 	for _, file := range files {
-		if checkFileSize(c, file.Size) {
+		if validFileSize(c, file.Size) {
 			continue
 		}
 		fileData, _ := file.Open()
@@ -263,7 +273,7 @@ func ReceiveImages(c *gin.Context) {
 		if imgErr != nil {
 			log.Fatalf("Error getting image type: %s\n", imgErr)
 		}
-		ok := detectImageType(fileType)
+		ok := validImageType(fileType)
 		if !ok {
 			c.JSON(415, gin.H{
 				"message": "Unsupported media type",
@@ -297,10 +307,10 @@ func ReceiveImages(c *gin.Context) {
 
 			//inserting image to the database
 			imageId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
-				Md5:        md5Hash,
-				Sha1:        sha1Hash,
-				Path:        dst,
-				Name:        sql.NullString{
+				Md5:  md5Hash,
+				Sha1: sha1Hash,
+				Path: dst,
+				Name: sql.NullString{
 					String: filename,
 					Valid:  true,
 				},
@@ -315,17 +325,16 @@ func ReceiveImages(c *gin.Context) {
 
 			//building the return message (may discard some field)
 			c.JSON(200, Image{
-				Id: imageId,
+				Id:       imageId,
 				Filename: filename,
-				URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
+				URL:      c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
 			})
 		default:
 			c.JSON(400, gin.H{
 				"message": "File already exist",
-				"Id": peekRow.ID,
-				"URL": c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
+				"Id":      peekRow.ID,
+				"URL":     c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
 			})
 		}
 	}
 }
-
