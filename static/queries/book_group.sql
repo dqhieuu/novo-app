@@ -1,35 +1,45 @@
--- name: GetBookGroup :one
-SELECT title, description, date_created,
-       (SELECT user_name FROM users WHERE id = ownerid) AS ownerName
+-- name: BookGroupById :one
+SELECT *
 FROM book_groups
-WHERE title = $1
-FETCH FIRST ROWS ONLY;
+WHERE id = $1;
 
--- name: GetListBookGroup :many
-SELECT title, description, date_created,
-       (SELECT user_name FROM users WHERE id = ownerid) AS ownerName
+-- name: BookGroupsByTitle :many
+SELECT *
 FROM book_groups
-FETCH FIRST $1 ROWS ONLY;
+WHERE  LOWER(title) LIKE '%' || $1 || '%'
+OFFSET $2 ROWS
+    FETCH FIRST $3 ROWS ONLY;
 
--- name: UpdateTitleBookGroup :exec
+-- name: BookGroupsByGenre :many
+SELECT bg.*
+FROM book_groups AS bg
+         JOIN book_group_genres AS bgg
+              ON bg.book_group_id=bgg.book_group_id
+WHERE bgg.genre_id=$1
+OFFSET $2 ROWS
+    FETCH FIRST $3 ROWS ONLY;
+
+-- name: BookGroupsByAuthor :many
+SELECT bg.*
+FROM book_groups AS bg
+         JOIN book_group_authors AS bga
+              ON bg.book_group_id=bga.book_group_id
+WHERE bga.book_author_id=$1
+OFFSET $2 ROWS
+    FETCH FIRST $3 ROWS ONLY;
+
+-- name: UpdateBookGroup :exec
 UPDATE book_groups
-SET title = @new_title
-WHERE title = @old_title;
+SET title = $2,
+    description=$3,
+    ownerid=$4
+WHERE id = $1;
 
--- name: UpdateDescBookGroup :exec
-UPDATE book_groups
-SET description = @new_description
-WHERE title = @title;
-
--- name: UpdateAuthorBookGroup :exec
-UPDATE book_groups
-SET ownerid = (SELECT id FROM users WHERE user_name = @new_user_name)
-WHERE title = @title;
-
--- name: InsertBookGroup :exec
+-- name: InsertBookGroup :one
 INSERT INTO book_groups(title, description,ownerid)
-VALUES (@title, @description,(SELECT id FROM users WHERE user_name = @owner_name));
+VALUES (@title, @description,@ownerid)
+RETURNING *;
 
 -- name: DeleteBookGroup :exec
 DELETE FROM book_groups
-WHERE title = @title;
+WHERE id = @id;

@@ -23,7 +23,6 @@ func Run() {
 	r.POST("/login", authMiddleware.LoginHandler)
 	r.GET("/login", authMiddleware.LoginHandler)
 
-
 	imageHandler := r.Group("/images")
 	{
 		imageHandler.POST("/upload", ReceiveImages)
@@ -39,8 +38,7 @@ func Run() {
 		log.Printf("NoRoute claims: %#v\n", claims)
 		c.JSON(404, gin.H{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
 	})
-  
-	BookGroupRun(r)
+
 	auth := r.Group("/auth")
 	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 
