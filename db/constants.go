@@ -1,3 +1,3 @@
 package db
 
-const CodeVersion = 2
+const CodeVersion = 3

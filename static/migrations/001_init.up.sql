@@ -32,10 +32,9 @@ CREATE TABLE IF NOT EXISTS roles
     can_modify_book_genre   boolean          NOT NULL DEFAULT false,
     can_modify_book_group   permission_scope NOT NULL DEFAULT 'self',
     can_modify_book_chapter permission_scope NOT NULL DEFAULT 'self',
-    can_create_comment      permission_scope          DEFAULT 'self',
-    can_update_comment      permission_scope          DEFAULT 'self',
-    can_delete_comment      permission_scope          DEFAULT 'self',
-    can_modify_d            permission_scope          DEFAULT 'self',
+    can_create_comment      bool NOT NULL DEFAULT true,
+    can_update_comment      permission_scope NOT NULL DEFAULT 'self',
+    can_delete_comment      permission_scope NOT NULL DEFAULT 'self',
     PRIMARY KEY (id)
 );
 

@@ -125,10 +125,9 @@ type Role struct {
 	CanModifyBookGenre   bool            `json:"can_modify_book_genre"`
 	CanModifyBookGroup   PermissionScope `json:"can_modify_book_group"`
 	CanModifyBookChapter PermissionScope `json:"can_modify_book_chapter"`
-	CanCreateComment     PermissionScope `json:"can_create_comment"`
+	CanCreateComment     bool            `json:"can_create_comment"`
 	CanUpdateComment     PermissionScope `json:"can_update_comment"`
 	CanDeleteComment     PermissionScope `json:"can_delete_comment"`
-	CanModifyD           PermissionScope `json:"can_modify_d"`
 }
 
 type TempImage struct {

@@ -1,0 +1,21 @@
+INSERT INTO roles (name, description,
+                   can_modify_role,
+                   can_modify_book_author, can_modify_book_genre,
+                   can_modify_book_group, can_modify_book_chapter,
+                   can_create_comment, can_update_comment, can_delete_comment)
+VALUES ('user', 'Default user role when registered.',
+        false,
+        true, true,
+        'self', 'self',
+        true, 'self', 'self'),
+       ('moderator', 'The one who moderates contents.',
+        true,
+        true, true,
+        'all', 'all',
+        true, 'self', 'all'),
+       ('admin', 'The Supreme leader.',
+        true,
+        true, true,
+        'all', 'all',
+        true, 'all', 'all');
+

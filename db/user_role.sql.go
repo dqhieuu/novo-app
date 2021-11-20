@@ -21,7 +21,7 @@ func (q *Queries) DeleteRole(ctx context.Context, name string) error {
 const insertNewRole = `-- name: InsertNewRole :one
 INSERT INTO roles (name, description)
 VALUES ($1, $2)
-RETURNING id, name, description, can_modify_role, can_modify_book_author, can_modify_book_genre, can_modify_book_group, can_modify_book_chapter, can_create_comment, can_update_comment, can_delete_comment, can_modify_d
+RETURNING id, name, description, can_modify_role, can_modify_book_author, can_modify_book_genre, can_modify_book_group, can_modify_book_chapter, can_create_comment, can_update_comment, can_delete_comment
 `
 
 type InsertNewRoleParams struct {
@@ -44,7 +44,6 @@ func (q *Queries) InsertNewRole(ctx context.Context, arg InsertNewRoleParams) (R
 		&i.CanCreateComment,
 		&i.CanUpdateComment,
 		&i.CanDeleteComment,
-		&i.CanModifyD,
 	)
 	return i, err
 }
