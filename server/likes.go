@@ -11,7 +11,7 @@ type LikesParams struct{
 	BookId int32
 }
 func InsertLikes(c *gin.Context, params LikesParams) {
-	err := db.New(db.Pool()).UpsertLikes(c, db.UpsertLikesParams{
+	err := db.New(db.Pool()).Likes(c, db.LikesParams{
 		UserID:      params.UserId,
 		BookGroupID: params.BookId,
 	})
@@ -22,7 +22,7 @@ func InsertLikes(c *gin.Context, params LikesParams) {
 }
 
 func InsertDisLikes(c *gin.Context, params LikesParams) {
-	err := db.New(db.Pool()).DownsertLikes(c, db.DownsertLikesParams{
+	err := db.New(db.Pool()).DisLikes(c, db.DisLikesParams{
 		UserID:      params.UserId,
 		BookGroupID: params.BookId,
 	})
@@ -32,11 +32,19 @@ func InsertDisLikes(c *gin.Context, params LikesParams) {
 	}
 }
 
-func ReturnLikes(c *gin.Context, params LikesParams) {
-	likes, err := db.New(db.Pool()).GetLikes(c, db.GetLikesParams{
+func InsertUnLikes(c *gin.Context, params LikesParams) {
+	err := db.New(db.Pool()).Unlikes(c, db.UnlikesParams{
 		UserID:      params.UserId,
 		BookGroupID: params.BookId,
 	})
+
+	if err != nil {
+		log.Fatalf("Error upserting likes: %s\n", err)
+	}
+}
+
+func ReturnLikes(c *gin.Context, bookId int32) {
+	likes, err := db.New(db.Pool()).GetLikes(c, bookId)
 
 	if err != nil {
 		log.Fatalf("Error upserting likes: %s\n", err)

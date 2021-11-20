@@ -7,52 +7,57 @@ import (
 	"context"
 )
 
-const downsertLikes = `-- name: DownsertLikes :exec
+const disLikes = `-- name: DisLikes :exec
 INSERT INTO book_group_likes(user_id, book_group_id, point)
-VALUES ($1, $2, 0)
-ON CONFLICT (user_id, book_group_id)
-DO UPDATE SET point = point - 1
+VALUES ($1, $2, -1)
 `
 
-type DownsertLikesParams struct {
+type DisLikesParams struct {
 	UserID      int32 `json:"user_id"`
 	BookGroupID int32 `json:"book_group_id"`
 }
 
-func (q *Queries) DownsertLikes(ctx context.Context, arg DownsertLikesParams) error {
-	_, err := q.db.Exec(ctx, downsertLikes, arg.UserID, arg.BookGroupID)
+func (q *Queries) DisLikes(ctx context.Context, arg DisLikesParams) error {
+	_, err := q.db.Exec(ctx, disLikes, arg.UserID, arg.BookGroupID)
 	return err
 }
 
 const getLikes = `-- name: GetLikes :one
-SELECT point FROM book_group_likes WHERE user_id = $1 AND book_group_id = $2
+SELECT SUM(point) as totalLikes FROM book_group_likes WHERE book_group_id = $1
 `
 
-type GetLikesParams struct {
-	UserID      int32 `json:"user_id"`
-	BookGroupID int32 `json:"book_group_id"`
+func (q *Queries) GetLikes(ctx context.Context, bookGroupID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, getLikes, bookGroupID)
+	var totallikes int64
+	err := row.Scan(&totallikes)
+	return totallikes, err
 }
 
-func (q *Queries) GetLikes(ctx context.Context, arg GetLikesParams) (int32, error) {
-	row := q.db.QueryRow(ctx, getLikes, arg.UserID, arg.BookGroupID)
-	var point int32
-	err := row.Scan(&point)
-	return point, err
-}
-
-const upsertLikes = `-- name: UpsertLikes :exec
+const likes = `-- name: Likes :exec
 INSERT INTO book_group_likes(user_id, book_group_id, point)
-VALUES ($1, $2, 0)
-ON CONFLICT (user_id, book_group_id)
-DO UPDATE SET point = point + 1
+VALUES ($1, $2, 1)
 `
 
-type UpsertLikesParams struct {
+type LikesParams struct {
 	UserID      int32 `json:"user_id"`
 	BookGroupID int32 `json:"book_group_id"`
 }
 
-func (q *Queries) UpsertLikes(ctx context.Context, arg UpsertLikesParams) error {
-	_, err := q.db.Exec(ctx, upsertLikes, arg.UserID, arg.BookGroupID)
+func (q *Queries) Likes(ctx context.Context, arg LikesParams) error {
+	_, err := q.db.Exec(ctx, likes, arg.UserID, arg.BookGroupID)
+	return err
+}
+
+const unlikes = `-- name: Unlikes :exec
+DELETE FROM book_group_likes WHERE user_id = $1 AND book_group_id = $2
+`
+
+type UnlikesParams struct {
+	UserID      int32 `json:"user_id"`
+	BookGroupID int32 `json:"book_group_id"`
+}
+
+func (q *Queries) Unlikes(ctx context.Context, arg UnlikesParams) error {
+	_, err := q.db.Exec(ctx, unlikes, arg.UserID, arg.BookGroupID)
 	return err
 }
