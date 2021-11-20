@@ -1,10 +1,10 @@
 package server
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"github.com/dqhieuu/novo-app/db"
-	"github.com/gin-gonic/gin"
-	"log"
 )
 
 type CommentParams struct{
@@ -14,8 +14,8 @@ type CommentParams struct{
 	Content string
 }
 
-func InsertComment(c *gin.Context, params CommentParams) {
-	err := db.New(db.Pool()).AddComment(c, db.AddCommentParams{
+func InsertComment(params CommentParams) error {
+	err := db.New(db.Pool()).AddComment(context.Background(), db.AddCommentParams{
 		UserID:        params.UserId,
 		BookGroupID:   sql.NullInt32{
 			Int32: params.BookId,
@@ -29,12 +29,13 @@ func InsertComment(c *gin.Context, params CommentParams) {
 	})
 
 	if err != nil {
-		log.Fatalf("Error adding comment: %s\n", err)
+		return errors.New("error adding comment: " + err.Error())
 	}
+	return nil
 }
 
-func EditComment(c *gin.Context, params CommentParams) {
-	err := db.New(db.Pool()).UpdateComment(c, db.UpdateCommentParams{
+func EditComment(params CommentParams) error {
+	err := db.New(db.Pool()).UpdateComment(context.Background(), db.UpdateCommentParams{
 		UserID:        params.UserId,
 		BookGroupID:   sql.NullInt32{
 			Int32: params.BookId,
@@ -48,12 +49,13 @@ func EditComment(c *gin.Context, params CommentParams) {
 	})
 
 	if err != nil {
-		log.Fatalf("Error updating comment: %s\n", err)
+		return errors.New("error updating comment: " + err.Error())
 	}
+	return nil
 }
 
-func RemoveComment(c *gin.Context, params CommentParams) {
-	err := db.New(db.Pool()).DeleteComment(c, db.DeleteCommentParams{
+func RemoveComment(params CommentParams) error {
+	err := db.New(db.Pool()).DeleteComment(context.Background(), db.DeleteCommentParams{
 		UserID:        params.UserId,
 		BookGroupID:   sql.NullInt32{
 			Int32: params.BookId,
@@ -66,6 +68,7 @@ func RemoveComment(c *gin.Context, params CommentParams) {
 	})
 
 	if err != nil {
-		log.Fatalf("Error deleting comment: %s\n", err)
+		return errors.New("error deleting comment: " + err.Error())
 	}
+	return nil
 }

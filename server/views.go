@@ -1,9 +1,10 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
-	"log"
 	"time"
 )
 
@@ -12,46 +13,50 @@ type InsertViewParams struct{
 	ViewDate time.Time
 }
 
-func InsertView(c *gin.Context, params InsertViewParams) {
-	err := db.New(db.Pool()).UpsertViewByDate(c, db.UpsertViewByDateParams{
+func InsertView(params InsertViewParams) error {
+	err := db.New(db.Pool()).UpsertViewByDate(context.Background(), db.UpsertViewByDateParams{
 		BookChapterID: params.ChapterId,
 		ViewDate:      params.ViewDate,
 	})
 
 	if err != nil {
-		log.Fatalf("Error upserting view: %s\n", err)
+		return errors.New("error inserting view: " + err.Error())
 	}
+	return nil
 }
 
-func ViewByWeek(c *gin.Context, chapterId int32) {
-	totalViewByWeek, err := db.New(db.Pool()).GetViewByWeek(c, chapterId)
+func ViewByWeek(c *gin.Context, chapterId int32) (int64, error) {
+	totalViewByWeek, err := db.New(db.Pool()).GetViewByWeek(context.Background(), chapterId)
 	if err != nil {
-		log.Fatalf("Error getting views by week: %s\n", err)
+		return 0, errors.New("error getting views by week: " + err.Error())
 	}
 
-	c.JSON(200, gin.H{
-		"viewsByWeek": totalViewByWeek,
-	})
+	//c.JSON(200, gin.H{
+	//	"viewsByWeek": totalViewByWeek,
+	//})
+	return totalViewByWeek, nil
 }
 
-func ViewByMonth(c *gin.Context, chapterId int32) {
-	totalViewByMonth, err := db.New(db.Pool()).GetViewByMonth(c, chapterId)
+func ViewByMonth(chapterId int32) (int64, error) {
+	totalViewByMonth, err := db.New(db.Pool()).GetViewByMonth(context.Background(), chapterId)
 	if err != nil {
-		log.Fatalf("Error getting views by month: %s\n", err)
+		return 0, errors.New("error getting views by month: " + err.Error())
 	}
 
-	c.JSON(200, gin.H{
-		"viewsByMonth": totalViewByMonth,
-	})
+	//c.JSON(200, gin.H{
+	//	"viewsByMonth": totalViewByMonth,
+	//})
+	return totalViewByMonth, nil
 }
 
-func ViewByYear(c *gin.Context, chapterId int32) {
-	totalViewByYear, err := db.New(db.Pool()).GetViewByYear(c, chapterId)
+func ViewByYear(chapterId int32) (int64, error) {
+	totalViewByYear, err := db.New(db.Pool()).GetViewByYear(context.Background(), chapterId)
 	if err != nil {
-		log.Fatalf("Error getting views by year: %s\n", err)
+		return 0, errors.New("error getting views by year: " + err.Error())
 	}
 
-	c.JSON(200, gin.H{
-		"viewsByWeek": totalViewByYear,
-	})
+	//c.JSON(200, gin.H{
+	//	"viewsByWeek": totalViewByYear,
+	//})
+	return totalViewByYear, nil
 }
