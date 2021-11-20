@@ -72,7 +72,7 @@ func TestBookGroup(t *testing.T) {
 	s := rand.NewSource(time.Now().UnixNano())
 	r = rand.New(s)
 	db.Init()
-	defer db.Pool().Close()
+	defer db.Close()
 	users = createUserAndRole(t)
 	defer delUserAndRole(t)
 	testBookGroupById(t)

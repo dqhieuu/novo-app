@@ -9,10 +9,6 @@ import (
 
 var pool *pgxpool.Pool
 
-func Pool() *pgxpool.Pool {
-	return pool
-}
-
 // ValidateVersion validates current database version
 func validateVersion(ctx context.Context) {
 	rows, err := pool.Query(ctx, "SELECT * FROM schema_migrations")
@@ -60,4 +56,13 @@ func Init() {
 	pool = dbPool
 	// Checks current migrated version
 	validateVersion(ctx)
+}
+
+func Pool() *pgxpool.Pool {
+	return pool
+}
+
+func Close() {
+	pool.Close()
+	pool = nil
 }

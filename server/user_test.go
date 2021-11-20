@@ -28,7 +28,7 @@ func TestCreateAccount(t *testing.T) {
 	db.Init()
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	defer db.Pool().Close()
+	defer db.Close()
 
 	username, password, email := "testuser", "secretpw", "user@atest.com"
 	testRole := "Test"
