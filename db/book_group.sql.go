@@ -8,71 +8,56 @@ import (
 	"database/sql"
 )
 
-const deleteBookGroup = `-- name: DeleteBookGroup :exec
-DELETE FROM book_groups
-WHERE title = $1
-`
-
-func (q *Queries) DeleteBookGroup(ctx context.Context, title string) error {
-	_, err := q.db.Exec(ctx, deleteBookGroup, title)
-	return err
-}
-
-const getBookGroup = `-- name: GetBookGroup :one
-SELECT title, description, date_created,
-       (SELECT user_name FROM users WHERE id = ownerid) AS ownerName
+const bookGroupById = `-- name: BookGroupById :one
+SELECT id, title, description, date_created, ownerid
 FROM book_groups
-WHERE title = $1
-FETCH FIRST ROWS ONLY
+WHERE id = $1
 `
 
-type GetBookGroupRow struct {
-	Title       string         `json:"title"`
-	Description sql.NullString `json:"description"`
-	DateCreated sql.NullTime   `json:"date_created"`
-	Ownername   sql.NullString `json:"ownername"`
-}
-
-func (q *Queries) GetBookGroup(ctx context.Context, title string) (GetBookGroupRow, error) {
-	row := q.db.QueryRow(ctx, getBookGroup, title)
-	var i GetBookGroupRow
+func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error) {
+	row := q.db.QueryRow(ctx, bookGroupById, id)
+	var i BookGroup
 	err := row.Scan(
+		&i.ID,
 		&i.Title,
 		&i.Description,
 		&i.DateCreated,
-		&i.Ownername,
+		&i.Ownerid,
 	)
 	return i, err
 }
 
-const getListBookGroup = `-- name: GetListBookGroup :many
-SELECT title, description, date_created,
-       (SELECT user_name FROM users WHERE id = ownerid) AS ownerName
-FROM book_groups
-FETCH FIRST $1 ROWS ONLY
+const bookGroupsByAuthor = `-- name: BookGroupsByAuthor :many
+SELECT bg.id, bg.title, bg.description, bg.date_created, bg.ownerid
+FROM book_groups AS bg
+         JOIN book_group_authors AS bga
+              ON bg.book_group_id=bga.book_group_id
+WHERE bga.book_author_id=$1
+OFFSET $2 ROWS
+    FETCH FIRST $3 ROWS ONLY
 `
 
-type GetListBookGroupRow struct {
-	Title       string         `json:"title"`
-	Description sql.NullString `json:"description"`
-	DateCreated sql.NullTime   `json:"date_created"`
-	Ownername   sql.NullString `json:"ownername"`
+type BookGroupsByAuthorParams struct {
+	BookAuthorID int32 `json:"book_author_id"`
+	Offset       int32 `json:"offset"`
+	Limit        int32 `json:"limit"`
 }
 
-func (q *Queries) GetListBookGroup(ctx context.Context, limit int32) ([]GetListBookGroupRow, error) {
-	rows, err := q.db.Query(ctx, getListBookGroup, limit)
+func (q *Queries) BookGroupsByAuthor(ctx context.Context, arg BookGroupsByAuthorParams) ([]BookGroup, error) {
+	rows, err := q.db.Query(ctx, bookGroupsByAuthor, arg.BookAuthorID, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []GetListBookGroupRow
+	var items []BookGroup
 	for rows.Next() {
-		var i GetListBookGroupRow
+		var i BookGroup
 		if err := rows.Scan(
+			&i.ID,
 			&i.Title,
 			&i.Description,
 			&i.DateCreated,
-			&i.Ownername,
+			&i.Ownerid,
 		); err != nil {
 			return nil, err
 		}
@@ -84,66 +69,144 @@ func (q *Queries) GetListBookGroup(ctx context.Context, limit int32) ([]GetListB
 	return items, nil
 }
 
-const insertBookGroup = `-- name: InsertBookGroup :exec
+const bookGroupsByGenre = `-- name: BookGroupsByGenre :many
+SELECT bg.id, bg.title, bg.description, bg.date_created, bg.ownerid
+FROM book_groups AS bg
+         JOIN book_group_genres AS bgg
+              ON bg.book_group_id=bgg.book_group_id
+WHERE bgg.genre_id=$1
+OFFSET $2 ROWS
+    FETCH FIRST $3 ROWS ONLY
+`
+
+type BookGroupsByGenreParams struct {
+	GenreID int32 `json:"genre_id"`
+	Offset  int32 `json:"offset"`
+	Limit   int32 `json:"limit"`
+}
+
+func (q *Queries) BookGroupsByGenre(ctx context.Context, arg BookGroupsByGenreParams) ([]BookGroup, error) {
+	rows, err := q.db.Query(ctx, bookGroupsByGenre, arg.GenreID, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookGroup
+	for rows.Next() {
+		var i BookGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.DateCreated,
+			&i.Ownerid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
+SELECT id, title, description, date_created, ownerid
+FROM book_groups
+WHERE  LOWER(title) LIKE '%' || $1 || '%'
+OFFSET $2 ROWS
+    FETCH FIRST $3 ROWS ONLY
+`
+
+type BookGroupsByTitleParams struct {
+	Column1 sql.NullString `json:"column_1"`
+	Offset  int32          `json:"offset"`
+	Limit   int32          `json:"limit"`
+}
+
+func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitleParams) ([]BookGroup, error) {
+	rows, err := q.db.Query(ctx, bookGroupsByTitle, arg.Column1, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookGroup
+	for rows.Next() {
+		var i BookGroup
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.DateCreated,
+			&i.Ownerid,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const deleteBookGroup = `-- name: DeleteBookGroup :exec
+DELETE FROM book_groups
+WHERE id = $1
+`
+
+func (q *Queries) DeleteBookGroup(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteBookGroup, id)
+	return err
+}
+
+const insertBookGroup = `-- name: InsertBookGroup :one
 INSERT INTO book_groups(title, description,ownerid)
-VALUES ($1, $2,(SELECT id FROM users WHERE user_name = $3))
+VALUES ($1, $2,$3)
+RETURNING id, title, description, date_created, ownerid
 `
 
 type InsertBookGroupParams struct {
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	OwnerName   sql.NullString `json:"owner_name"`
+	Ownerid     int32          `json:"ownerid"`
 }
 
-func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) error {
-	_, err := q.db.Exec(ctx, insertBookGroup, arg.Title, arg.Description, arg.OwnerName)
-	return err
+func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) (BookGroup, error) {
+	row := q.db.QueryRow(ctx, insertBookGroup, arg.Title, arg.Description, arg.Ownerid)
+	var i BookGroup
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.DateCreated,
+		&i.Ownerid,
+	)
+	return i, err
 }
 
-const updateAuthorBookGroup = `-- name: UpdateAuthorBookGroup :exec
+const updateBookGroup = `-- name: UpdateBookGroup :exec
 UPDATE book_groups
-SET ownerid = (SELECT id FROM users WHERE user_name = $1)
-WHERE title = $2
+SET title = $2,
+    description=$3,
+    ownerid=$4
+WHERE id = $1
 `
 
-type UpdateAuthorBookGroupParams struct {
-	NewUserName sql.NullString `json:"new_user_name"`
+type UpdateBookGroupParams struct {
+	ID          int32          `json:"id"`
 	Title       string         `json:"title"`
+	Description sql.NullString `json:"description"`
+	Ownerid     int32          `json:"ownerid"`
 }
 
-func (q *Queries) UpdateAuthorBookGroup(ctx context.Context, arg UpdateAuthorBookGroupParams) error {
-	_, err := q.db.Exec(ctx, updateAuthorBookGroup, arg.NewUserName, arg.Title)
-	return err
-}
-
-const updateDescBookGroup = `-- name: UpdateDescBookGroup :exec
-UPDATE book_groups
-SET description = $1
-WHERE title = $2
-`
-
-type UpdateDescBookGroupParams struct {
-	NewDescription sql.NullString `json:"new_description"`
-	Title          string         `json:"title"`
-}
-
-func (q *Queries) UpdateDescBookGroup(ctx context.Context, arg UpdateDescBookGroupParams) error {
-	_, err := q.db.Exec(ctx, updateDescBookGroup, arg.NewDescription, arg.Title)
-	return err
-}
-
-const updateTitleBookGroup = `-- name: UpdateTitleBookGroup :exec
-UPDATE book_groups
-SET title = $1
-WHERE title = $2
-`
-
-type UpdateTitleBookGroupParams struct {
-	NewTitle string `json:"new_title"`
-	OldTitle string `json:"old_title"`
-}
-
-func (q *Queries) UpdateTitleBookGroup(ctx context.Context, arg UpdateTitleBookGroupParams) error {
-	_, err := q.db.Exec(ctx, updateTitleBookGroup, arg.NewTitle, arg.OldTitle)
+func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams) error {
+	_, err := q.db.Exec(ctx, updateBookGroup,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.Ownerid,
+	)
 	return err
 }

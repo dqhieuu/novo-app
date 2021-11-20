@@ -2,255 +2,130 @@ package server
 
 import (
 	"context"
-	"encoding/json"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
-	"github.com/gin-gonic/gin"
-	"net/http"
-	"strings"
 )
 
-const maxInt32 = 2147483647
+const limitBookGroup = 50
 
-//localhost:8080/getBookGroup?title=title1
-func GetBookGroup(c *gin.Context) {
-	title := c.Query("title")
+func BookGroupById(id int32) (*db.BookGroup, error) {
+	ctx := context.Background()
 	queries := db.New(db.Pool())
-	data, err := queries.GetBookGroup(context.Background(), title)
+	data, err := queries.BookGroupById(ctx, id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
+		stringErr := fmt.Sprintf("Get book group by id failed: %s", err)
+		return nil, errors.New(stringErr)
 	}
-	c.JSON(http.StatusOK, data)
+	return &data, err
 }
 
-/*
-localhost:8080/getListBookGroup?limit=2
-localhost:8080/getListBookGroup
-*/
-func GetListBookGroup(c *gin.Context) {
-	var limit int32
-	_, err := fmt.Sscan(c.Query("limit"), &limit)
-	if err != nil {
-		limit = maxInt32
-		err = nil
-	}
+func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
+	ctx := context.Background()
 	queries := db.New(db.Pool())
-	outData, err := queries.GetListBookGroup(context.Background(), limit)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, outData)
-}
-
-//localhost:8080/searchBookGroup?limit=3&title=t
-func SearchBookGroup(c *gin.Context) {
-	var limit int32
-	_, err := fmt.Sscan(c.Query("limit"), &limit)
-	if err != nil {
-		limit = maxInt32
-		err = nil
-	}
-	title := c.Query("title")
-	queries := db.New(db.Pool())
-	data, err := queries.GetListBookGroup(context.Background(), maxInt32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	fmt.Println("title", title, limit)
-	var outData []db.GetListBookGroupRow
-	for i := 0; i < len(data) && len(outData) < int(limit); i++ {
-		if strings.Contains(data[i].Title, title) {
-			outData = append(outData, data[i])
-		}
-	}
-	fmt.Println("Output ", data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, outData)
-}
-
-/*localhost:8080/updateTitleBookGroup
-{
-    "new_title":"abcde",
-    "old_title":"title1"
-}
-*/
-func UpdateTitleBookGroup(c *gin.Context) {
-	var data db.UpdateTitleBookGroupParams
-	err := json.NewDecoder(c.Request.Body).Decode(&data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	queries := db.New(db.Pool())
-	err = queries.UpdateTitleBookGroup(context.Background(), data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Update title success",
+	bookGroups, err := queries.BookGroupsByTitle(ctx, db.BookGroupsByTitleParams{
+		Column1: sql.NullString{
+			String: title,
+			Valid:  title != "",
+		},
+		Offset: (page - 1) * limitBookGroup,
+		Limit:  limitBookGroup,
 	})
+	if err != nil {
+		stringErr := fmt.Sprintf("Get bookGroups by title failed: %s", err)
+		return nil, errors.New(stringErr)
+	}
+	var outData []*db.BookGroup
+	for i := 0; i < len(bookGroups); i++ {
+		outData = append(outData, &bookGroups[i])
+	}
+	return outData, err
 }
 
-/*
-localhost:8080/updateDescBookGroup
-{
-    "new_description":
-    {
-        "String":"description1",
-        "Valid":true
-    },
-    "title":"title1"
-}
-*/
-func UpdateDescBookGroup(c *gin.Context) {
-	var data db.UpdateDescBookGroupParams
-	err := json.NewDecoder(c.Request.Body).Decode(&data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
+//Chưa viết hàm test
+/*func BookGroupsByGenre(genreId, page int32) ([]*db.BookGroup, error) {
+	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err = queries.UpdateDescBookGroup(context.Background(), data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Update description success",
+	bookGroups, err := queries.BookGroupsByGenre(ctx, db.BookGroupsByGenreParams{
+		GenreID: genreId,
+		Offset:  (page - 1) * limitBookGroup,
+		Limit:   limitBookGroup,
 	})
+	if err != nil {
+		stringErr := fmt.Sprintf("Get bookGroups by genre failed: %s", err)
+		return nil, errors.New(stringErr)
+	}
+	var outData []*db.BookGroup
+	for i := 0; i < len(bookGroups); i++ {
+		outData = append(outData, &bookGroups[i])
+	}
+	return outData, err
 }
 
-/*
-localhost:8080/UpdateAuthorBookGroup
-{
-    "new_user_name":"usersname2",
-    "title":"title1"
-}
-*/
-func UpdateAuthorBookGroup(c *gin.Context) {
-	var data db.UpdateAuthorBookGroupParams
-	err := json.NewDecoder(c.Request.Body).Decode(&data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
+func BookGroupsByAuthor(authorId, page int32) ([]*db.BookGroup, error) {
+	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err = queries.UpdateAuthorBookGroup(context.Background(), data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Update author success",
+	bookGroups, err := queries.BookGroupsByAuthor(ctx, db.BookGroupsByAuthorParams{
+		BookAuthorID: authorId,
+		Offset:       (page - 1) * limitBookGroup,
+		Limit:        limitBookGroup,
 	})
-}
-
-/*localhost:8080/createBookGroup
-{
-    "title":"title4",
-    "description":
-    {
-        "String":"description4",
-        "Valid":true
-    },
-    "owner_name":"usersname2"
-}
-*/
-func CreateBookGroup(c *gin.Context) {
-	var data db.InsertBookGroupParams
-	err := json.NewDecoder(c.Request.Body).Decode(&data)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
+		stringErr := fmt.Sprintf("Get bookGroups by author failed: %s", err)
+		return nil, errors.New(stringErr)
 	}
+	var outData []*db.BookGroup
+	for i := 0; i < len(bookGroups); i++ {
+		outData = append(outData, &bookGroups[i])
+	}
+	return outData, err
+}*/
 
+func UpdateBookGroup(id int32, title string, description string, ownerId int32) error {
+	ctx := context.Background()
 	queries := db.New(db.Pool())
-	check, _ := queries.GetBookGroup(context.Background(), data.Title)
-	if check != (db.GetBookGroupRow{}) {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Title of book group already exist",
-		})
-		return
-	}
-
-	err = queries.InsertBookGroup(context.Background(), data)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Create book group success",
+	err := queries.UpdateBookGroup(ctx, db.UpdateBookGroupParams{
+		ID:    id,
+		Title: title,
+		Description: sql.NullString{
+			String: description,
+			Valid:  description != "",
+		},
+		Ownerid: ownerId,
 	})
-}
-
-/*localhost:8080/deleteBookGroup
-{
-    "title":"title4"
-}
-*/
-func DeleteBookGroup(c *gin.Context) {
-	var bookGroup db.BookGroup
-	err := json.NewDecoder(c.Request.Body).Decode(&bookGroup)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
+		stringErr := fmt.Sprintf("Update book group failed: %s", err)
+		return errors.New(stringErr)
 	}
+	return nil
+}
 
+func CreateBookGroup(title string, description string, Ownerid int32) (*db.BookGroup, error) {
+	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err = queries.DeleteBookGroup(context.Background(), bookGroup.Title)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Delete book group success",
+	outData, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
+		Title: title,
+		Description: sql.NullString{
+			String: description,
+			Valid:  description != "",
+		},
+		Ownerid: Ownerid,
 	})
+	if err != nil {
+		stringErr := fmt.Sprintf("Create book group failed: %s", err)
+		return nil, errors.New(stringErr)
+	}
+	return &outData, nil
 }
 
-func BookGroupRun(r *gin.Engine) {
-	r.GET("/getBookGroup", GetBookGroup)
-	r.GET("/getListBookGroup", GetListBookGroup)
-	r.GET("/searchBookGroup", SearchBookGroup)
-	r.PUT("/updateTitleBookGroup", UpdateTitleBookGroup)
-	r.PUT("/updateDescBookGroup", UpdateDescBookGroup)
-	r.PUT("/UpdateAuthorBookGroup", UpdateAuthorBookGroup)
-	r.POST("/createBookGroup", CreateBookGroup)
-	r.DELETE("/deleteBookGroup", DeleteBookGroup)
+func DeleteBookGroup(id int32) error {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	err := queries.DeleteBookGroup(ctx, id)
+	if err != nil {
+		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+	return nil
 }
