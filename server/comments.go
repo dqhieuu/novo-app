@@ -9,11 +9,20 @@ import (
 )
 
 func InsertComment(c *gin.Context) {
-	userId, _ := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	bookId, _ := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing user ID: %s\n", err)
+	}
+	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing book group ID: %s\n", err)
+	}
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
 	content := c.PostForm("content")
-	err := db.New(db.Pool()).AddComment(c, db.AddCommentParams{
+	err = db.New(db.Pool()).AddComment(c, db.AddCommentParams{
 		UserID:        int32(userId),
 		BookGroupID:   sql.NullInt32{
 			Int32: int32(bookId),
@@ -32,11 +41,20 @@ func InsertComment(c *gin.Context) {
 }
 
 func EditComment(c *gin.Context) {
-	userId, _ := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	bookId, _ := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing user ID: %s\n", err)
+	}
+	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing book group ID: %s\n", err)
+	}
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
 	content := c.PostForm("content")
-	err := db.New(db.Pool()).UpdateComment(c, db.UpdateCommentParams{
+	err = db.New(db.Pool()).UpdateComment(c, db.UpdateCommentParams{
 		UserID:        int32(userId),
 		BookGroupID:   sql.NullInt32{
 			Int32: int32(bookId),
@@ -55,10 +73,19 @@ func EditComment(c *gin.Context) {
 }
 
 func RemoveComment(c *gin.Context) {
-	userId, _ := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	bookId, _ := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	err := db.New(db.Pool()).DeleteComment(c, db.DeleteCommentParams{
+	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing user ID: %s\n", err)
+	}
+	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing book group ID: %s\n", err)
+	}
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
+	err = db.New(db.Pool()).DeleteComment(c, db.DeleteCommentParams{
 		UserID:        int32(userId),
 		BookGroupID:   sql.NullInt32{
 			Int32: int32(bookId),

@@ -9,7 +9,10 @@ import (
 )
 
 func UpsertView(c *gin.Context) {
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
 	viewDate, err := time.Parse("2006-01-02 15:04:05", c.PostForm("viewDate"))
 	if err != nil {
 		log.Fatalf("Error parsing date: %s\n", err)
@@ -26,7 +29,10 @@ func UpsertView(c *gin.Context) {
 }
 
 func ViewByWeek(c *gin.Context) {
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
 	totalViewByWeek, err := db.New(db.Pool()).GetViewByWeek(c, int32(chapterId))
 	if err != nil {
 		log.Fatalf("Error getting views by week: %s\n", err)
@@ -38,7 +44,10 @@ func ViewByWeek(c *gin.Context) {
 }
 
 func ViewByMonth(c *gin.Context) {
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
 	totalViewByMonth, err := db.New(db.Pool()).GetViewByMonth(c, int32(chapterId))
 	if err != nil {
 		log.Fatalf("Error getting views by month: %s\n", err)
@@ -50,7 +59,10 @@ func ViewByMonth(c *gin.Context) {
 }
 
 func ViewByYear(c *gin.Context) {
-	chapterId, _ := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing chapter ID: %s\n", err)
+	}
 	totalViewByYear, err := db.New(db.Pool()).GetViewByYear(c, int32(chapterId))
 	if err != nil {
 		log.Fatalf("Error getting views by year: %s\n", err)

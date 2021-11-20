@@ -32,6 +32,14 @@ type Image struct{
 	URL string `json:"url"`
 }
 
+type ResizeImageParams struct{
+	InType string `json:"in_type"`
+	OutType string `json:"out_type"`
+	OutDst string `json:"out_dst"`
+	Width int `json:"width"`
+	Height int `json:"height"`
+}
+
 func newFileName (fileType string) string {
 	var ext string
 	switch fileType {
@@ -51,7 +59,10 @@ func getImageType(f multipart.File) (string, error) {
 		return "", err
 	}
 	imageType := http.DetectContentType(buffer)
-	f.Seek(0, io.SeekStart)
+	_, err := f.Seek(0, io.SeekStart)
+	if err != nil {
+		return "", err
+	}
 	return imageType, nil
 }
 
@@ -82,10 +93,10 @@ func generateHashes(f io.Reader) (string, string, error) {
 	return hex.EncodeToString(md5Hash.Sum(nil)), hex.EncodeToString(sha1Hash.Sum(nil)), nil
 }
 
-func ResizeImage(f multipart.File, w int, h int, inType string, outType string, outDst string) {
+func ResizeImage(f multipart.File, params ResizeImageParams) error {
 	var srcImg image.Image
 	var err error
-	switch inType {
+	switch params.InType {
 	case "image/jpeg":
 		srcImg, err = jpeg.Decode(f)
 	case "image/png":
@@ -95,14 +106,17 @@ func ResizeImage(f multipart.File, w int, h int, inType string, outType string, 
 	}
 
 	if err != nil {
-		log.Fatalf("Error decoding image: %s\n", err)
+		return err
 	}
 
-	dstImg := imaging.Resize(srcImg, w, h, imaging.MitchellNetravali)
+	dstImg := imaging.Resize(srcImg, params.Width, params.Height, imaging.MitchellNetravali)
 
-	out, _ := os.Create(outDst)
+	out, err := os.Create(params.OutDst)
+	if err != nil {
+		return err
+	}
 
-	switch outType {
+	switch params.OutType {
 	case "image/jpeg":
 		err = jpeg.Encode(out, dstImg, nil)
 	case "image/png":
@@ -114,9 +128,13 @@ func ResizeImage(f multipart.File, w int, h int, inType string, outType string, 
 	}
 
 	if err != nil {
-		log.Fatalf("Error encoding image: %s\n", err)
+		return err
 	}
-	out.Close()
+	err = out.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func checkFileSize(c *gin.Context, size int64) bool {
@@ -149,8 +167,14 @@ func GetImageById(c *gin.Context) {
 }
 
 func ServeThumbnail(c *gin.Context) {
-	file, _ := c.FormFile("thumbnail")
-	fileData, _ := file.Open()
+	file, err := c.FormFile("thumbnail")
+	if err != nil {
+		log.Fatalf("Error getting thumbnail: %s\n", err)
+	}
+	fileData, err := file.Open()
+	if err != nil {
+		log.Fatalf("Error getting file stream: %s\n", err)
+	}
 	if checkFileSize(c, file.Size) {
 		return
 	}
@@ -167,8 +191,14 @@ func ServeThumbnail(c *gin.Context) {
 		return
 	}
 
-	width, _ := strconv.Atoi(c.PostForm("width"))
-	height, _ := strconv.Atoi(c.PostForm("height"))
+	width, err := strconv.Atoi(c.PostForm("width"))
+	if err != nil {
+		log.Fatalf("Error parsing width: %s\n", err)
+	}
+	height, err := strconv.Atoi(c.PostForm("height"))
+	if err != nil {
+		log.Fatalf("Error parsing height: %s\n", err)
+	}
 	outType := c.PostForm("outType")
 	thumbnailType := c.PostForm("thumbnailType")
 	description := c.PostForm("description")
@@ -181,14 +211,29 @@ func ServeThumbnail(c *gin.Context) {
 	filename := newFileName(outType)
 
 	dst := "server/images/" + thumbnailType + "/" + filename
-	ResizeImage(fileData, width, height, fileType, outType, dst)
-	thumbnailFile, _ := os.Open(dst)
+	err = ResizeImage(fileData, ResizeImageParams{
+		InType:  fileType,
+		OutType: outType,
+		OutDst:  dst,
+		Width:   width,
+		Height:  height,
+	})
+	if err != nil {
+		log.Fatalf("Error resizing image: %s\n", err)
+	}
+	thumbnailFile, err := os.Open(dst)
+	if err != nil {
+		log.Fatalf("Error opening destination path: %s\n", err)
+	}
 	
 	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
 	if err != nil {
 		log.Fatalf("Error generating hashes: %s\n", err)
 	}
-	thumbnailFile.Seek(0, io.SeekStart)
+	_, err = thumbnailFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return
+	}
 
 	insertId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
 		Md5:  md5Hash,
@@ -248,7 +293,10 @@ func CleanImages(c *gin.Context) {
 }
 
 func ReceiveImages(c *gin.Context) {
-	form, _ := c.MultipartForm()
+	form, err := c.MultipartForm()
+	if err != nil {
+		log.Fatalf("Error getting multipart form: %s\n", err)
+	}
 	description := c.PostForm("description")
 	files := form.File["upload[]"]
 
@@ -256,7 +304,10 @@ func ReceiveImages(c *gin.Context) {
 		if checkFileSize(c, file.Size) {
 			continue
 		}
-		fileData, _ := file.Open()
+		fileData, err := file.Open()
+		if err != nil {
+			log.Fatalf("Error getting file stream: %s\n", err)
+		}
 
 		//checking if file is an image (jpg, png, gif)
 		fileType, imgErr := getImageType(fileData)
@@ -276,7 +327,10 @@ func ReceiveImages(c *gin.Context) {
 		if err != nil {
 			log.Fatalf("Error generating hashes: %s\n", err)
 		}
-		fileData.Seek(0, io.SeekStart)
+		_, err = fileData.Seek(0, io.SeekStart)
+		if err != nil {
+			return
+		}
 
 		//check if the file exist in the database
 		peekRow, err := db.New(db.Pool()).GetImageBasedOnHash(c, db.GetImageBasedOnHashParams{

@@ -8,10 +8,15 @@ import (
 )
 
 func UpsertLikes(c *gin.Context) {
-	userId, _ := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	bookId, _ := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-
-	err := db.New(db.Pool()).UpsertLikes(c, db.UpsertLikesParams{
+	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing user ID: %s\n", err)
+	}
+	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing book group ID: %s\n", err)
+	}
+	err = db.New(db.Pool()).UpsertLikes(c, db.UpsertLikesParams{
 		UserID:      int32(userId),
 		BookGroupID: int32(bookId),
 	})
@@ -22,8 +27,14 @@ func UpsertLikes(c *gin.Context) {
 }
 
 func ReturnLikes(c *gin.Context) {
-	userId, _ := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	bookId, _ := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
+	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing user ID: %s\n", err)
+	}
+	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
+	if err != nil {
+		log.Fatalf("Error parsing book group ID: %s\n", err)
+	}
 
 	likes, err := db.New(db.Pool()).GetLikes(c, db.GetLikesParams{
 		UserID:      int32(userId),
