@@ -4,23 +4,18 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"log"
-	"strconv"
 	"time"
 )
 
-func UpsertView(c *gin.Context) {
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	viewDate, err := time.Parse("2006-01-02 15:04:05", c.PostForm("viewDate"))
-	if err != nil {
-		log.Fatalf("Error parsing date: %s\n", err)
-	}
+type InsertViewParams struct{
+	ChapterId int32
+	ViewDate time.Time
+}
 
-	err = db.New(db.Pool()).UpsertViewByDate(c, db.UpsertViewByDateParams{
-		BookChapterID: int32(chapterId),
-		ViewDate:      viewDate,
+func InsertView(c *gin.Context, params InsertViewParams) {
+	err := db.New(db.Pool()).UpsertViewByDate(c, db.UpsertViewByDateParams{
+		BookChapterID: params.ChapterId,
+		ViewDate:      params.ViewDate,
 	})
 
 	if err != nil {
@@ -28,12 +23,8 @@ func UpsertView(c *gin.Context) {
 	}
 }
 
-func ViewByWeek(c *gin.Context) {
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	totalViewByWeek, err := db.New(db.Pool()).GetViewByWeek(c, int32(chapterId))
+func ViewByWeek(c *gin.Context, chapterId int32) {
+	totalViewByWeek, err := db.New(db.Pool()).GetViewByWeek(c, chapterId)
 	if err != nil {
 		log.Fatalf("Error getting views by week: %s\n", err)
 	}
@@ -43,12 +34,8 @@ func ViewByWeek(c *gin.Context) {
 	})
 }
 
-func ViewByMonth(c *gin.Context) {
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	totalViewByMonth, err := db.New(db.Pool()).GetViewByMonth(c, int32(chapterId))
+func ViewByMonth(c *gin.Context, chapterId int32) {
+	totalViewByMonth, err := db.New(db.Pool()).GetViewByMonth(c, chapterId)
 	if err != nil {
 		log.Fatalf("Error getting views by month: %s\n", err)
 	}
@@ -58,12 +45,8 @@ func ViewByMonth(c *gin.Context) {
 	})
 }
 
-func ViewByYear(c *gin.Context) {
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	totalViewByYear, err := db.New(db.Pool()).GetViewByYear(c, int32(chapterId))
+func ViewByYear(c *gin.Context, chapterId int32) {
+	totalViewByYear, err := db.New(db.Pool()).GetViewByYear(c, chapterId)
 	if err != nil {
 		log.Fatalf("Error getting views by year: %s\n", err)
 	}

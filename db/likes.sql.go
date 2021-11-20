@@ -7,6 +7,23 @@ import (
 	"context"
 )
 
+const downsertLikes = `-- name: DownsertLikes :exec
+INSERT INTO book_group_likes(user_id, book_group_id, point)
+VALUES ($1, $2, 0)
+ON CONFLICT (user_id, book_group_id)
+DO UPDATE SET point = point - 1
+`
+
+type DownsertLikesParams struct {
+	UserID      int32 `json:"user_id"`
+	BookGroupID int32 `json:"book_group_id"`
+}
+
+func (q *Queries) DownsertLikes(ctx context.Context, arg DownsertLikesParams) error {
+	_, err := q.db.Exec(ctx, downsertLikes, arg.UserID, arg.BookGroupID)
+	return err
+}
+
 const getLikes = `-- name: GetLikes :one
 SELECT point FROM book_group_likes WHERE user_id = $1 AND book_group_id = $2
 `
@@ -24,8 +41,8 @@ func (q *Queries) GetLikes(ctx context.Context, arg GetLikesParams) (int32, erro
 }
 
 const upsertLikes = `-- name: UpsertLikes :exec
-INSERT INTO book_group_likes(user_id, book_group_id)
-VALUES ($1, $2)
+INSERT INTO book_group_likes(user_id, book_group_id, point)
+VALUES ($1, $2, 0)
 ON CONFLICT (user_id, book_group_id)
 DO UPDATE SET point = point + 1
 `

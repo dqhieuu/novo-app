@@ -15,8 +15,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
-	"strconv"
-
 	//"encoding/json"
 	//"github.com/dqhieuu/novo-app/db"
 	"github.com/disintegration/imaging"
@@ -26,19 +24,6 @@ import (
 )
 
 const MaxSize = 1024 * 1024 * 10
-type Image struct{
-	Id int32 `json:"id"`
-	Filename string `json:"filename"`
-	URL string `json:"url"`
-}
-
-type ResizeImageParams struct{
-	InType string `json:"in_type"`
-	OutType string `json:"out_type"`
-	OutDst string `json:"out_dst"`
-	Width int `json:"width"`
-	Height int `json:"height"`
-}
 
 func newFileName (fileType string) string {
 	var ext string
@@ -137,45 +122,35 @@ func ResizeImage(f multipart.File, params ResizeImageParams) error {
 	return nil
 }
 
-func checkFileSize(c *gin.Context, size int64) bool {
+func checkFileSize(size int64) bool {
 	if size > MaxSize {
-		c.JSON(413, gin.H{
-			"message": "File too large",
-		})
 		return true
 	}
 	return false
 }
 
-func GetImageById(c *gin.Context) {
-	param, err := strconv.ParseInt(c.Param("imageId"), 10, 32)
-
-	if err != nil {
-		log.Fatalf("Error parsing image id: %s\n", err)
-	}
-
-	imageId := int32(param)
+func GetImageById(c *gin.Context, imageId int32) {
 	requestImg, err := db.New(db.Pool()).GetImageBasedOnId(c, imageId)
 	switch {
 	case err == sql.ErrNoRows || requestImg.Md5 == "" || requestImg.Sha1 == "":
-		c.JSON(404, gin.H{
-			"message": "Image not found",
-		})
+		//c.JSON(404, gin.H{
+		//	"message": "Image not found",
+		//})
 	default:
-		c.File(requestImg.Path)
+		//c.File(requestImg.Path)
 	}
 }
 
-func ServeThumbnail(c *gin.Context) {
-	file, err := c.FormFile("thumbnail")
-	if err != nil {
-		log.Fatalf("Error getting thumbnail: %s\n", err)
-	}
+func ServeThumbnail(c *gin.Context, params ServeThumnailParams) {
+	file := params.File
 	fileData, err := file.Open()
 	if err != nil {
 		log.Fatalf("Error getting file stream: %s\n", err)
 	}
-	if checkFileSize(c, file.Size) {
+	if checkFileSize(file.Size) {
+		//c.JSON(413, gin.H{
+		//	"message": "File too large",
+		//})
 		return
 	}
 
@@ -185,47 +160,34 @@ func ServeThumbnail(c *gin.Context) {
 	}
 	ok := detectImageType(fileType)
 	if !ok {
-		c.JSON(415, gin.H{
-			"message": "Unsupported media type",
-		})
+		//c.JSON(415, gin.H{
+		//	"message": "Unsupported media type",
+		//})
 		return
 	}
 
-	width, err := strconv.Atoi(c.PostForm("width"))
-	if err != nil {
-		log.Fatalf("Error parsing width: %s\n", err)
-	}
-	height, err := strconv.Atoi(c.PostForm("height"))
-	if err != nil {
-		log.Fatalf("Error parsing height: %s\n", err)
-	}
-	outType := c.PostForm("outType")
-	thumbnailType := c.PostForm("thumbnailType")
-	description := c.PostForm("description")
-
-	switch outType {
+	//default output type is png
+	switch params.ResizeParams.OutType {
 	case "image/jpeg", "image/png", "image/gif":
 	default:
-		outType = "image/png"
+		params.ResizeParams.OutType = "image/png"
 	}
-	filename := newFileName(outType)
 
-	dst := "server/images/" + thumbnailType + "/" + filename
-	err = ResizeImage(fileData, ResizeImageParams{
-		InType:  fileType,
-		OutType: outType,
-		OutDst:  dst,
-		Width:   width,
-		Height:  height,
-	})
+	//resize the image and save it to dst
+	filename := newFileName(params.ResizeParams.OutType)
+	dst := "server/images/" + params.ThumbnailType + "/" + filename
+	err = ResizeImage(fileData, params.ResizeParams)
 	if err != nil {
 		log.Fatalf("Error resizing image: %s\n", err)
 	}
+
+	// open the file again to calculate hashes
 	thumbnailFile, err := os.Open(dst)
 	if err != nil {
 		log.Fatalf("Error opening destination path: %s\n", err)
 	}
 	
+	// calculate hashes
 	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
 	if err != nil {
 		log.Fatalf("Error generating hashes: %s\n", err)
@@ -235,6 +197,7 @@ func ServeThumbnail(c *gin.Context) {
 		return
 	}
 
+	//inserting the image into the database
 	insertId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
 		Md5:  md5Hash,
 		Sha1: sha1Hash,
@@ -244,7 +207,7 @@ func ServeThumbnail(c *gin.Context) {
 			Valid:  true,
 		},
 		Description: sql.NullString{
-			String: description,
+			String: params.Description,
 			Valid:  true,
 		},
 	})
@@ -252,21 +215,17 @@ func ServeThumbnail(c *gin.Context) {
 		log.Fatalf("Error inserting image: %s\n", err)
 	}
 
+	//delete the temp image due to trigger
 	err = db.New(db.Pool()).DeleteTempImage(c, insertId)
 	if err != nil {
 		log.Fatalf("Error deleting temp image: %s\n", err)
 	}
 	
-	c.File(dst)
+	//send back the file for front-end uses
+	//c.File(dst)
 }
 
-func SubmitImages(c *gin.Context) {
-	var submitImages []Image
-
-	if err := c.BindJSON(&submitImages); err != nil {
-		log.Fatalf("Error parsing JSON: %s\n", err)
-	}
-
+func SubmitImages(c *gin.Context, submitImages []Image) {
 	for _, submit := range submitImages {
 		err := db.New(db.Pool()).DeleteTempImage(c, submit.Id)
 		if err != nil {
@@ -274,9 +233,9 @@ func SubmitImages(c *gin.Context) {
 		}
 	}
 
-	c.JSON(200, gin.H{
-		"message": "Submit successful",
-	})
+	//c.JSON(200, gin.H{
+	//	"message": "Submit successful",
+	//})
 }
 
 func CleanImages(c *gin.Context) {
@@ -292,16 +251,14 @@ func CleanImages(c *gin.Context) {
 	}
 }
 
-func ReceiveImages(c *gin.Context) {
-	form, err := c.MultipartForm()
-	if err != nil {
-		log.Fatalf("Error getting multipart form: %s\n", err)
-	}
-	description := c.PostForm("description")
-	files := form.File["upload[]"]
+func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
+	files := params.Files
 
 	for _, file := range files {
-		if checkFileSize(c, file.Size) {
+		if checkFileSize(file.Size) {
+			//c.JSON(413, gin.H{
+			//	"message": "File too large",
+			//})
 			continue
 		}
 		fileData, err := file.Open()
@@ -316,9 +273,9 @@ func ReceiveImages(c *gin.Context) {
 		}
 		ok := detectImageType(fileType)
 		if !ok {
-			c.JSON(415, gin.H{
-				"message": "Unsupported media type",
-			})
+			//c.JSON(415, gin.H{
+			//	"message": "Unsupported media type",
+			//})
 			continue
 		}
 
@@ -349,8 +306,8 @@ func ReceiveImages(c *gin.Context) {
 				log.Fatalf("Error saving file: %s\n", err)
 			}
 
-			//inserting image to the database
-			imageId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
+			//inserting image to the database (_ is the imageId)
+			_, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
 				Md5:        md5Hash,
 				Sha1:        sha1Hash,
 				Path:        dst,
@@ -359,7 +316,7 @@ func ReceiveImages(c *gin.Context) {
 					Valid:  true,
 				},
 				Description: sql.NullString{
-					String: description,
+					String: params.Description,
 					Valid:  true,
 				},
 			})
@@ -368,17 +325,17 @@ func ReceiveImages(c *gin.Context) {
 			}
 
 			//building the return message (may discard some field)
-			c.JSON(200, Image{
-				Id: imageId,
-				Filename: filename,
-				URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
-			})
+			//c.JSON(200, Image{
+			//	Id: imageId,
+			//	Filename: filename,
+			//	URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
+			//})
 		default:
-			c.JSON(400, gin.H{
-				"message": "File already exist",
-				"Id": peekRow.ID,
-				"URL": c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
-			})
+			//c.JSON(400, gin.H{
+			//	"message": "File already exist",
+			//	"Id": peekRow.ID,
+			//	"URL": c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
+			//})
 		}
 	}
 }

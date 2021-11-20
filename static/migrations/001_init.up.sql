@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS book_group_arts
 
 CREATE TABLE IF NOT EXISTS book_group_likes
 (
-    point         int NOT NULL DEFAULT 1,
+    point         int NOT NULL,
     user_id       int NOT NULL,
     book_group_id int NOT NULL,
     PRIMARY KEY (user_id, book_group_id),

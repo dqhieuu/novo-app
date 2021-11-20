@@ -24,34 +24,34 @@ func Run() {
 	r.GET("/login", authMiddleware.LoginHandler)
 
 
-	imageHandler := r.Group("/images")
-	{
-		imageHandler.POST("/upload", ReceiveImages)
-		imageHandler.POST("/submit", SubmitImages)
-		imageHandler.POST("/thumbnail", ServeThumbnail)
-		imageHandler.GET("/:imageId", GetImageById)
-	}
+	//imageHandler := r.Group("/images")
+	//{
+	//	imageHandler.POST("/upload", ReceiveImages)
+	//	imageHandler.POST("/submit", SubmitImages)
+	//	imageHandler.POST("/thumbnail", ServeThumbnail)
+	//	imageHandler.GET("/:imageId", GetImageById)
+	//}
+	//
+	//commentHandler := r.Group("/comments")
+	//{
+	//	commentHandler.POST("/add", InsertComment)
+	//	commentHandler.POST("/edit", EditComment)
+	//	commentHandler.DELETE("/delete", RemoveComment)
+	//}
+	//
+	//viewsHandler := r.Group("/views")
+	//{
+	//	viewsHandler.POST("", InsertView)
+	//	viewsHandler.GET("/week", ViewByWeek)
+	//	viewsHandler.GET("/month", ViewByMonth)
+	//	viewsHandler.GET("/year", ViewByYear)
+	//}
+	//
+	//
+	//r.POST("/likes", InsertLikes)
+	//r.POST("/dislikes", InsertDisLikes)
+	//r.GET("/likes", ReturnLikes)
 
-	commentHandler := r.Group("/comments")
-	{
-		commentHandler.POST("/add", InsertComment)
-		commentHandler.POST("/edit", EditComment)
-		commentHandler.DELETE("/delete", RemoveComment)
-	}
-
-	viewsHandler := r.Group("/views")
-	{
-		viewsHandler.POST("", UpsertView)
-		viewsHandler.GET("/week", ViewByWeek)
-		viewsHandler.GET("/month", ViewByMonth)
-		viewsHandler.GET("/year", ViewByYear)
-	}
-
-	likesHandler := r.Group("/likes")
-	{
-		likesHandler.POST("", UpsertLikes)
-		likesHandler.GET("", ReturnLikes)
-	}
 
 	r.GET("/oauth/google", GoogleOauthRedirect)
 

@@ -11,8 +11,8 @@ import (
 const getViewByMonth = `-- name: GetViewByMonth :one
 SELECT SUM(count) as viewByMonth FROM book_chapter_views
 WHERE book_chapter_id = $1
-AND (DATE_PART('year', now()::date) - DATE_PART('year', view_date::date)) * 12 +
-    (DATE_PART('month', now()::date) - DATE_PART('month', view_date::date)) <= 1
+AND view_date >= date_trunc('month', now() - interval '1 month')
+AND view_date < date_trunc('month', now())
 `
 
 func (q *Queries) GetViewByMonth(ctx context.Context, bookChapterID int32) (int64, error) {
@@ -25,7 +25,8 @@ func (q *Queries) GetViewByMonth(ctx context.Context, bookChapterID int32) (int6
 const getViewByWeek = `-- name: GetViewByWeek :one
 SELECT SUM(count) as viewByWeek FROM book_chapter_views
 WHERE book_chapter_id = $1
-AND TRUNC(DATE_PART('day', now()::timestamp - view_date::timestamp)/7) <= 1
+  AND view_date >= date_trunc('week', now() - interval '1 week')
+  AND view_date < date_trunc('week', now())
 `
 
 func (q *Queries) GetViewByWeek(ctx context.Context, bookChapterID int32) (int64, error) {
@@ -38,7 +39,8 @@ func (q *Queries) GetViewByWeek(ctx context.Context, bookChapterID int32) (int64
 const getViewByYear = `-- name: GetViewByYear :one
 SELECT SUM(count) as viewByYear FROM book_chapter_views
 WHERE book_chapter_id = $1
-AND DATE_PART('year', now()::date) - DATE_PART('year', view_date::date) <= 1
+  AND view_date >= date_trunc('year', now() - interval '1 year')
+  AND view_date < date_trunc('year', now())
 `
 
 func (q *Queries) GetViewByYear(ctx context.Context, bookChapterID int32) (int64, error) {

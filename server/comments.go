@@ -5,34 +5,27 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"log"
-	"strconv"
 )
 
-func InsertComment(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing user ID: %s\n", err)
-	}
-	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing book group ID: %s\n", err)
-	}
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	content := c.PostForm("content")
-	err = db.New(db.Pool()).AddComment(c, db.AddCommentParams{
-		UserID:        int32(userId),
+type CommentParams struct{
+	UserId int32
+	BookId int32
+	ChapterId int32
+	Content string
+}
+
+func InsertComment(c *gin.Context, params CommentParams) {
+	err := db.New(db.Pool()).AddComment(c, db.AddCommentParams{
+		UserID:        params.UserId,
 		BookGroupID:   sql.NullInt32{
-			Int32: int32(bookId),
+			Int32: params.BookId,
 			Valid: true,
 		},
 		BookChapterID: sql.NullInt32{
-			Int32: int32(chapterId),
+			Int32: params.ChapterId,
 			Valid: true,
 		},
-		Content:       content,
+		Content:       params.Content,
 	})
 
 	if err != nil {
@@ -40,31 +33,18 @@ func InsertComment(c *gin.Context) {
 	}
 }
 
-func EditComment(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing user ID: %s\n", err)
-	}
-	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing book group ID: %s\n", err)
-	}
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	content := c.PostForm("content")
-	err = db.New(db.Pool()).UpdateComment(c, db.UpdateCommentParams{
-		UserID:        int32(userId),
+func EditComment(c *gin.Context, params CommentParams) {
+	err := db.New(db.Pool()).UpdateComment(c, db.UpdateCommentParams{
+		UserID:        params.UserId,
 		BookGroupID:   sql.NullInt32{
-			Int32: int32(bookId),
+			Int32: params.BookId,
 			Valid: true,
 		},
 		BookChapterID: sql.NullInt32{
-			Int32: int32(chapterId),
+			Int32: params.ChapterId,
 			Valid: true,
 		},
-		Content:       content,
+		Content:       params.Content,
 	})
 
 	if err != nil {
@@ -72,27 +52,15 @@ func EditComment(c *gin.Context) {
 	}
 }
 
-func RemoveComment(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.PostForm("userId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing user ID: %s\n", err)
-	}
-	bookId, err := strconv.ParseInt(c.PostForm("bookId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing book group ID: %s\n", err)
-	}
-	chapterId, err := strconv.ParseInt(c.PostForm("chapterId"), 10, 32)
-	if err != nil {
-		log.Fatalf("Error parsing chapter ID: %s\n", err)
-	}
-	err = db.New(db.Pool()).DeleteComment(c, db.DeleteCommentParams{
-		UserID:        int32(userId),
+func RemoveComment(c *gin.Context, params CommentParams) {
+	err := db.New(db.Pool()).DeleteComment(c, db.DeleteCommentParams{
+		UserID:        params.UserId,
 		BookGroupID:   sql.NullInt32{
-			Int32: int32(bookId),
+			Int32: params.BookId,
 			Valid: true,
 		},
 		BookChapterID: sql.NullInt32{
-			Int32: int32(chapterId),
+			Int32: params.ChapterId,
 			Valid: true,
 		},
 	})
