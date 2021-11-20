@@ -32,6 +32,27 @@ func Run() {
 		imageHandler.GET("/:imageId", GetImageById)
 	}
 
+	commentHandler := r.Group("/comments")
+	{
+		commentHandler.POST("/add", InsertComment)
+		commentHandler.POST("/edit", EditComment)
+		commentHandler.DELETE("/delete", RemoveComment)
+	}
+
+	viewsHandler := r.Group("/views")
+	{
+		viewsHandler.POST("", UpsertView)
+		viewsHandler.GET("/week", ViewByWeek)
+		viewsHandler.GET("/month", ViewByMonth)
+		viewsHandler.GET("/year", ViewByYear)
+	}
+
+	likesHandler := r.Group("/likes")
+	{
+		likesHandler.POST("", UpsertLikes)
+		likesHandler.GET("", ReturnLikes)
+	}
+
 	r.GET("/oauth/google", GoogleOauthRedirect)
 
 	r.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {

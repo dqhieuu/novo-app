@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS book_group_arts
 
 CREATE TABLE IF NOT EXISTS book_group_likes
 (
-    point         int NOT NULL,
+    point         int NOT NULL DEFAULT 1,
     user_id       int NOT NULL,
     book_group_id int NOT NULL,
     PRIMARY KEY (user_id, book_group_id),
@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
 
 CREATE TABLE IF NOT EXISTS book_chapter_views
 (
-    count           int,
+    count           int DEFAULT 1,
     view_date       date NOT NULL DEFAULT now(),
     book_chapter_id int  NOT NULL,
     CONSTRAINT fk_book_chapter_views_book_chapters
