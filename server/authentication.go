@@ -15,8 +15,8 @@ type UserClaims struct {
 }
 
 type passwordLogin struct {
-	UsernameOrEmail string `form:"u" json:"u" binding:"required"`
-	Password        string `form:"pw" json:"pw" binding:"required"`
+	UsernameOrEmail string `form:"username_or_email" json:"username_or_email" binding:"required"`
+	Password        string `form:"password" json:"password" binding:"required"`
 }
 
 type OauthLogin struct {

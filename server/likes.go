@@ -6,11 +6,12 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 )
 
-type LikesParams struct{
+type UserLikeParams struct {
 	UserId int32
 	BookId int32
 }
-func InsertLikes(params LikesParams) error {
+
+func LikeBookGroup(params UserLikeParams) error {
 	err := db.New(db.Pool()).Likes(context.Background(), db.LikesParams{
 		UserID:      params.UserId,
 		BookGroupID: params.BookId,
@@ -22,7 +23,7 @@ func InsertLikes(params LikesParams) error {
 	return nil
 }
 
-func InsertDisLikes(params LikesParams) error {
+func DislikeBookGroup(params UserLikeParams) error {
 	err := db.New(db.Pool()).DisLikes(context.Background(), db.DisLikesParams{
 		UserID:      params.UserId,
 		BookGroupID: params.BookId,
@@ -34,7 +35,7 @@ func InsertDisLikes(params LikesParams) error {
 	return nil
 }
 
-func InsertUnLikes(params LikesParams) error {
+func UnlikeBookGroup(params UserLikeParams) error {
 	err := db.New(db.Pool()).Unlikes(context.Background(), db.UnlikesParams{
 		UserID:      params.UserId,
 		BookGroupID: params.BookId,
@@ -46,15 +47,15 @@ func InsertUnLikes(params LikesParams) error {
 	return nil
 }
 
-func ReturnLikes(bookId int32) (int64, error) {
-	likes, err := db.New(db.Pool()).GetLikes(context.Background(), bookId)
-
-	if err != nil {
-		return 0, errors.New("error getting total likes: " + err.Error())
-	}
-
-	//c.JSON(200, gin.H{
-	//	"likes": likes,
-	//})
-	return likes, nil
-}
+//func ReturnLikes(bookId int32) (int64, error) {
+//	likes, err := db.New(db.Pool()).GetLikes(context.Background(), bookId)
+//
+//	if err != nil {
+//		return 0, errors.New("error getting total likes: " + err.Error())
+//	}
+//
+//	//c.JSON(200, gin.H{
+//	//	"likes": likes,
+//	//})
+//	return likes, nil
+//}

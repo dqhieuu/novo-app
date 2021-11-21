@@ -4,31 +4,10 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"time"
 
 	"github.com/jackc/pgtype"
 )
-
-type PermissionScope string
-
-const (
-	PermissionScopeNone PermissionScope = "none"
-	PermissionScopeSelf PermissionScope = "self"
-	PermissionScopeAll  PermissionScope = "all"
-)
-
-func (e *PermissionScope) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = PermissionScope(s)
-	case string:
-		*e = PermissionScope(s)
-	default:
-		return fmt.Errorf("unsupported scan type for PermissionScope: %T", src)
-	}
-	return nil
-}
 
 type BookAuthor struct {
 	ID            int32          `json:"id"`
@@ -118,17 +97,15 @@ type Image struct {
 }
 
 type Role struct {
-	ID                   int32           `json:"id"`
-	Name                 string          `json:"name"`
-	Description          sql.NullString  `json:"description"`
-	CanModifyRole        bool            `json:"can_modify_role"`
-	CanModifyBookAuthor  bool            `json:"can_modify_book_author"`
-	CanModifyBookGenre   bool            `json:"can_modify_book_genre"`
-	CanModifyBookGroup   PermissionScope `json:"can_modify_book_group"`
-	CanModifyBookChapter PermissionScope `json:"can_modify_book_chapter"`
-	CanCreateComment     bool            `json:"can_create_comment"`
-	CanUpdateComment     PermissionScope `json:"can_update_comment"`
-	CanDeleteComment     PermissionScope `json:"can_delete_comment"`
+	ID          int32          `json:"id"`
+	Name        string         `json:"name"`
+	Description sql.NullString `json:"description"`
+}
+
+type RoleAction struct {
+	Module string `json:"module"`
+	Action string `json:"action"`
+	RoleID int32  `json:"role_id"`
 }
 
 type TempImage struct {

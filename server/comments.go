@@ -7,17 +7,17 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 )
 
-type CommentParams struct{
-	UserId int32
-	BookId int32
+type CommentParams struct {
+	UserId    int32
+	BookId    int32
 	ChapterId int32
-	Content string
+	Content   string
 }
 
 func InsertComment(params CommentParams) error {
 	err := db.New(db.Pool()).AddComment(context.Background(), db.AddCommentParams{
-		UserID:        params.UserId,
-		BookGroupID:   sql.NullInt32{
+		UserID: params.UserId,
+		BookGroupID: sql.NullInt32{
 			Int32: params.BookId,
 			Valid: true,
 		},
@@ -25,7 +25,7 @@ func InsertComment(params CommentParams) error {
 			Int32: params.ChapterId,
 			Valid: true,
 		},
-		Content:       params.Content,
+		Content: params.Content,
 	})
 
 	if err != nil {
@@ -36,8 +36,8 @@ func InsertComment(params CommentParams) error {
 
 func EditComment(commentId int32, content string) error {
 	err := db.New(db.Pool()).UpdateComment(context.Background(), db.UpdateCommentParams{
-		ID: commentId,
-		Content:       content,
+		ID:      commentId,
+		Content: content,
 	})
 
 	if err != nil {
@@ -53,4 +53,12 @@ func RemoveComment(commentId int32) error {
 		return errors.New("error deleting comment: " + err.Error())
 	}
 	return nil
+}
+
+func CommentsByBookGroup(bookGroupId int32, page int) {
+
+}
+
+func CommentsByBookChapter(bookChapterId int32, page int) {
+
 }

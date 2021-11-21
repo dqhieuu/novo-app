@@ -29,7 +29,7 @@ import (
 
 const MaxSize = 1024 * 1024 * 10
 
-func newFileName (fileType string) string {
+func fileName(fileType string) string {
 	var ext string
 	switch fileType {
 	case "image/jpeg":
@@ -55,7 +55,7 @@ func getImageType(f multipart.File) (string, error) {
 	return imageType, nil
 }
 
-func detectImageType(imgType string) bool {
+func validImageType(imgType string) bool {
 	switch imgType {
 	case "image/jpeg", "image/png", "image/gif":
 		return true
@@ -63,6 +63,7 @@ func detectImageType(imgType string) bool {
 	return false
 }
 
+//generateHashes generates md5 and sha1 hashes from an input file stream simultaneously
 func generateHashes(f io.Reader) (string, string, error) {
 	var sha1Stream bytes.Buffer
 	md5Stream := io.TeeReader(f, &sha1Stream)
@@ -126,13 +127,6 @@ func ResizeImage(f multipart.File, params ResizeImageParams) error {
 	return nil
 }
 
-func checkFileSize(size int64) bool {
-	if size > MaxSize {
-		return true
-	}
-	return false
-}
-
 func GetImageById(imageId int32) error {
 	requestImg, err := db.New(db.Pool()).GetImageBasedOnId(context.Background(), imageId)
 	switch {
@@ -153,7 +147,7 @@ func ServeThumbnail(params ServeThumnailParams) error {
 	if err != nil {
 		return errors.New("error opening file stream: " + err.Error())
 	}
-	if checkFileSize(file.Size) {
+	if file.Size > MaxSize {
 		//c.JSON(413, gin.H{
 		//	"message": "File too large",
 		//})
@@ -164,7 +158,7 @@ func ServeThumbnail(params ServeThumnailParams) error {
 	if err != nil {
 		return errors.New("error getting image type: " + err.Error())
 	}
-	ok := detectImageType(fileType)
+	ok := validImageType(fileType)
 	if !ok {
 		//c.JSON(415, gin.H{
 		//	"message": "Unsupported media type",
@@ -180,7 +174,7 @@ func ServeThumbnail(params ServeThumnailParams) error {
 	}
 
 	//resize the image and save it to dst
-	filename := newFileName(params.ResizeParams.OutType)
+	filename := fileName(params.ResizeParams.OutType)
 	dst := "server/images/" + params.ThumbnailType + "/" + filename
 	err = ResizeImage(fileData, params.ResizeParams)
 	if err != nil {
@@ -192,7 +186,7 @@ func ServeThumbnail(params ServeThumnailParams) error {
 	if err != nil {
 		return errors.New("error creating destination path: " + err.Error())
 	}
-	
+
 	// calculate hashes
 	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
 	if err != nil {
@@ -204,7 +198,9 @@ func ServeThumbnail(params ServeThumnailParams) error {
 	}
 
 	//inserting the image into the database
-	insertId, err := db.New(db.Pool()).InsertImage(context.Background(), db.InsertImageParams{
+	queries := db.New(db.Pool())
+	ctx := context.Background()
+	insertId, err := queries.InsertImage(ctx, db.InsertImageParams{
 		Md5:  md5Hash,
 		Sha1: sha1Hash,
 		Path: dst,
@@ -222,11 +218,11 @@ func ServeThumbnail(params ServeThumnailParams) error {
 	}
 
 	//delete the temp image due to trigger
-	err = db.New(db.Pool()).DeleteTempImage(context.Background(), insertId)
+	err = queries.DeleteTempImage(ctx, insertId)
 	if err != nil {
 		return errors.New("error deleting temp image: " + err.Error())
 	}
-	
+
 	//send back the file for front-end uses
 	//c.File(dst)
 	return nil
@@ -246,13 +242,15 @@ func SubmitImages(submitImages []Image) error {
 	return nil
 }
 
-func CleanImages() error {
-	deletedRows, err := db.New(db.Pool()).ClearTempImages(context.Background())
+func CleanTempImages() error {
+	queries := db.New(db.Pool())
+	ctx := context.Background()
+	deletedRows, err := queries.ClearTempImages(ctx)
 	if err != nil {
 		return errors.New("error clearing temp images: " + err.Error())
 	}
 	for _, row := range deletedRows {
-		err = db.New(db.Pool()).DeleteImage(context.Background(), row)
+		err = queries.DeleteImage(ctx, row)
 		if err != nil {
 			return errors.New("error deleting image: " + err.Error())
 		}
@@ -264,7 +262,7 @@ func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
 	files := params.Files
 
 	for _, file := range files {
-		if checkFileSize(file.Size) {
+		if file.Size > MaxSize {
 			c.JSON(413, gin.H{
 				"message": "File too large",
 			})
@@ -282,8 +280,7 @@ func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
 			log.Printf("Error getting image type: %s\n", imgErr)
 			continue
 		}
-		ok := detectImageType(fileType)
-		if !ok {
+		if !validImageType(fileType) {
 			c.JSON(415, gin.H{
 				"message": "Unsupported media type",
 			})
@@ -311,7 +308,7 @@ func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
 		switch {
 		case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
 			//saving file to the server
-			filename := newFileName(fileType)
+			filename := fileName(fileType)
 			dst := "server/images/book_contents/" + filename
 
 			err = c.SaveUploadedFile(file, dst)
@@ -322,10 +319,10 @@ func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
 
 			//inserting image to the database
 			imageId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
-				Md5:        md5Hash,
-				Sha1:        sha1Hash,
-				Path:        dst,
-				Name:        sql.NullString{
+				Md5:  md5Hash,
+				Sha1: sha1Hash,
+				Path: dst,
+				Name: sql.NullString{
 					String: filename,
 					Valid:  true,
 				},
@@ -341,17 +338,16 @@ func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
 
 			//building the return message (may discard some field)
 			c.JSON(200, Image{
-				Id: imageId,
+				Id:       imageId,
 				Filename: filename,
-				URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
+				URL:      c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
 			})
 		default:
 			c.JSON(400, gin.H{
 				"message": "File already exist",
-				"Id": peekRow.ID,
-				"URL": c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
+				"Id":      peekRow.ID,
+				"URL":     c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
 			})
 		}
 	}
 }
-

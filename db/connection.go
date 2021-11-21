@@ -30,8 +30,8 @@ func validateVersion(ctx context.Context) {
 		panic("Dirty database. Not good. Consider fixing it?")
 	}
 
-	if dbVersion != DbVersion {
-		panic(fmt.Sprintf("Incorrect database version (Current: %d != Supported: %d)", dbVersion, DbVersion))
+	if dbVersion != CodeVersion {
+		panic(fmt.Sprintf("Incorrect database version (Current: %d != Supported: %d)", dbVersion, CodeVersion))
 	}
 }
 

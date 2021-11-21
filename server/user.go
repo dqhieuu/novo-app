@@ -93,11 +93,11 @@ func DeleteAccount(username string) error {
 }
 
 func RegisterAccount(username, password, email string) (*db.User, error) {
-	return CreateAccount(username, password, email, "user")
+	return CreateAccount(username, password, email, "member")
 }
 
 func RegisterOauthAccount(email string) (*db.User, error) {
-	return CreateOauthAccount(email, "user")
+	return CreateOauthAccount(email, "member")
 }
 
 func UserByLoginInfo(usernameOrEmail string, password string) (*db.User, error) {
