@@ -27,7 +27,7 @@ func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
 	bookGroups, err := queries.BookGroupsByTitle(ctx, db.BookGroupsByTitleParams{
 		Column1: sql.NullString{
 			String: title,
-			Valid:  title != "",
+			Valid:  true, // chuỗi rỗng sẽ liệt kê tất cả
 		},
 		Offset: (page - 1) * limitBookGroup,
 		Limit:  limitBookGroup,
