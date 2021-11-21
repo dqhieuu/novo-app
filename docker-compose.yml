@@ -10,9 +10,9 @@ services:
     ports:
       - "7001:8080"
     volumes:
-      - /e/server/book_contents:/app/server/book_contents
-      - /e/server/user_avatars:/app/server/user_avatars
-      - /e/server/cover_arts:/app/server/cover_arts
+      - /e/server/book_contents:/app/server/images/book_contents
+      - /e/server/user_avatars:/app/server/images/user_avatars
+      - /e/server/cover_arts:/app/server/images/cover_arts
   database:
     image: postgres:14.0
     restart: always

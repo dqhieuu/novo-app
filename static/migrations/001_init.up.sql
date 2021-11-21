@@ -203,7 +203,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
 
 CREATE TABLE IF NOT EXISTS book_chapter_views
 (
-    count           int,
+    count           int DEFAULT 1,
     view_date       date NOT NULL DEFAULT now(),
     book_chapter_id int  NOT NULL,
     CONSTRAINT fk_book_chapter_views_book_chapters
@@ -213,10 +213,12 @@ CREATE TABLE IF NOT EXISTS book_chapter_views
 
 CREATE TABLE IF NOT EXISTS book_comments
 (
+    id           int GENERATED ALWAYS AS IDENTITY,
     content         text NOT NULL,
     user_id         int  NOT NULL,
     book_group_id   int,
     book_chapter_id int,
+    Primary Key (id),
     CONSTRAINT fk_book_comments_users
         FOREIGN KEY (user_id)
             REFERENCES users (id),

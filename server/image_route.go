@@ -2,34 +2,34 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/hex"
-	"github.com/disintegration/imaging"
+	"errors"
 	"github.com/dqhieuu/novo-app/db"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"image"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"strconv"
+
+	//"encoding/json"
+	//"github.com/dqhieuu/novo-app/db"
+	"github.com/disintegration/imaging"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"log"
 )
 
-const MaxSize = 1024 * 1024 * 10 // 10 MB
-type Image struct {
-	Id       int32  `json:"id"`
-	Filename string `json:"filename"`
-	URL      string `json:"url"`
-}
+const MaxSize = 1024 * 1024 * 10
 
-func newFileName(fileType string) string {
+func newFileName (fileType string) string {
 	var ext string
 	switch fileType {
 	case "image/jpeg":
@@ -42,20 +42,20 @@ func newFileName(fileType string) string {
 	return uuid.NewString() + ext
 }
 
-func getImageType(fileStream multipart.File) (string, error) {
+func getImageType(f multipart.File) (string, error) {
 	buffer := make([]byte, 512)
-	if _, err := fileStream.Read(buffer); err != nil {
-		return "", err
-	}
-	if _, err := fileStream.Seek(0, io.SeekStart); err != nil {
+	if _, err := f.Read(buffer); err != nil {
 		return "", err
 	}
 	imageType := http.DetectContentType(buffer)
-
+	_, err := f.Seek(0, io.SeekStart)
+	if err != nil {
+		return "", err
+	}
 	return imageType, nil
 }
 
-func validImageType(imgType string) bool {
+func detectImageType(imgType string) bool {
 	switch imgType {
 	case "image/jpeg", "image/png", "image/gif":
 		return true
@@ -63,9 +63,9 @@ func validImageType(imgType string) bool {
 	return false
 }
 
-func generateHashes(fileStream io.Reader) (string, string, error) {
+func generateHashes(f io.Reader) (string, string, error) {
 	var sha1Stream bytes.Buffer
-	md5Stream := io.TeeReader(fileStream, &sha1Stream)
+	md5Stream := io.TeeReader(f, &sha1Stream)
 
 	md5Hash := md5.New()
 	sha1Hash := sha1.New()
@@ -79,14 +79,13 @@ func generateHashes(fileStream io.Reader) (string, string, error) {
 	if err != nil {
 		return "", "", err
 	}
-
 	return hex.EncodeToString(md5Hash.Sum(nil)), hex.EncodeToString(sha1Hash.Sum(nil)), nil
 }
 
-func ResizeImage(f multipart.File, w int, h int, inType string, outType string, outDst string) {
+func ResizeImage(f multipart.File, params ResizeImageParams) error {
 	var srcImg image.Image
 	var err error
-	switch inType {
+	switch params.InType {
 	case "image/jpeg":
 		srcImg, err = jpeg.Decode(f)
 	case "image/png":
@@ -96,23 +95,17 @@ func ResizeImage(f multipart.File, w int, h int, inType string, outType string, 
 	}
 
 	if err != nil {
-		log.Fatalf("Error decoding image: %s\n", err)
+		return err
 	}
 
-	dstImg := imaging.Resize(srcImg, w, h, imaging.MitchellNetravali)
+	dstImg := imaging.Resize(srcImg, params.Width, params.Height, imaging.MitchellNetravali)
 
-	out, err := os.Create(outDst)
+	out, err := os.Create(params.OutDst)
 	if err != nil {
-		return
+		return err
 	}
-	defer func() {
-		err := out.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
 
-	switch outType {
+	switch params.OutType {
 	case "image/jpeg":
 		err = jpeg.Encode(out, dstImg, nil)
 	case "image/png":
@@ -124,83 +117,94 @@ func ResizeImage(f multipart.File, w int, h int, inType string, outType string, 
 	}
 
 	if err != nil {
-		log.Fatalf("Error encoding image: %s\n", err)
+		return err
 	}
-
+	err = out.Close()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func validFileSize(c *gin.Context, size int64) bool {
+func checkFileSize(size int64) bool {
 	if size > MaxSize {
-		c.JSON(413, gin.H{
-			"message": "File too large",
-		})
 		return true
 	}
 	return false
 }
 
-func GetImageById(c *gin.Context) {
-	param, err := strconv.ParseInt(c.Param("imageId"), 10, 32)
-
-	if err != nil {
-		log.Fatalf("Error parsing image id: %s\n", err)
-	}
-
-	imageId := int32(param)
-	requestImg, err := db.New(db.Pool()).GetImageBasedOnId(c, imageId)
+func GetImageById(imageId int32) error {
+	requestImg, err := db.New(db.Pool()).GetImageBasedOnId(context.Background(), imageId)
 	switch {
 	case err == sql.ErrNoRows || requestImg.Md5 == "" || requestImg.Sha1 == "":
-		c.JSON(404, gin.H{
-			"message": "Image not found",
-		})
+		//c.JSON(404, gin.H{
+		//	"message": "Image not found",
+		//})
+		return errors.New("image does not exist")
 	default:
-		c.File(requestImg.Path)
+		//c.File(requestImg.Path)
+		return nil
 	}
 }
 
-func ServeThumbnail(c *gin.Context) {
-	file, _ := c.FormFile("thumbnail")
-	fileData, _ := file.Open()
-	if validFileSize(c, file.Size) {
-		return
+func ServeThumbnail(params ServeThumnailParams) error {
+	file := params.File
+	fileData, err := file.Open()
+	if err != nil {
+		return errors.New("error opening file stream: " + err.Error())
+	}
+	if checkFileSize(file.Size) {
+		//c.JSON(413, gin.H{
+		//	"message": "File too large",
+		//})
+		return errors.New("file too large")
 	}
 
 	fileType, err := getImageType(fileData)
 	if err != nil {
-		log.Fatalf("Error getting image type: %s\n", err)
+		return errors.New("error getting image type: " + err.Error())
 	}
-	ok := validImageType(fileType)
+	ok := detectImageType(fileType)
 	if !ok {
-		c.JSON(415, gin.H{
-			"message": "Unsupported media type",
-		})
-		return
+		//c.JSON(415, gin.H{
+		//	"message": "Unsupported media type",
+		//})
+		return errors.New("unsupported media type")
 	}
 
-	width, _ := strconv.Atoi(c.PostForm("width"))
-	height, _ := strconv.Atoi(c.PostForm("height"))
-	outType := c.PostForm("outType")
-	thumbnailType := c.PostForm("thumbnailType")
-	description := c.PostForm("description")
-
-	switch outType {
+	//default output type is png
+	switch params.ResizeParams.OutType {
 	case "image/jpeg", "image/png", "image/gif":
 	default:
-		outType = "image/png"
+		params.ResizeParams.OutType = "image/png"
 	}
-	filename := newFileName(outType)
 
-	dst := "server/images/" + thumbnailType + "/" + filename
-	ResizeImage(fileData, width, height, fileType, outType, dst)
-	thumbnailFile, _ := os.Open(dst)
+	//resize the image and save it to dst
+	filename := newFileName(params.ResizeParams.OutType)
+	dst := "server/images/" + params.ThumbnailType + "/" + filename
+	err = ResizeImage(fileData, params.ResizeParams)
+	if err != nil {
+		return errors.New("error resizing image: " + err.Error())
+	}
 
+	// open the file again to calculate hashes
+	thumbnailFile, err := os.Open(dst)
+	if err != nil {
+		return errors.New("error creating destination path: " + err.Error())
+	}
+	
+	// calculate hashes
 	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
 	if err != nil {
-		log.Fatalf("Error generating hashes: %s\n", err)
+		return errors.New("error generating hashes: " + err.Error())
 	}
-	thumbnailFile.Seek(0, io.SeekStart)
+	_, err = thumbnailFile.Seek(0, io.SeekStart)
+	if err != nil {
+		return errors.New("error resetting file pointer: " + err.Error())
+	}
 
-	insertId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
+	//inserting the image into the database
+	insertId, err := db.New(db.Pool()).InsertImage(context.Background(), db.InsertImageParams{
 		Md5:  md5Hash,
 		Sha1: sha1Hash,
 		Path: dst,
@@ -209,71 +213,76 @@ func ServeThumbnail(c *gin.Context) {
 			Valid:  true,
 		},
 		Description: sql.NullString{
-			String: description,
+			String: params.Description,
 			Valid:  true,
 		},
 	})
 	if err != nil {
-		log.Fatalf("Error inserting image: %s\n", err)
+		return errors.New("error inserting image: " + err.Error())
 	}
 
-	err = db.New(db.Pool()).DeleteTempImage(c, insertId)
+	//delete the temp image due to trigger
+	err = db.New(db.Pool()).DeleteTempImage(context.Background(), insertId)
 	if err != nil {
-		log.Fatalf("Error deleting temp image: %s\n", err)
+		return errors.New("error deleting temp image: " + err.Error())
 	}
-
-	c.File(dst)
+	
+	//send back the file for front-end uses
+	//c.File(dst)
+	return nil
 }
 
-func SubmitImages(c *gin.Context) {
-	var submitImages []Image
-
-	if err := c.BindJSON(&submitImages); err != nil {
-		log.Fatalf("Error parsing JSON: %s\n", err)
-	}
-
+func SubmitImages(submitImages []Image) error {
 	for _, submit := range submitImages {
-		err := db.New(db.Pool()).DeleteTempImage(c, submit.Id)
+		err := db.New(db.Pool()).DeleteTempImage(context.Background(), submit.Id)
 		if err != nil {
-			log.Fatalf("Error deleting temp image: %s\n", err)
+			return errors.New("error deleting temp image: " + err.Error())
 		}
 	}
 
-	c.JSON(200, gin.H{
-		"message": "Submit successful",
-	})
+	//c.JSON(200, gin.H{
+	//	"message": "Submit successful",
+	//})
+	return nil
 }
 
-func CleanImages(c *gin.Context) {
-	deletedRows, err := db.New(db.Pool()).ClearTempImages(c)
+func CleanImages() error {
+	deletedRows, err := db.New(db.Pool()).ClearTempImages(context.Background())
 	if err != nil {
-		log.Fatalf("Error clearing temp images: %s\n", err)
+		return errors.New("error clearing temp images: " + err.Error())
 	}
 	for _, row := range deletedRows {
-		err = db.New(db.Pool()).DeleteImage(c, row)
+		err = db.New(db.Pool()).DeleteImage(context.Background(), row)
 		if err != nil {
-			log.Fatalf("Error deleting image: %s\n", err)
+			return errors.New("error deleting image: " + err.Error())
 		}
 	}
+	return nil
 }
 
-func ReceiveImages(c *gin.Context) {
-	form, _ := c.MultipartForm()
-	description := c.PostForm("description")
-	files := form.File["upload[]"]
+func ReceiveImages(c *gin.Context, params ReceiveImagesParams) {
+	files := params.Files
 
 	for _, file := range files {
-		if validFileSize(c, file.Size) {
+		if checkFileSize(file.Size) {
+			c.JSON(413, gin.H{
+				"message": "File too large",
+			})
 			continue
 		}
-		fileData, _ := file.Open()
+		fileData, err := file.Open()
+		if err != nil {
+			log.Printf("Error getting file stream: %s\n", err)
+			continue
+		}
 
 		//checking if file is an image (jpg, png, gif)
 		fileType, imgErr := getImageType(fileData)
 		if imgErr != nil {
-			log.Fatalf("Error getting image type: %s\n", imgErr)
+			log.Printf("Error getting image type: %s\n", imgErr)
+			continue
 		}
-		ok := validImageType(fileType)
+		ok := detectImageType(fileType)
 		if !ok {
 			c.JSON(415, gin.H{
 				"message": "Unsupported media type",
@@ -284,9 +293,14 @@ func ReceiveImages(c *gin.Context) {
 		//generating hash
 		md5Hash, sha1Hash, err := generateHashes(fileData)
 		if err != nil {
-			log.Fatalf("Error generating hashes: %s\n", err)
+			log.Printf("Error generating hashes: %s\n", err)
+			continue
 		}
-		fileData.Seek(0, io.SeekStart)
+		_, err = fileData.Seek(0, io.SeekStart)
+		if err != nil {
+			log.Printf("Error reseting file pointer: %s\n", err)
+			continue
+		}
 
 		//check if the file exist in the database
 		peekRow, err := db.New(db.Pool()).GetImageBasedOnHash(c, db.GetImageBasedOnHashParams{
@@ -302,39 +316,42 @@ func ReceiveImages(c *gin.Context) {
 
 			err = c.SaveUploadedFile(file, dst)
 			if err != nil {
-				log.Fatalf("Error saving file: %s\n", err)
+				log.Printf("Error saving file: %s\n", err)
+				continue
 			}
 
 			//inserting image to the database
 			imageId, err := db.New(db.Pool()).InsertImage(c, db.InsertImageParams{
-				Md5:  md5Hash,
-				Sha1: sha1Hash,
-				Path: dst,
-				Name: sql.NullString{
+				Md5:        md5Hash,
+				Sha1:        sha1Hash,
+				Path:        dst,
+				Name:        sql.NullString{
 					String: filename,
 					Valid:  true,
 				},
 				Description: sql.NullString{
-					String: description,
+					String: params.Description,
 					Valid:  true,
 				},
 			})
 			if err != nil {
-				log.Fatalf("Error inserting image: %s\n", err)
+				log.Printf("Error inserting image: %s\n", err)
+				continue
 			}
 
 			//building the return message (may discard some field)
 			c.JSON(200, Image{
-				Id:       imageId,
+				Id: imageId,
 				Filename: filename,
-				URL:      c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
+				URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
 			})
 		default:
 			c.JSON(400, gin.H{
 				"message": "File already exist",
-				"Id":      peekRow.ID,
-				"URL":     c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
+				"Id": peekRow.ID,
+				"URL": c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
 			})
 		}
 	}
 }
+
