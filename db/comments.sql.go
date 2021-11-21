@@ -30,37 +30,24 @@ func (q *Queries) AddComment(ctx context.Context, arg AddCommentParams) error {
 }
 
 const deleteComment = `-- name: DeleteComment :exec
-DELETE FROM book_comments WHERE user_id = $1 AND book_group_id = $2 AND book_chapter_id = $3
+DELETE FROM book_comments WHERE id = $1
 `
 
-type DeleteCommentParams struct {
-	UserID        int32         `json:"user_id"`
-	BookGroupID   sql.NullInt32 `json:"book_group_id"`
-	BookChapterID sql.NullInt32 `json:"book_chapter_id"`
-}
-
-func (q *Queries) DeleteComment(ctx context.Context, arg DeleteCommentParams) error {
-	_, err := q.db.Exec(ctx, deleteComment, arg.UserID, arg.BookGroupID, arg.BookChapterID)
+func (q *Queries) DeleteComment(ctx context.Context, id int32) error {
+	_, err := q.db.Exec(ctx, deleteComment, id)
 	return err
 }
 
 const updateComment = `-- name: UpdateComment :exec
-UPDATE book_comments SET content = $4 WHERE user_id = $1 AND book_group_id = $2 AND book_chapter_id = $3
+UPDATE book_comments SET content = $2 WHERE id = $1
 `
 
 type UpdateCommentParams struct {
-	UserID        int32         `json:"user_id"`
-	BookGroupID   sql.NullInt32 `json:"book_group_id"`
-	BookChapterID sql.NullInt32 `json:"book_chapter_id"`
-	Content       string        `json:"content"`
+	ID      int32  `json:"id"`
+	Content string `json:"content"`
 }
 
 func (q *Queries) UpdateComment(ctx context.Context, arg UpdateCommentParams) error {
-	_, err := q.db.Exec(ctx, updateComment,
-		arg.UserID,
-		arg.BookGroupID,
-		arg.BookChapterID,
-		arg.Content,
-	)
+	_, err := q.db.Exec(ctx, updateComment, arg.ID, arg.Content)
 	return err
 }

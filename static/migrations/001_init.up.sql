@@ -214,10 +214,12 @@ CREATE TABLE IF NOT EXISTS book_chapter_views
 
 CREATE TABLE IF NOT EXISTS book_comments
 (
+    id           int GENERATED ALWAYS AS IDENTITY,
     content         text NOT NULL,
     user_id         int  NOT NULL,
     book_group_id   int,
     book_chapter_id int,
+    Primary Key (id),
     CONSTRAINT fk_book_comments_users
         FOREIGN KEY (user_id)
             REFERENCES users (id),

@@ -60,6 +60,7 @@ type BookChapterView struct {
 }
 
 type BookComment struct {
+	ID            int32         `json:"id"`
 	Content       string        `json:"content"`
 	UserID        int32         `json:"user_id"`
 	BookGroupID   sql.NullInt32 `json:"book_group_id"`

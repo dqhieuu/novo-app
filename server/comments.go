@@ -34,18 +34,10 @@ func InsertComment(params CommentParams) error {
 	return nil
 }
 
-func EditComment(params CommentParams) error {
+func EditComment(commentId int32, content string) error {
 	err := db.New(db.Pool()).UpdateComment(context.Background(), db.UpdateCommentParams{
-		UserID:        params.UserId,
-		BookGroupID:   sql.NullInt32{
-			Int32: params.BookId,
-			Valid: true,
-		},
-		BookChapterID: sql.NullInt32{
-			Int32: params.ChapterId,
-			Valid: true,
-		},
-		Content:       params.Content,
+		ID: commentId,
+		Content:       content,
 	})
 
 	if err != nil {
@@ -54,18 +46,8 @@ func EditComment(params CommentParams) error {
 	return nil
 }
 
-func RemoveComment(params CommentParams) error {
-	err := db.New(db.Pool()).DeleteComment(context.Background(), db.DeleteCommentParams{
-		UserID:        params.UserId,
-		BookGroupID:   sql.NullInt32{
-			Int32: params.BookId,
-			Valid: true,
-		},
-		BookChapterID: sql.NullInt32{
-			Int32: params.ChapterId,
-			Valid: true,
-		},
-	})
+func RemoveComment(commentId int32) error {
+	err := db.New(db.Pool()).DeleteComment(context.Background(), commentId)
 
 	if err != nil {
 		return errors.New("error deleting comment: " + err.Error())
