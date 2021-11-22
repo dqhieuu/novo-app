@@ -1,5 +1,5 @@
 {
-  "name": "novo-client",
+  "name": "my-app",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -8,13 +8,22 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "12.0.2",
-    "react": "17.0.2",
-    "react-dom": "17.0.2"
+    "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-solid-svg-icons": "^5.15.4",
+    "@fortawesome/react-fontawesome": "^0.1.16",
+    "bootstrap": "^5.1.3",
+    "bootstrap-icons": "^1.7.1",
+    "next": "12.0.3",
+    "react": "^17.0.2",
+    "react-bootstrap": "^2.0.2",
+    "react-dom": "^17.0.2",
+    "react-icons": "^4.3.1",
+    "react-paginate": "^8.0.0",
+    "reactstrap": "^9.0.0"
   },
   "devDependencies": {
-    "eslint": "7",
-    "eslint-config-next": "12.0.2",
+    "eslint": "7.32.0",
+    "eslint-config-next": "12.0.3",
     "eslint-config-prettier": "^8.3.0"
   }
 }

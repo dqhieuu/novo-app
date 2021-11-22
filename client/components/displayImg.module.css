@@ -1,0 +1,21 @@
+/* Container holding the image and the text */
+.container {
+  position: relative;
+  font-size: 10px;
+}
+
+/* Bottom right text */
+.textBlock {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  /* background-color: red; */
+  color: white;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 13px;
+}
+.container:hover {
+  opacity: 0.7;
+  cursor: pointer;
+}
