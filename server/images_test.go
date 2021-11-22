@@ -141,10 +141,8 @@ func TestProcessImages(t *testing.T) {
 	})
 
 	for _, stat := range status {
-		if stat.Err != nil {
-			t.Error(stat.Err)
-			assert.Nil(t, stat.Err)
-		}
+		assert.Nil(t, stat.Err)
+		log.Println(stat.Id)
 	}
 
 	defer func() {
@@ -197,6 +195,7 @@ func TestServeThumbnail(t *testing.T) {
 	})
 
 	assert.Nil(t, err)
+	log.Println(thumbnailId)
 	defer func() {
 		err := queries.DeleteImage(ctx, thumbnailId)
 		if err != nil {
@@ -266,4 +265,24 @@ func TestCleanImages(t *testing.T) {
 
 	err = CleanImages()
 	assert.Nil(t, err)
+}
+
+func TestProcessImageByUrl(t *testing.T) {
+	db.Init()
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	imageId, err := ProcessImageByUrl("https://files.catbox.moe/fwctkw.jpeg")
+	log.Println(imageId)
+	assert.Nil(t, err)
+	defer func() {
+		err := queries.DeleteTempImage(ctx, imageId)
+		if err != nil {
+			t.Fatalf("Error deleting temp image: %s\n", err)
+		}
+		err = queries.DeleteImage(ctx, imageId)
+		if err != nil {
+			t.Fatalf("Error deleting image: %s\n", err)
+		}
+	}()
 }

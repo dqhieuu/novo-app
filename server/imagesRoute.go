@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
 	"crypto/sha1"
@@ -13,6 +14,7 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
@@ -59,29 +61,19 @@ func detectImageType(imgType string) bool {
 	return false
 }
 
-func generateHashes(fileStream multipart.File) (string, string, error) {
-	//var sha1Stream bytes.Buffer
-	//md5Stream := io.TeeReader(f, &sha1Stream)
+func generateHashes(fileStream io.Reader) (string, string, error) {
+	var sha1Stream bytes.Buffer
+	md5Stream := io.TeeReader(fileStream, &sha1Stream)
 
 	md5Hash := md5.New()
 	sha1Hash := sha1.New()
 
-	_, err := io.Copy(md5Hash, fileStream)
+	_, err := io.Copy(md5Hash, md5Stream)
 	if err != nil {
 		return "", "", err
 	}
 
-	_, err = fileStream.Seek(0, io.SeekStart)
-	if err != nil {
-		return "", "", err
-	}
-
-	_, err = io.Copy(sha1Hash, fileStream)
-	if err != nil {
-		return "", "", err
-	}
-
-	_, err = fileStream.Seek(0, io.SeekStart)
+	_, err = io.Copy(sha1Hash, &sha1Stream)
 	if err != nil {
 		return "", "", err
 	}
@@ -334,6 +326,14 @@ func ProcessImages(params ReceiveImagesParams) []ImageStatus {
 			})
 			continue
 		}
+		_, err = file.Data.Seek(0, io.SeekStart)
+		if err != nil {
+			status = append(status, ImageStatus{
+				Id:  -1,
+				Err: errors.New("error resetting file pointer: " + err.Error()),
+			})
+			continue
+		}
 
 		//check if the file exist in the database
 		peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
@@ -426,5 +426,68 @@ func ProcessImages(params ReceiveImagesParams) []ImageStatus {
 		}
 	}
 	return status
+}
+
+func ProcessImageByUrl(url string) (int32, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	response, err := http.Get(url)
+	if err != nil {
+		return -1, errors.New("error getting http response: " + err.Error())
+	}
+
+	dirErr := os.MkdirAll("server/images/url", os.ModePerm)
+	if dirErr != nil {
+		log.Printf("Error creating new directory: %s\n", dirErr)
+		return -1, dirErr
+	}
+
+	bodyData, err := ioutil.ReadAll(response.Body)
+	response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyData))
+
+	imageType := http.DetectContentType(bodyData)
+	filename := newFileName(imageType)
+	dst := "server/images/url/" + filename
+
+	saveFile, err := os.Create(dst)
+	if err != nil {
+		return -1, errors.New("error creating new file: " + err.Error())
+	}
+
+	defer func(saveFile *os.File) {
+		err := saveFile.Close()
+		if err != nil {
+			log.Printf("Error closing new file: %s\n", err)
+		}
+	}(saveFile)
+
+	_, err = io.Copy(saveFile, response.Body)
+	if err != nil {
+		return -1, errors.New("error saving file: " + err.Error())
+	}
+
+	response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyData))
+	md5Hash, sha1Hash, err := generateHashes(response.Body)
+
+	imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
+		Md5:         md5Hash,
+		Sha1:        sha1Hash,
+		Path:        dst,
+		Name:        sql.NullString{
+			String: filename,
+			Valid: true,
+		},
+		Description: sql.NullString{
+			String: "",
+			Valid: true,
+		},
+	})
+
+	if err != nil {
+		return -1, errors.New("error inserting image into database: " + err.Error())
+	}
+
+	return imageId, nil
 }
 
