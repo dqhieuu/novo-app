@@ -272,7 +272,7 @@ func TestProcessImageByUrl(t *testing.T) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	imageId, err := ProcessImageByUrl("https://files.catbox.moe/fwctkw.jpeg")
+	imageId, err := ProcessImageByUrl("https://files.catbox.moe/fwctkw.jpeg", "")
 	log.Println(imageId)
 	assert.Nil(t, err)
 	defer func() {

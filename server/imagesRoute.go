@@ -428,7 +428,7 @@ func ProcessImages(params ReceiveImagesParams) []ImageStatus {
 	return status
 }
 
-func ProcessImageByUrl(url string) (int32, error) {
+func ProcessImageByUrl(url string, description string) (int32, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
@@ -479,7 +479,7 @@ func ProcessImageByUrl(url string) (int32, error) {
 			Valid: true,
 		},
 		Description: sql.NullString{
-			String: "",
+			String: description,
 			Valid: true,
 		},
 	})
