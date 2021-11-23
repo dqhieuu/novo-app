@@ -20,23 +20,23 @@ CREATE TABLE IF NOT EXISTS temp_images
             REFERENCES images (id)
 );
 
-CREATE TYPE permission_scope AS ENUM ('none', 'self', 'all');
-
 CREATE TABLE IF NOT EXISTS roles
 (
     id                      int GENERATED ALWAYS AS IDENTITY,
     name                    text             NOT NULL UNIQUE,
     description             text,
-    can_modify_role         boolean          NOT NULL DEFAULT false,
-    can_modify_book_author  boolean          NOT NULL DEFAULT false,
-    can_modify_book_genre   boolean          NOT NULL DEFAULT false,
-    can_modify_book_group   permission_scope NOT NULL DEFAULT 'self',
-    can_modify_book_chapter permission_scope NOT NULL DEFAULT 'self',
-    can_create_comment      permission_scope          DEFAULT 'self',
-    can_update_comment      permission_scope          DEFAULT 'self',
-    can_delete_comment      permission_scope          DEFAULT 'self',
-    can_modify_d            permission_scope          DEFAULT 'self',
     PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS role_actions
+(
+    module text NOT NULL,
+    action text NOT NULL,
+    role_id int NOT NULL,
+    PRIMARY KEY (module, action),
+    CONSTRAINT fk_role_id_roles
+        FOREIGN KEY (role_id)
+            REFERENCES roles(id)
 );
 
 CREATE TABLE IF NOT EXISTS users
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS book_chapters
     chapter_number decimal     NOT NULL,
     description    text,
     text_context   text,
-    type           text        NOT NULL CHECK (type IN ('image', 'hypertext')),
+    type           text        NOT NULL CHECK (type IN ('images', 'hypertext')),
     book_group_id  int         NOT NULL,
     owner_id       int         NOT NULL,
     PRIMARY KEY (id),

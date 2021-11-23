@@ -21,7 +21,7 @@ func (q *Queries) DeleteRole(ctx context.Context, name string) error {
 const insertNewRole = `-- name: InsertNewRole :one
 INSERT INTO roles (name, description)
 VALUES ($1, $2)
-RETURNING id, name, description, can_modify_role, can_modify_book_author, can_modify_book_genre, can_modify_book_group, can_modify_book_chapter, can_create_comment, can_update_comment, can_delete_comment, can_modify_d
+RETURNING id, name, description
 `
 
 type InsertNewRoleParams struct {
@@ -32,21 +32,33 @@ type InsertNewRoleParams struct {
 func (q *Queries) InsertNewRole(ctx context.Context, arg InsertNewRoleParams) (Role, error) {
 	row := q.db.QueryRow(ctx, insertNewRole, arg.Name, arg.Description)
 	var i Role
-	err := row.Scan(
-		&i.ID,
-		&i.Name,
-		&i.Description,
-		&i.CanModifyRole,
-		&i.CanModifyBookAuthor,
-		&i.CanModifyBookGenre,
-		&i.CanModifyBookGroup,
-		&i.CanModifyBookChapter,
-		&i.CanCreateComment,
-		&i.CanUpdateComment,
-		&i.CanDeleteComment,
-		&i.CanModifyD,
-	)
+	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
+}
+
+const roleActionsById = `-- name: RoleActionsById :many
+SELECT module || '.' || action FROM role_actions ra
+WHERE ra.role_id = $1
+`
+
+func (q *Queries) RoleActionsById(ctx context.Context, roleID int32) ([]interface{}, error) {
+	rows, err := q.db.Query(ctx, roleActionsById, roleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []interface{}
+	for rows.Next() {
+		var column_1 interface{}
+		if err := rows.Scan(&column_1); err != nil {
+			return nil, err
+		}
+		items = append(items, column_1)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const roleIdByName = `-- name: RoleIdByName :one

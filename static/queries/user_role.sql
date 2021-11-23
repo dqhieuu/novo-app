@@ -11,3 +11,7 @@ FETCH FIRST ROWS ONLY;
 -- name: DeleteRole :exec
 DELETE FROM roles
 WHERE name = $1;
+
+-- name: RoleActionsById :many
+SELECT module || '.' || action FROM role_actions ra
+WHERE ra.role_id = $1;
