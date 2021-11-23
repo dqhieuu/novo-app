@@ -3,9 +3,8 @@ package server
 import "mime/multipart"
 
 type Image struct {
-	Id       int32  `json:"id"`
-	Filename string `json:"filename"`
-	URL      string `json:"url"`
+	Data multipart.File
+	Size int64
 }
 
 type ResizeImageParams struct {
@@ -16,14 +15,20 @@ type ResizeImageParams struct {
 	Height  int    `json:"height"`
 }
 
-type ServeThumnailParams struct {
-	File          *multipart.FileHeader
+type ServeThumbnailParams struct {
+	File          multipart.File
 	ResizeParams  ResizeImageParams
+	Size          int64
 	Description   string
 	ThumbnailType string
 }
 
 type ReceiveImagesParams struct {
-	Files       []*multipart.FileHeader
+	Files       []Image
 	Description string
+}
+
+type ImageStatus struct {
+	Id  int32
+	Err error
 }
