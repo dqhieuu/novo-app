@@ -151,7 +151,7 @@ func GetImageById(imageId int32) (string, error) {
 func ServeThumbnail(params ServeThumbnailParams) (string, int32, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	dirErr := os.MkdirAll("server/images/" + params.ThumbnailType, os.ModePerm)
+	dirErr := os.MkdirAll("images/" + params.ThumbnailType, os.ModePerm)
 	if dirErr != nil {
 		log.Printf("Error creating new directory: %s\n", dirErr)
 		return "", -1, dirErr
@@ -186,7 +186,7 @@ func ServeThumbnail(params ServeThumbnailParams) (string, int32, error) {
 
 	//resize the image and save it to dst
 	filename := newFileName(params.ResizeParams.OutType)
-	dst := "server/images/" + params.ThumbnailType + "/" + filename
+	dst := "images/" + params.ThumbnailType + "/" + filename
 	params.ResizeParams.OutDst = dst
 	err = ResizeImage(fileData, params.ResizeParams)
 	if err != nil {
@@ -210,38 +210,51 @@ func ServeThumbnail(params ServeThumbnailParams) (string, int32, error) {
 		return "", -1, errors.New("error generating hashes: " + err.Error())
 	}
 
-	//inserting the image into the database
-	insertId, err := queries.InsertImage(ctx, db.InsertImageParams{
-		Md5:  md5Hash,
-		Sha1: sha1Hash,
-		Path: dst,
-		Name: sql.NullString{
-			String: filename,
-			Valid:  true,
-		},
-		Description: sql.NullString{
-			String: params.Description,
-			Valid:  true,
-		},
-	})
-	if err != nil {
-		return "", -1, errors.New("error inserting image: " + err.Error())
-	}
-
-	//delete the temp image due to trigger
-	err = queries.DeleteTempImage(ctx, insertId)
-	if err != nil {
-		return "", -1, errors.New("error deleting temp image: " + err.Error())
-	}
-
 	err = thumbnailFile.Close()
 	if err != nil {
-		return "", -1, errors.New("error closing file stream: " + err.Error())
+		return "", -1, errors.New("error closing thumbnail file: " + err.Error())
 	}
-	
-	//send back the file for front-end uses
-	//c.File(dst)
-	return dst, insertId, nil
+
+	peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+		Md5:  md5Hash,
+		Sha1: sha1Hash,
+	})
+
+	switch {
+	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
+		//inserting the image into the database
+		insertId, err := queries.InsertImage(ctx, db.InsertImageParams{
+			Md5:  md5Hash,
+			Sha1: sha1Hash,
+			Path: dst,
+			Name: sql.NullString{
+				String: filename,
+				Valid:  true,
+			},
+			Description: sql.NullString{
+				String: params.Description,
+				Valid:  true,
+			},
+		})
+		if err != nil {
+			return "", -1, errors.New("error inserting image: " + err.Error())
+		}
+
+		//delete the temp image due to trigger
+		err = queries.DeleteTempImage(ctx, insertId)
+		if err != nil {
+			return "", -1, errors.New("error deleting temp image: " + err.Error())
+		}
+		//send back the file for front-end uses
+		//c.File(dst)
+		return dst, insertId, nil
+	default:
+		err = os.Remove(dst)
+		if err != nil {
+			return "", -1, errors.New("error removing duplicate file: " + err.Error())
+		}
+		return peekRow.Path, peekRow.ID, errors.New("image already exists")
+	}
 }
 
 func SubmitImages(submitImages []int32) error {
@@ -281,7 +294,7 @@ func ProcessImages(params ReceiveImagesParams) []ImageStatus {
 	queries := db.New(db.Pool())
 	files := params.Files
 	var status []ImageStatus
-	dirErr := os.MkdirAll("server/images/book_contents", os.ModePerm)
+	dirErr := os.MkdirAll("images/book_contents", os.ModePerm)
 	if dirErr != nil {
 		log.Printf("Error creating new directory: %s\n", dirErr)
 		return status
@@ -345,7 +358,7 @@ func ProcessImages(params ReceiveImagesParams) []ImageStatus {
 		case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
 			//saving file to the server
 			filename := newFileName(fileType)
-			dst := "server/images/book_contents/" + filename
+			dst := "images/book_contents/" + filename
 
 			//err = c.SaveUploadedFile(file, dst)
 			saveFileStream, err := os.Create(dst)
@@ -437,7 +450,7 @@ func ProcessImageByUrl(url string, description string) (int32, error) {
 		return -1, errors.New("error getting http response: " + err.Error())
 	}
 
-	dirErr := os.MkdirAll("server/images/url", os.ModePerm)
+	dirErr := os.MkdirAll("images/url", os.ModePerm)
 	if dirErr != nil {
 		log.Printf("Error creating new directory: %s\n", dirErr)
 		return -1, dirErr
@@ -446,48 +459,61 @@ func ProcessImageByUrl(url string, description string) (int32, error) {
 	bodyData, err := ioutil.ReadAll(response.Body)
 	response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyData))
 
-	imageType := http.DetectContentType(bodyData)
-	filename := newFileName(imageType)
-	dst := "server/images/url/" + filename
-
-	saveFile, err := os.Create(dst)
-	if err != nil {
-		return -1, errors.New("error creating new file: " + err.Error())
-	}
-
-	defer func(saveFile *os.File) {
-		err := saveFile.Close()
-		if err != nil {
-			log.Printf("Error closing new file: %s\n", err)
-		}
-	}(saveFile)
-
-	_, err = io.Copy(saveFile, response.Body)
-	if err != nil {
-		return -1, errors.New("error saving file: " + err.Error())
-	}
-
-	response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyData))
 	md5Hash, sha1Hash, err := generateHashes(response.Body)
+	if err != nil {
+		return -1, errors.New("error generating hash")
+	}
 
-	imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
-		Md5:         md5Hash,
-		Sha1:        sha1Hash,
-		Path:        dst,
-		Name:        sql.NullString{
-			String: filename,
-			Valid: true,
-		},
-		Description: sql.NullString{
-			String: description,
-			Valid: true,
-		},
+	peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+		Md5:  md5Hash,
+		Sha1: sha1Hash,
 	})
 
-	if err != nil {
-		return -1, errors.New("error inserting image into database: " + err.Error())
-	}
+	switch {
+	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
+		imageType := http.DetectContentType(bodyData)
+		filename := newFileName(imageType)
+		dst := "images/url/" + filename
+		response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyData))
 
-	return imageId, nil
+		saveFile, err := os.Create(dst)
+		if err != nil {
+			return -1, errors.New("error creating new file: " + err.Error())
+		}
+
+		defer func(saveFile *os.File) {
+			err := saveFile.Close()
+			if err != nil {
+				log.Printf("Error closing new file: %s\n", err)
+			}
+		}(saveFile)
+
+		_, err = io.Copy(saveFile, response.Body)
+		if err != nil {
+			return -1, errors.New("error saving file: " + err.Error())
+		}
+
+		imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
+			Md5:         md5Hash,
+			Sha1:        sha1Hash,
+			Path:        dst,
+			Name:        sql.NullString{
+				String: filename,
+				Valid: true,
+			},
+			Description: sql.NullString{
+				String: description,
+				Valid: true,
+			},
+		})
+
+		if err != nil {
+			return -1, errors.New("error inserting image into database: " + err.Error())
+		}
+
+		return imageId, nil
+	default:
+		return peekRow.ID, errors.New("image already exists")
+	}
 }
 
