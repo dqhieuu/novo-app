@@ -1,0 +1,247 @@
+{
+  "manga": [
+    {
+      "title": "One punch Man",
+      "chapter": 120,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://static2.vieon.vn/vieplay-image/thumbnail_v4/2021/07/29/jrq7m1ys_1920x1080-onepunchman-1.jpg",
+      "lastUpdate": "11/15/2021",
+      "views": 150000
+    },
+    {
+      "title": "ÔNG CHỒNG NỘI TRỢ",
+      "chapter": 68,
+      "author": "Fujko F. Fujio",
+      "description": "Tatsu là một cựu yakuza đã từng gây nên bao nỗi khiếp sợ cho những tên tội phạm ghê gớm nhất. Tuy vẫn giữ vẻ ngoài đáng sợ nhưng hiện tại Tatsu ngày nào đã cưới vợ và trở thành một ông chồng đảm đang mẫu mực. Vì vợ thường xuyên bận rộn nên mọi công việc tề gia nội trợ trong nhà hiện tại đều do một tay gã cựu xã hội đen đảm nhận và gã đã hoàn thành mọi chuyện tốt hơn cả tưởng tượng, tạo nên một hình ảnh đối lập hoàn toàn ở con người gã.",
+      "imgSrc": "https://gamek.mediacdn.vn/thumb_w/640/133514250583805952/2020/7/12/photo-1-1561025978940519631861-1594517405496255690164.jpg",
+      "lastUpdate": "10/15/2021",
+      "views": 102496
+    },
+    {
+      "title": "ONE PIECE",
+      "chapter": 1031,
+      "author": "Fujko F. Fujio",
+      "description": "One Piece là câu truyện kể về Luffy và các thuyền viên của mình. Khi còn nhỏ, Luffy ước mơ trở thành Vua Hải Tặc. Cuộc sống của cậu bé thay đổi khi cậu vô tình có được sức mạnh có thể co dãn như cao su, nhưng đổi lại, cậu không bao giờ có thể bơi được nữa. Giờ đây, Luffy cùng những người bạn hải tặc của mình ra khơi tìm kiếm kho báu One Piece, kho báu vĩ đại nhất trên thế giới. Trong One Piece, mỗi nhân vật trong đều mang một nét cá tính đặc sắc kết hợp cùng các tình huống kịch tính, lối dẫn truyện hấp dẫn chứa đầy các bước ngoặt bất ngờ và cũng vô cùng hài hước đã biến One Piece trở thành một trong những bộ truyện nổi tiếng nhất không thể bỏ qua.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/02/28/8d6d35f1c174751e_35b873941cbe1e6f_52428158288498841.jpg",
+      "lastUpdate": "11/12/2021",
+      "views": 8742685
+    },
+    {
+      "title": "Kimetsu No Yaiba",
+      "chapter": 205,
+      "author": "Fujko F. Fujio",
+      "description": "Tanjiro là con cả trong một gia đình không còn người cha. Một hôm, Tanjiro đi bán than ở một ngôi làng nọ và phải ở lại đó qua đêm vì có tin đồn rằng, về đêm, luôn có một con quỷ lởn vởn ở ngọn núi gần đó. Khi Tanjiro đi về nhà vào ngày hôm sau, bi kịch đang chờ đón cậu.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/03/06/a3a62084f603a892_09e48447777abb46_43465158347151141.jpg",
+      "lastUpdate": "05/14/2020",
+      "views": 7064424
+    },
+    {
+      "title": "BORUTO",
+      "chapter": 63,
+      "author": "Fujko F. Fujio",
+      "description": "Thằng nhóc Boruto - con của ngài Đệ Thất luôn muốn chống đối người cha của mình - Naruto lên đã làm mọi cách để gây sự chú ý đến ông già của nó. Câu chuyện li kì hấp dẫn sẽ diễn ra và đầy bất ngờ trong các chương tiếp theo.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2021/06/27/44052577c74200b9_323794ce80f21f17_29998162478009179674.jpg",
+      "lastUpdate": "11/10/2021",
+      "views": 60000
+    },
+    {
+      "title": "Liar Satsuki can see the death",
+      "chapter": 3,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2021/11/11/4d590d6aeeed76f3_8e036f81c5adbc59_3735416365959785833854.jpg",
+      "lastUpdate": "11/12/2021",
+      "views": 759
+    },
+    {
+      "title": "ATTACK ON TITAN",
+      "chapter": 141,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2021/10/24/c8b79327cd96e8b8_03834e9292baaf0e_3697216350438498828291.jpg",
+      "lastUpdate": "11/01/2021",
+      "views": 14924
+    },
+    {
+      "title": "THÁM TỬ LỪNG DANH CONAN",
+      "chapter": 1081,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/03/19/5d47c1a3006c4106_fbb79ad7bbd42027_224941584606669445957.jpg",
+      "lastUpdate": "11/07/2021",
+      "views": 134923
+    },
+    {
+      "title": "NARUTO",
+      "chapter": 700,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/03/06/fc11f9b484cd4f2b_4bd4899a9a74430b_37304158347131971.jpg",
+      "lastUpdate": "11/02/2021",
+      "views": 139483
+    },
+    {
+      "title": "YUGI-OH! FULL MÀU",
+      "chapter": 342,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://static2.vieon.vn/vieplay-image/thumbnail_v4/2021/07/29/jrq7m1ys_1920x1080-onepunchman-1.jpg",
+      "lastUpdate": "11/03/2021",
+      "views": 419384
+    },
+    {
+      "title": "TOKYO卍REVENGERS",
+      "chapter": 230,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2021/08/03/f58a506e7b3dc03d_c973dce3950d2381_41090162798610749674.jpg",
+      "lastUpdate": "11/10/2021",
+      "views": 123981
+    },
+    {
+      "title": "BLACK CLOVER",
+      "chapter": 313,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/03/06/889f84dd4127c4c3_f46f1f911956fb50_36147158347140031.jpg",
+      "lastUpdate": "11/13/2021",
+      "views": 139998
+    },
+    {
+      "title": "BLEACH",
+      "chapter": 686,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/03/06/a6afa7cb9fb24431_10cb725ec2c064eb_31660158347260521.jpg",
+      "lastUpdate": "11/07/2021",
+      "views": 123912
+    },
+    {
+      "title": "Kingdom",
+      "chapter": 697,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2021/09/03/3c2b7246f88c21c8_450ab23594bd9dcb_33491163066051249674.jpg",
+      "lastUpdate": "11/13/2021",
+      "views": 113900
+    },
+    {
+      "title": "New Town",
+      "chapter": 11,
+      "author": "Fujko F. Fujio",
+      "description": "Home study teacher Jang Himchan has moved to a dense new city, filled with bored married women. There won't be a quiet day for him from now on!",
+      "imgSrc": "https://manhwa18.cc/manga/new-townm.jpg",
+      "lastUpdate": "11/11/2021",
+      "views": 13024
+    },
+    {
+      "title": "Secret Class",
+      "chapter": 106,
+      "author": "Fujko F. Fujio",
+      "description": "Dae Ho, who became an orphan at the age of 13, was adopted by his father's friend. However, Dae Ho in adulthood knew nothing about the relationship between men and women. Aunt and sisters decided to give pure Dae Ho a secret class...",
+      "imgSrc": "https://manhwa18.cc/manga/secret-classczv.jpg",
+      "lastUpdate": "11/14/2021",
+      "views": 13391
+    },
+    {
+      "title": "Stepmother Friends",
+      "chapter": 91,
+      "author": "Fujko F. Fujio",
+      "description": "My mother passed away when I was young. Dad wanted to ease my pain, so he let me live a life without worry. Then suddenly one day, my father introduced me to a young and beautiful woman he married because she coveted the man's property. Seeing her sincerely loving my father, I began to open my heart to her gradually, however...",
+      "imgSrc": "https://manhwa18.cc/manga/stepmother-friendsczv.jpg",
+      "lastUpdate": "11/12/2021",
+      "views": 150001
+    },
+    {
+      "title": "Is there an Empty Room?",
+      "chapter": 47,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://manhwa18.cc/manga/is-there-an-empty-roomczv.jpg",
+      "lastUpdate": "11/12/2021",
+      "views": 15000
+    },
+    {
+      "title": "Boarding Diary",
+      "chapter": 65,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://manhwa18.cc/manga/boarding-diaryczv.jpg",
+      "lastUpdate": "11/12/2021",
+      "views": 150000
+    },
+    {
+      "title": "Fitness",
+      "chapter": 110,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://manhwa18.cc/manga/fitnessczv.jpg",
+      "lastUpdate": "11/14/2021",
+      "views": 150000
+    },
+    {
+      "title": "My Kingdom (Silent War)",
+      "chapter": 151,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://manhwa18.cc/manga/silent-war-rawczv.jpg",
+      "lastUpdate": "11/14/2021",
+      "views": 19133
+    },
+    {
+      "title": "JUJUTSU KAISEN - CHÚ THUẬT HỒI CHIẾN",
+      "chapter": 163,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2021/01/20/906587cc2f226d4d_843cd593179d86b0_467071611141384745957.jpg",
+      "lastUpdate": "11/12/2021",
+      "views": 183831
+    },
+    {
+      "title": "SHUUMATSU NO VALKYRIE",
+      "chapter": 55,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/12/31/4b281c75d39e055f_16bc475c3f0bcb4b_358971609411672245957.jpg",
+      "lastUpdate": "11/15/2021",
+      "views": 335305
+    },
+    {
+      "title": "EDEN'S ZERO",
+      "chapter": 166,
+      "author": "Fujko F. Fujio",
+      "description": "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Eum, reiciendis sit placeat cumque, commodi corporis pariatur sunt optio qui provident nobis. Labore, minima. Sequi odio quas, sunt omnis ab blanditiis.",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/04/20/71bbcc8801f3fb57_8a7789c48f400894_4037315873661739185710.jpg",
+      "lastUpdate": "10/15/2021",
+      "views": 150000
+    },
+    {
+      "title": "CHÚA TỂ HỌC ĐƯỜNG",
+      "chapter": 503,
+      "author": "Fujko F. Fujio",
+      "description": "Khi một hòn đảo đang dần biến mất khỏi bề mặt Trái Đất, một tổ chức bí ẩn đã gửi tới mọi đấu sĩ xuất sắc trên thế giới một lời mời tham gia vào một cuộc thi với giải thưởng là bất cứ thứ gì bạn muốn",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/09/02/0e4d7ec1f248a862_f583ad09530e8bdc_482821599008961745957.jpg",
+      "lastUpdate": "11/09/2021",
+      "views": 139134
+    },
+    {
+      "title": "ISEKAI MAHOU WA OKURETERU!",
+      "chapter": 43,
+      "author": "Gamei Hitsuji",
+      "description": "Felmenia Stingray là một pháp sư thiên tài. Cô nhanh chóng trở thành phù thủy mạnh nhất vương quốc Astel sau khi phát hiện ra bạch hỏa có thể đốt cháy mọi thứ. Tuy nhiên, thế giới lúc này đang bên bờ vực nguy hiểm do Quỷ Vương. Vì thế hội đồng pháp sư quyết định thực hiện nghi lễ triệu hồi anh hùng, và kết quả là mang đến hai anh hùng, một chàng trai và một cô gái. Không giống như cô gái, chàng trai từ chối chiến đấu với Quỷ Vương và đòi trở về thế giới của mình. Quốc vương giận dữ trước cách cư...",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/06/08/827fb7dd0e601736_83c3b03aa04cb8a6_379801591613783245957.jpg",
+      "lastUpdate": "11/09/2021",
+      "views": 122933
+    },
+    {
+      "title": "NHỚ NHÀ",
+      "chapter": 3,
+      "author": "Ms. Freaky",
+      "description": "Rayne tỉnh dậy mà không có bất kì kí ức gì về ngày tận thế. Samael chỉ là...một tên du côn, người tình cờ tìm thấy Rayne trên sân thượng. Cả hai cuối cùng đã thực hiển một thoả thuận để tồn tại trong một thế giới nơi những con quái vật ăn thịt người đang lang thang",
+      "imgSrc": "https://s199.imacdn.com/tt24/2020/06/08/827fb7dd0e601736_83c3b03aa04cb8a6_379801591613783245957.jpg",
+      "lastUpdate": "04/09/2021",
+      "views": 852
+    }
+  ]
+}

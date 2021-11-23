@@ -14,8 +14,8 @@ import (
 func TestBookGroupById(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookChapters()
-	defer deleteBookChapters()
+	createBookGroups()
+	defer deleteBookGroups()
 	intRandom := r.Intn(len(bookGroups))
 	bookGroup1 := bookGroups[intRandom]
 	bookGroup2, err := BookGroupById(bookGroup1.ID)
@@ -28,8 +28,8 @@ func TestBookGroupById(t *testing.T) {
 func TestCreateBookGroup(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookChapters()
-	defer deleteBookChapters()
+	createBookGroups()
+	defer deleteBookGroups()
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	title := "titleTest"
@@ -56,8 +56,8 @@ func TestCreateBookGroup(t *testing.T) {
 func TestUpdateBookGroup(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookChapters()
-	defer deleteBookChapters()
+	createBookGroups()
+	defer deleteBookGroups()
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	ownerId := users[r.Int31n(cntUser)].ID
@@ -102,8 +102,8 @@ func TestUpdateBookGroup(t *testing.T) {
 func TestDeleteBookGroup(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookChapters()
-	defer deleteBookChapters()
+	createBookGroups()
+	defer deleteBookGroups()
 	intRandom := r.Intn(len(bookGroups))
 	bookGroup1 := bookGroups[intRandom]
 	err := DeleteBookGroup(bookGroup1.ID)
@@ -120,8 +120,8 @@ func TestDeleteBookGroup(t *testing.T) {
 func TestBookGroupsByTitle(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookChapters()
-	defer deleteBookChapters()
+	createBookGroups()
+	defer deleteBookGroups()
 	titles := []string{"one", "two", "thee"}
 	subTitle := titles[r.Intn(2)]
 	newBookGroups, err := BookGroupsByTitle(subTitle, 1)
