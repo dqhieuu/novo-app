@@ -181,8 +181,8 @@ func TestServeThumbnail(t *testing.T) {
 	img, size, dst := createImage(600, 400)
 
 	_, thumbnailId, err := ServeThumbnail(ServeThumbnailParams{
-		File:          img,
-		ResizeParams:  ResizeImageParams{
+		File: img,
+		ResizeParams: ResizeImageParams{
 			InType:  "image/png",
 			OutType: "image/png",
 			OutDst:  "",
@@ -214,10 +214,10 @@ func TestSubmitImages(t *testing.T) {
 	queries := db.New(db.Pool())
 
 	imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
-		Md5:         "random",
-		Sha1:        "random",
-		Path:        "random",
-		Name:        sql.NullString{
+		Md5:  "random",
+		Sha1: "random",
+		Path: "random",
+		Name: sql.NullString{
 			Valid: false,
 		},
 		Description: sql.NullString{
@@ -248,10 +248,10 @@ func TestCleanImages(t *testing.T) {
 	queries := db.New(db.Pool())
 
 	_, err := queries.InsertImage(ctx, db.InsertImageParams{
-		Md5:         "random",
-		Sha1:        "random",
-		Path:        "random",
-		Name:        sql.NullString{
+		Md5:  "random",
+		Sha1: "random",
+		Path: "random",
+		Name: sql.NullString{
 			Valid: false,
 		},
 		Description: sql.NullString{

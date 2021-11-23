@@ -10,7 +10,6 @@ import (
 	"golang.org/x/oauth2/google"
 	googleOauth2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
-	"log"
 	"net/http"
 )
 
@@ -72,7 +71,19 @@ func UserByGoogleOauthCode(code string) (*db.User, error) {
 		return nil, err
 	}
 
-	log.Print(gin.H{"info": user})
+	//role, err := queries.RoleByUserId(ctx, user.ID)
+	//if err != nil {
+	//	return nil, errors.New(fmt.Sprintf("getting user role failed: %s", err))
+	//}
+	//
+	//var rolePerms []string
+	//rolePermsPg := role.RolePermissions.(pgtype.TextArray)
+	//err = rolePermsPg.AssignTo(&rolePerms)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//log.Println(rolePerms, role.RoleName)
+
 	return &user, nil
 }
 

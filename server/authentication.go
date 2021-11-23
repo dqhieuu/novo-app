@@ -10,8 +10,9 @@ import (
 )
 
 type UserClaims struct {
-	UserId int32
-	Role   int32
+	UserId          int32
+	Role            string
+	RolePermissions []string
 }
 
 type passwordLogin struct {
@@ -43,7 +44,7 @@ func AuthMiddleware() *jwt.GinJWTMiddleware {
 				if err != nil {
 					return nil, err
 				}
-				return UserClaims{UserId: user.ID, Role: user.RoleID}, nil
+				return UserClaims{UserId: user.ID}, nil
 			}
 
 			// Try if it has oauth login fields
@@ -53,14 +54,14 @@ func AuthMiddleware() *jwt.GinJWTMiddleware {
 				if err != nil {
 					return nil, err
 				}
-				return UserClaims{UserId: user.ID, Role: user.RoleID}, nil
+				return UserClaims{UserId: user.ID}, nil
 			}
 
 			return nil, errors.New("authentication failed")
 		},
 
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*UserClaims); ok {
+			if v, ok := data.(UserClaims); ok {
 				return jwt.MapClaims{
 					userId: v.UserId,
 					"role": v.Role,
