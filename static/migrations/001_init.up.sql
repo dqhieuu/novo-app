@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS roles
     PRIMARY KEY (id)
 );
 
-CREATE TABLE IF NOT EXISTS role_actions
+CREATE TABLE IF NOT EXISTS role_permissions
 (
     module text NOT NULL,
     action text NOT NULL,

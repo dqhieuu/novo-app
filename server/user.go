@@ -73,10 +73,15 @@ func CreateAccount(username, password, email, roleName string) (*db.User, error)
 		Email:    email,
 		RoleName: roleName,
 	})
-
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("creating new user failed: %s", err))
 	}
+
+	//role, err := queries.RoleByUserId(ctx, user.ID)
+	//if err != nil {
+	//	return nil, errors.New(fmt.Sprintf("getting user role failed: %s", err))
+	//}
+	//fmt.Println(role.RolePermissions.([]string), roleName)
 
 	return &user, nil
 }
