@@ -13,8 +13,8 @@ VALUES ($1, $2, -1)
 `
 
 type DisLikesParams struct {
-	UserID      int32 `json:"user_id"`
-	BookGroupID int32 `json:"book_group_id"`
+	UserID      int32 `json:"userID"`
+	BookGroupID int32 `json:"bookGroupID"`
 }
 
 func (q *Queries) DisLikes(ctx context.Context, arg DisLikesParams) error {
@@ -39,8 +39,8 @@ VALUES ($1, $2, 1)
 `
 
 type LikesParams struct {
-	UserID      int32 `json:"user_id"`
-	BookGroupID int32 `json:"book_group_id"`
+	UserID      int32 `json:"userID"`
+	BookGroupID int32 `json:"bookGroupID"`
 }
 
 func (q *Queries) Likes(ctx context.Context, arg LikesParams) error {
@@ -53,8 +53,8 @@ DELETE FROM book_group_likes WHERE user_id = $1 AND book_group_id = $2
 `
 
 type UnlikesParams struct {
-	UserID      int32 `json:"user_id"`
-	BookGroupID int32 `json:"book_group_id"`
+	UserID      int32 `json:"userID"`
+	BookGroupID int32 `json:"bookGroupID"`
 }
 
 func (q *Queries) Unlikes(ctx context.Context, arg UnlikesParams) error {

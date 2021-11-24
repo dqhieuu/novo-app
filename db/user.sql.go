@@ -26,10 +26,10 @@ RETURNING id, date_created, user_name, password, email, summary, avatar_image_id
 `
 
 type InsertUserParams struct {
-	UserName sql.NullString `json:"user_name"`
+	UserName sql.NullString `json:"userName"`
 	Password sql.NullString `json:"password"`
 	Email    string         `json:"email"`
-	RoleName string         `json:"role_name"`
+	RoleName string         `json:"roleName"`
 }
 
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, error) {

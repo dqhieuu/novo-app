@@ -13,9 +13,9 @@ INSERT INTO book_comments(user_id, book_group_id, book_chapter_id, content) VALU
 `
 
 type AddCommentParams struct {
-	UserID        int32         `json:"user_id"`
-	BookGroupID   sql.NullInt32 `json:"book_group_id"`
-	BookChapterID sql.NullInt32 `json:"book_chapter_id"`
+	UserID        int32         `json:"userID"`
+	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookChapterID sql.NullInt32 `json:"bookChapterID"`
 	Content       string        `json:"content"`
 }
 

@@ -43,46 +43,7 @@ func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
 	return outData, err
 }
 
-//Chưa viết hàm test
-/*func BookGroupsByGenre(genreId, page int32) ([]*db.BookGroup, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	bookGroups, err := queries.BookGroupsByGenre(ctx, db.BookGroupsByGenreParams{
-		GenreID: genreId,
-		Offset:  (page - 1) * limitBookGroup,
-		Limit:   limitBookGroup,
-	})
-	if err != nil {
-		stringErr := fmt.Sprintf("Get bookGroups by genre failed: %s", err)
-		return nil, errors.New(stringErr)
-	}
-	var outData []*db.BookGroup
-	for i := 0; i < len(bookGroups); i++ {
-		outData = append(outData, &bookGroups[i])
-	}
-	return outData, err
-}
-
-func BookGroupsByAuthor(authorId, page int32) ([]*db.BookGroup, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	bookGroups, err := queries.BookGroupsByAuthor(ctx, db.BookGroupsByAuthorParams{
-		BookAuthorID: authorId,
-		Offset:       (page - 1) * limitBookGroup,
-		Limit:        limitBookGroup,
-	})
-	if err != nil {
-		stringErr := fmt.Sprintf("Get bookGroups by author failed: %s", err)
-		return nil, errors.New(stringErr)
-	}
-	var outData []*db.BookGroup
-	for i := 0; i < len(bookGroups); i++ {
-		outData = append(outData, &bookGroups[i])
-	}
-	return outData, err
-}*/
-
-func UpdateBookGroup(id int32, title string, description string, ownerId int32) error {
+func UpdateBookGroup(id int32, title string, description string, ownerId int32, genreIds []int32, authorIds []int32) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	err := queries.UpdateBookGroup(ctx, db.UpdateBookGroupParams{
@@ -98,31 +59,63 @@ func UpdateBookGroup(id int32, title string, description string, ownerId int32) 
 		stringErr := fmt.Sprintf("Update book group failed: %s", err)
 		return errors.New(stringErr)
 	}
+
+	err = DeleteGenresByBookGroup(id)
+	if err != nil {
+		stringErr := fmt.Sprintf("Update book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+	for i := 0; i < len(genreIds); i++ {
+		_, err = CreateBookGroupGenre(id, genreIds[i])
+		if err != nil {
+			stringErr := fmt.Sprintf("Update book group failed: %s", err)
+			return errors.New(stringErr)
+		}
+	}
 	return nil
 }
 
-func CreateBookGroup(title string, description string, Ownerid int32) (*db.BookGroup, error) {
+func CreateBookGroup(title string, description string, ownerId int32, genreIds []int32, authorIds []int32) (*db.BookGroup, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	outData, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
+	bookGroup, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
 		Title: title,
 		Description: sql.NullString{
 			String: description,
 			Valid:  description != "",
 		},
-		Ownerid: Ownerid,
+		Ownerid: ownerId,
 	})
 	if err != nil {
 		stringErr := fmt.Sprintf("Create book group failed: %s", err)
 		return nil, errors.New(stringErr)
 	}
-	return &outData, nil
+
+	for i := 0; i < len(genreIds); i++ {
+		_, err = CreateBookGroupGenre(bookGroup.ID, genreIds[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &bookGroup, nil
 }
 
 func DeleteBookGroup(id int32) error {
+	err := DeleteGenresByBookGroup(id)
+	if err != nil {
+		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+
+	err = DeleteBookChapterByBookGroupId(id)
+	if err != nil {
+		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err := queries.DeleteBookGroup(ctx, id)
+	err = queries.DeleteBookGroup(ctx, id)
 	if err != nil {
 		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
 		return errors.New(stringErr)

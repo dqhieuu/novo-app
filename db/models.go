@@ -13,78 +13,78 @@ type BookAuthor struct {
 	ID            int32          `json:"id"`
 	Name          string         `json:"name"`
 	Description   sql.NullString `json:"description"`
-	AvatarImageID sql.NullInt32  `json:"avatar_image_id"`
+	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
 }
 
 type BookChapter struct {
 	ID            int32          `json:"id"`
-	DateCreated   time.Time      `json:"date_created"`
-	ChapterNumber pgtype.Numeric `json:"chapter_number"`
+	DateCreated   time.Time      `json:"dateCreated"`
+	ChapterNumber pgtype.Numeric `json:"chapterNumber"`
 	Description   sql.NullString `json:"description"`
-	TextContext   sql.NullString `json:"text_context"`
+	TextContext   sql.NullString `json:"textContext"`
 	Type          string         `json:"type"`
-	BookGroupID   int32          `json:"book_group_id"`
-	OwnerID       int32          `json:"owner_id"`
+	BookGroupID   int32          `json:"bookGroupID"`
+	OwnerID       int32          `json:"ownerID"`
 }
 
 type BookChapterImage struct {
-	BookChapterID int32 `json:"book_chapter_id"`
-	ImageID       int32 `json:"image_id"`
+	BookChapterID int32 `json:"bookChapterID"`
+	ImageID       int32 `json:"imageID"`
 }
 
 type BookChapterView struct {
 	Count         sql.NullInt32 `json:"count"`
-	ViewDate      time.Time     `json:"view_date"`
-	BookChapterID int32         `json:"book_chapter_id"`
+	ViewDate      time.Time     `json:"viewDate"`
+	BookChapterID int32         `json:"bookChapterID"`
 }
 
 type BookComment struct {
 	ID            int32         `json:"id"`
 	Content       string        `json:"content"`
-	UserID        int32         `json:"user_id"`
-	BookGroupID   sql.NullInt32 `json:"book_group_id"`
-	BookChapterID sql.NullInt32 `json:"book_chapter_id"`
+	UserID        int32         `json:"userID"`
+	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookChapterID sql.NullInt32 `json:"bookChapterID"`
 }
 
 type BookGroup struct {
 	ID          int32          `json:"id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	DateCreated sql.NullTime   `json:"date_created"`
+	DateCreated sql.NullTime   `json:"dateCreated"`
 	Ownerid     int32          `json:"ownerid"`
 }
 
 type BookGroupAltTitle struct {
 	Title  string `json:"title"`
-	BookID int32  `json:"book_id"`
+	BookID int32  `json:"bookID"`
 }
 
 type BookGroupArt struct {
-	BookGroupID int32 `json:"book_group_id"`
-	ImageID     int32 `json:"image_id"`
+	BookGroupID int32 `json:"bookGroupID"`
+	ImageID     int32 `json:"imageID"`
 }
 
 type BookGroupAuthor struct {
-	BookGroupID  int32 `json:"book_group_id"`
-	BookAuthorID int32 `json:"book_author_id"`
+	BookGroupID  int32 `json:"bookGroupID"`
+	BookAuthorID int32 `json:"bookAuthorID"`
 }
 
 type BookGroupGenre struct {
-	BookGroupID int32 `json:"book_group_id"`
-	GenreID     int32 `json:"genre_id"`
+	BookGroupID int32 `json:"bookGroupID"`
+	GenreID     int32 `json:"genreID"`
 }
 
 type BookGroupLike struct {
 	Point       int32 `json:"point"`
-	UserID      int32 `json:"user_id"`
-	BookGroupID int32 `json:"book_group_id"`
+	UserID      int32 `json:"userID"`
+	BookGroupID int32 `json:"bookGroupID"`
 }
 
 type Genre struct {
 	ID          int32          `json:"id"`
 	Name        string         `json:"name"`
 	Description sql.NullString `json:"description"`
-	ImageID     sql.NullInt32  `json:"image_id"`
+	ImageID     sql.NullInt32  `json:"imageID"`
 }
 
 type Image struct {
@@ -102,25 +102,25 @@ type Role struct {
 	Description sql.NullString `json:"description"`
 }
 
-type RoleAction struct {
+type RolePermission struct {
 	Module string `json:"module"`
 	Action string `json:"action"`
-	RoleID int32  `json:"role_id"`
+	RoleID int32  `json:"roleID"`
 }
 
 type TempImage struct {
-	ImageID     int32     `json:"image_id"`
-	DateCreated time.Time `json:"date_created"`
+	ImageID     int32     `json:"imageID"`
+	DateCreated time.Time `json:"dateCreated"`
 }
 
 type User struct {
 	ID            int32          `json:"id"`
-	DateCreated   time.Time      `json:"date_created"`
-	UserName      sql.NullString `json:"user_name"`
+	DateCreated   time.Time      `json:"dateCreated"`
+	UserName      sql.NullString `json:"userName"`
 	Password      sql.NullString `json:"password"`
 	Email         string         `json:"email"`
 	Summary       sql.NullString `json:"summary"`
-	AvatarImageID sql.NullInt32  `json:"avatar_image_id"`
-	RoleID        int32          `json:"role_id"`
-	FavoriteList  sql.NullString `json:"favorite_list"`
+	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
+	RoleID        int32          `json:"roleID"`
+	FavoriteList  sql.NullString `json:"favoriteList"`
 }

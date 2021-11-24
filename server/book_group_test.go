@@ -14,8 +14,9 @@ import (
 func TestBookGroupById(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookGroups()
-	defer deleteBookGroups()
+	createData()
+	defer removeData()
+
 	intRandom := r.Intn(len(bookGroups))
 	bookGroup1 := bookGroups[intRandom]
 	bookGroup2, err := BookGroupById(bookGroup1.ID)
@@ -28,63 +29,70 @@ func TestBookGroupById(t *testing.T) {
 func TestCreateBookGroup(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookGroups()
-	defer deleteBookGroups()
+	createData()
+	defer removeData()
+
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	title := "titleTest"
 	description := "descTest"
 	ownerId := users[r.Int31n(cntUser)].ID
-	bookGroup1, err := CreateBookGroup(title, description, ownerId)
+	var genreIds []int32
+	length := r.Intn(len(genres))
+	for i := 0; i < length && len(genreIds) <= limitBookGroup; i++ { // xét page 1
+		genreIds = append(genreIds, genres[i].ID)
+	}
+
+	bookGroup1, err := CreateBookGroup(title, description, ownerId, genreIds, []int32{})
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer func() {
-		err = queries.DeleteBookGroup(ctx, bookGroup1.ID)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
 
 	bookGroup2, err := queries.BookGroupById(ctx, bookGroup1.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.Equal(t, *bookGroup1, bookGroup2, "Compare bookGroup")
+	tmp, err := GenresByBookGroup(bookGroup2.ID, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, len(tmp), len(genreIds))
+	for i := 0; i < len(tmp); i++ {
+		assert.Equal(t, tmp[i], genreIds[i])
+	}
+	err = DeleteBookGroup(bookGroup1.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestUpdateBookGroup(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookGroups()
-	defer deleteBookGroups()
+	createData()
+	defer removeData()
+
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	ownerId := users[r.Int31n(cntUser)].ID
-	title := "titleTest"
-	var description sql.NullString
-	err := description.Scan("descTest")
-	if err != nil {
-		t.Fatal(err)
-	}
-	bookGroup1, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
-		Title:       title,
-		Description: description,
-		Ownerid:     ownerId,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		err = queries.DeleteBookGroup(ctx, bookGroup1.ID)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
+
+	intRand := r.Intn(len(bookGroups))
+	bookGroup1 := bookGroups[intRand]
+
 	newTitle := "titleUpdate"
 	newDesc := "descUpdate"
 	newOwnerId := users[r.Int31n(cntUser)].ID
-	err = UpdateBookGroup(bookGroup1.ID, newTitle, newDesc, newOwnerId)
+
+	length := r.Intn(len(genres))
+	var genreIds []int32
+	for i := 0; i < length && len(genreIds) <= limitGenres; i++ {
+		if r.Intn(1) == 1 {
+			genreIds = append(genreIds, genres[i].ID)
+		}
+	}
+
+	err := UpdateBookGroup(bookGroup1.ID, newTitle, newDesc, newOwnerId, genreIds, []int32{})
 	bookGroup2, err := queries.BookGroupById(ctx, bookGroup1.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -97,13 +105,23 @@ func TestUpdateBookGroup(t *testing.T) {
 	}
 	assert.Equal(t, bookGroup2.Description, tmp, "Compare description")
 	assert.Equal(t, bookGroup2.Ownerid, newOwnerId, "Compare ownerID")
+
+	genreIds2, err := GenresByBookGroup(bookGroup1.ID, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, len(genreIds), len(genreIds2))
+	for i := 0; i < len(genreIds); i++ {
+		assert.Equal(t, genreIds[i], genreIds2[i])
+	}
 }
 
 func TestDeleteBookGroup(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookGroups()
-	defer deleteBookGroups()
+	createData()
+	defer removeData()
+
 	intRandom := r.Intn(len(bookGroups))
 	bookGroup1 := bookGroups[intRandom]
 	err := DeleteBookGroup(bookGroup1.ID)
@@ -115,38 +133,44 @@ func TestDeleteBookGroup(t *testing.T) {
 		stringErr := fmt.Sprintf("Book group have not been deleted")
 		t.Fatal(errors.New(stringErr))
 	}
+
+	genreIds, err := GenresByBookGroup(bookGroup1.ID, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(genreIds) > 0 {
+		stringErr := fmt.Sprintf("Bảng book_group_genres không cập nhật theo")
+		t.Fatal(stringErr)
+	}
+
+	bookChapterTest, err := BookChaptersByBookGroupId(bookGroup1.ID, 1)
+	if len(bookChapterTest) > 0 {
+		stringErr := fmt.Sprintf("Bảng book chapter không cập nhật theo")
+		t.Fatal(stringErr)
+	}
 }
 
 func TestBookGroupsByTitle(t *testing.T) {
 	db.Init()
 	defer db.Close()
-	createBookGroups()
-	defer deleteBookGroups()
+	createData()
+	defer removeData()
+
 	titles := []string{"one", "two", "thee"}
-	subTitle := titles[r.Intn(2)]
-	newBookGroups, err := BookGroupsByTitle(subTitle, 1)
+	intRand := r.Intn(len(titles))
+	subTitle := titles[intRand]
+	tmp1, err := BookGroupsByTitle(subTitle, 1)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := 0; i < len(bookGroups); i++ {
+	var tmp2 []*db.BookGroup
+	for i := 0; i < len(bookGroups) && len(tmp2) <= limitBookGroup; i++ {
 		if strings.Contains(bookGroups[i].Title, subTitle) == true {
-			found := false
-			for j := 0; j < len(newBookGroups); j++ {
-				if bookGroups[i].ID == newBookGroups[j].ID {
-					assert.Equal(t, bookGroups[i], newBookGroups[j])
-					found = true
-				}
-			}
-			if found != true {
-				stringErr := fmt.Sprintf("Thiếu")
-				t.Fatal(errors.New(stringErr))
-			}
+			tmp2 = append(tmp2, bookGroups[i])
 		}
 	}
-	for i := 0; i < len(newBookGroups); i++ {
-		if strings.Contains(newBookGroups[i].Title, subTitle) != true {
-			stringErr := fmt.Sprintf("%s not contains %s ", newBookGroups[i].Title, subTitle)
-			t.Fatal(errors.New(stringErr))
-		}
+	assert.Equal(t, len(tmp1), len(tmp2))
+	for i := 0; i < len(tmp1); i++ {
+		assert.Equal(t, tmp1[i], tmp2[i])
 	}
 }
