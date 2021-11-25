@@ -55,8 +55,8 @@ DO UPDATE SET count = count + 1
 `
 
 type UpsertViewByDateParams struct {
-	BookChapterID int32     `json:"book_chapter_id"`
-	ViewDate      time.Time `json:"view_date"`
+	BookChapterID int32     `json:"bookChapterID"`
+	ViewDate      time.Time `json:"viewDate"`
 }
 
 func (q *Queries) UpsertViewByDate(ctx context.Context, arg UpsertViewByDateParams) error {

@@ -7,24 +7,7 @@ WHERE id = $1;
 SELECT *
 FROM book_groups
 WHERE  LOWER(title) LIKE '%' || $1 || '%'
-OFFSET $2 ROWS
-    FETCH FIRST $3 ROWS ONLY;
-
--- name: BookGroupsByGenre :many
-SELECT bg.*
-FROM book_groups AS bg
-         JOIN book_group_genres AS bgg
-              ON bg.book_group_id=bgg.book_group_id
-WHERE bgg.genre_id=$1
-OFFSET $2 ROWS
-    FETCH FIRST $3 ROWS ONLY;
-
--- name: BookGroupsByAuthor :many
-SELECT bg.*
-FROM book_groups AS bg
-         JOIN book_group_authors AS bga
-              ON bg.book_group_id=bga.book_group_id
-WHERE bga.book_author_id=$1
+ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY;
 
