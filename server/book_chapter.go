@@ -55,14 +55,14 @@ func UpdateBookChapter(id int32, chapterNumber, description, textContext, chapte
 		return errors.New(stringErr)
 	}
 
-	var descriptionSql sql.NullString
+	descriptionSql := sql.NullString{}
 	err = descriptionSql.Scan(description)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
 		return errors.New(stringErr)
 	}
 
-	var textContextSql sql.NullString
+	textContextSql := sql.NullString{}
 	err = textContextSql.Scan(textContext)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
@@ -98,14 +98,14 @@ func CreateBookChapter(chapterNumber, description, textContext, chapterType stri
 		return nil, errors.New(stringErr)
 	}
 
-	var descriptionSql sql.NullString
+	descriptionSql := sql.NullString{}
 	err = descriptionSql.Scan(description)
 	if err != nil {
 		stringErr := fmt.Sprintf("Create book chapter  failed: %s", err)
 		return nil, errors.New(stringErr)
 	}
 
-	var textContextSql sql.NullString
+	textContextSql := sql.NullString{}
 	err = textContextSql.Scan(textContext)
 	if err != nil {
 		stringErr := fmt.Sprintf("Create book chapter  failed: %s", err)
@@ -127,12 +127,23 @@ func CreateBookChapter(chapterNumber, description, textContext, chapterType stri
 	return &bookChapter, nil
 }
 
-func DeleteBookChapter(id int32) error {
+func DeleteBookChapterById(id int32) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err := queries.DeleteBookChapter(ctx, id)
+	err := queries.DeleteBookChapterById(ctx, id)
 	if err != nil {
-		stringErr := fmt.Sprintf("Delete book chapter  failed: %s", err)
+		stringErr := fmt.Sprintf("Delete book chapter by Id failed: %s", err)
+		return errors.New(stringErr)
+	}
+	return nil
+}
+
+func DeleteBookChapterByBookGroupId(bookGroupId int32) error {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	err := queries.DeleteBookChapterByBookGroupId(ctx, bookGroupId)
+	if err != nil {
+		stringErr := fmt.Sprintf("Delete book chapter by bookGroupId failed: %s", err)
 		return errors.New(stringErr)
 	}
 	return nil

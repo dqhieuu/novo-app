@@ -9,7 +9,8 @@ import (
 )
 
 const deleteRole = `-- name: DeleteRole :exec
-DELETE FROM roles
+DELETE
+FROM roles
 WHERE name = $1
 `
 
@@ -36,40 +37,23 @@ func (q *Queries) InsertNewRole(ctx context.Context, arg InsertNewRoleParams) (R
 	return i, err
 }
 
-const roleActionsById = `-- name: RoleActionsById :many
-SELECT module || '.' || action FROM role_actions ra
-WHERE ra.role_id = $1
+const role = `-- name: Role :one
+SELECT r.name                             role_name,
+       array_agg((module || '.' || action))::text[] role_permissions
+FROM role_permissions rp
+     JOIN roles r on r.id = rp.role_id
+WHERE rp.role_id = $1
+GROUP BY r.name
 `
 
-func (q *Queries) RoleActionsById(ctx context.Context, roleID int32) ([]interface{}, error) {
-	rows, err := q.db.Query(ctx, roleActionsById, roleID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []interface{}
-	for rows.Next() {
-		var column_1 interface{}
-		if err := rows.Scan(&column_1); err != nil {
-			return nil, err
-		}
-		items = append(items, column_1)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+type RoleRow struct {
+	RoleName        string   `json:"roleName"`
+	RolePermissions []string `json:"rolePermissions"`
 }
 
-const roleIdByName = `-- name: RoleIdByName :one
-SELECT id FROM roles
-WHERE name = $1
-FETCH FIRST ROWS ONLY
-`
-
-func (q *Queries) RoleIdByName(ctx context.Context, name string) (int32, error) {
-	row := q.db.QueryRow(ctx, roleIdByName, name)
-	var id int32
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) Role(ctx context.Context, roleID int32) (RoleRow, error) {
+	row := q.db.QueryRow(ctx, role, roleID)
+	var i RoleRow
+	err := row.Scan(&i.RoleName, &i.RolePermissions)
+	return i, err
 }

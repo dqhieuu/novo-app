@@ -7,6 +7,7 @@ WHERE id = $1;
 SELECT *
 FROM book_chapters
 WHERE book_group_id = $1
+ORDER BY id
 OFFSET $2 ROWS FETCH FIRST $3 ROWS ONLY;
 
 -- name: UpdateBookChapter :exec
@@ -24,7 +25,12 @@ INSERT INTO book_chapters(chapter_number,description,text_context,type,book_grou
 VALUES (@chapter_number,@description,@text_context,@type,@book_group_id,@owner_id)
 RETURNING *;
 
--- name: DeleteBookChapter :exec
+-- name: DeleteBookChapterById :exec
 DELETE
 FROM book_chapters
 WHERE id = $1;
+
+-- name: DeleteBookChapterByBookGroupId :exec
+DELETE
+FROM book_chapters
+WHERE book_group_id = $1;

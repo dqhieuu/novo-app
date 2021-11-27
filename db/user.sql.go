@@ -8,6 +8,24 @@ import (
 	"database/sql"
 )
 
+const completeOauthAccount = `-- name: CompleteOauthAccount :exec
+UPDATE users
+SET user_name = $2,
+    avatar_image_id = $3
+WHERE id = $1
+`
+
+type CompleteOauthAccountParams struct {
+	ID            int32          `json:"id"`
+	UserName      sql.NullString `json:"userName"`
+	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
+}
+
+func (q *Queries) CompleteOauthAccount(ctx context.Context, arg CompleteOauthAccountParams) error {
+	_, err := q.db.Exec(ctx, completeOauthAccount, arg.ID, arg.UserName, arg.AvatarImageID)
+	return err
+}
+
 const deleteUser = `-- name: DeleteUser :exec
 DELETE
 FROM users
@@ -26,10 +44,10 @@ RETURNING id, date_created, user_name, password, email, summary, avatar_image_id
 `
 
 type InsertUserParams struct {
-	UserName sql.NullString `json:"user_name"`
+	UserName sql.NullString `json:"userName"`
 	Password sql.NullString `json:"password"`
 	Email    string         `json:"email"`
-	RoleName string         `json:"role_name"`
+	RoleName string         `json:"roleName"`
 }
 
 func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, error) {

@@ -11,12 +11,12 @@ import (
 
 type UserClaims struct {
 	UserId          int32
-	Role            string
+	RoleName        string
 	RolePermissions []string
 }
 
-type passwordLogin struct {
-	UsernameOrEmail string `form:"username_or_email" json:"username_or_email" binding:"required"`
+type PasswordLogin struct {
+	UsernameOrEmail string `form:"usernameOrEmail" json:"usernameOrEmail" binding:"required"`
 	Password        string `form:"password" json:"password" binding:"required"`
 }
 
@@ -25,7 +25,9 @@ type OauthLogin struct {
 	Code     string `form:"code" json:"code" binding:"required"`
 }
 
-var userId = "uid"
+var UserIdClaimKey = "uid"
+var RoleNameClaimKey = "rol"
+var RolePermsClaimKey = "rolp"
 
 // AuthMiddleware is a jwt auth(enticator/orizator)
 func AuthMiddleware() *jwt.GinJWTMiddleware {
@@ -34,61 +36,56 @@ func AuthMiddleware() *jwt.GinJWTMiddleware {
 		Key:         []byte("U3M9B6BdNrWOxnar6P0HSqskxjec7DkG"),
 		Timeout:     time.Hour,
 		MaxRefresh:  time.Hour,
-		IdentityKey: userId,
+		IdentityKey: UserIdClaimKey,
 
+		// For the login function
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			// Try if it has password login fields
-			var loginInfo passwordLogin
+			var loginInfo PasswordLogin
 			if err := c.ShouldBind(&loginInfo); err == nil {
-				user, err := UserByLoginInfo(loginInfo.UsernameOrEmail, loginInfo.Password)
+				user, role, err := UserByLoginInfo(loginInfo)
 				if err != nil {
 					return nil, err
 				}
-				return UserClaims{UserId: user.ID}, nil
+
+				return UserClaims{UserId: user.ID, RoleName: role.RoleName, RolePermissions: role.RolePermissions}, nil
 			}
 
 			// Try if it has oauth login fields
 			var tokenInfo OauthLogin
 			if err := c.ShouldBindQuery(&tokenInfo); err == nil {
-				user, err := UserByOauthToken(tokenInfo)
+				user, role, err := UserByOauthToken(tokenInfo)
 				if err != nil {
 					return nil, err
 				}
-				return UserClaims{UserId: user.ID}, nil
+
+				return UserClaims{UserId: user.ID, RoleName: role.RoleName, RolePermissions: role.RolePermissions}, nil
 			}
 
-			return nil, errors.New("authentication failed")
+			return nil, errors.New("login credentials invalid")
 		},
 
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(UserClaims); ok {
 				return jwt.MapClaims{
-					userId: v.UserId,
-					"role": v.Role,
+					UserIdClaimKey:    v.UserId,
+					RoleNameClaimKey:  v.RoleName,
+					RolePermsClaimKey: v.RolePermissions,
 				}
 			}
 			return jwt.MapClaims{}
 		},
 
-		//Authorizator: func(data interface{}, c *gin.Context) bool {
-		//	if v, ok := data.(*UserClaims); ok {
-		//		log.Println(v.UserId)
-		//		return true
-		//	}
-		//
-		//	return false
-		//},
-
 		SendCookie:     true,
 		SecureCookie:   false, //non HTTPS dev environments
 		CookieHTTPOnly: true,  // JS can't modify. Helps mitigate cookie hijacking
 		CookieDomain:   "localhost:7001",
-		CookieName:     "jwt",
+		CookieName:     "token",
 		CookieSameSite: http.SameSiteDefaultMode, // (https only/Lax mode) CSRF protection
 
 		// TokenLookup is a string in the form of "<source>:<name>" that is used
 		// to extract token from the request.
-		TokenLookup: "header: Authorization, query: token, cookie: jwt",
+		TokenLookup: "header: Authorization, query: token, cookie: token",
 	})
 
 	if err != nil {

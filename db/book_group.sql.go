@@ -27,100 +27,17 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error
 	return i, err
 }
 
-const bookGroupsByAuthor = `-- name: BookGroupsByAuthor :many
-SELECT bg.id, bg.title, bg.description, bg.date_created, bg.ownerid
-FROM book_groups AS bg
-         JOIN book_group_authors AS bga
-              ON bg.book_group_id=bga.book_group_id
-WHERE bga.book_author_id=$1
-OFFSET $2 ROWS
-    FETCH FIRST $3 ROWS ONLY
-`
-
-type BookGroupsByAuthorParams struct {
-	BookAuthorID int32 `json:"book_author_id"`
-	Offset       int32 `json:"offset"`
-	Limit        int32 `json:"limit"`
-}
-
-func (q *Queries) BookGroupsByAuthor(ctx context.Context, arg BookGroupsByAuthorParams) ([]BookGroup, error) {
-	rows, err := q.db.Query(ctx, bookGroupsByAuthor, arg.BookAuthorID, arg.Offset, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []BookGroup
-	for rows.Next() {
-		var i BookGroup
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.Description,
-			&i.DateCreated,
-			&i.Ownerid,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const bookGroupsByGenre = `-- name: BookGroupsByGenre :many
-SELECT bg.id, bg.title, bg.description, bg.date_created, bg.ownerid
-FROM book_groups AS bg
-         JOIN book_group_genres AS bgg
-              ON bg.book_group_id=bgg.book_group_id
-WHERE bgg.genre_id=$1
-OFFSET $2 ROWS
-    FETCH FIRST $3 ROWS ONLY
-`
-
-type BookGroupsByGenreParams struct {
-	GenreID int32 `json:"genre_id"`
-	Offset  int32 `json:"offset"`
-	Limit   int32 `json:"limit"`
-}
-
-func (q *Queries) BookGroupsByGenre(ctx context.Context, arg BookGroupsByGenreParams) ([]BookGroup, error) {
-	rows, err := q.db.Query(ctx, bookGroupsByGenre, arg.GenreID, arg.Offset, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []BookGroup
-	for rows.Next() {
-		var i BookGroup
-		if err := rows.Scan(
-			&i.ID,
-			&i.Title,
-			&i.Description,
-			&i.DateCreated,
-			&i.Ownerid,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
 SELECT id, title, description, date_created, ownerid
 FROM book_groups
 WHERE  LOWER(title) LIKE '%' || $1 || '%'
+ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY
 `
 
 type BookGroupsByTitleParams struct {
-	Column1 sql.NullString `json:"column_1"`
+	Column1 sql.NullString `json:"column1"`
 	Offset  int32          `json:"offset"`
 	Limit   int32          `json:"limit"`
 }

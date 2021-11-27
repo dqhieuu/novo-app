@@ -30,41 +30,25 @@ func ValidUsername(username string) bool {
 	return validUsername
 }
 
-func CreateOauthAccount(email, roleName string) (*db.User, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-
-	user, err := queries.InsertUser(ctx, db.InsertUserParams{
-		Email:    email,
-		RoleName: roleName,
-	})
-
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("creating new unregistered user failed: %s", err))
-	}
-
-	return &user, nil
-}
-
-func CreateAccount(username, password, email, roleName string) (*db.User, error) {
+func createAccount(username, password, email, roleName string) (*db.User, *db.RoleRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
 	if _, err := mail.ParseAddress(email); err != nil {
-		return nil, errors.New(fmt.Sprintf(`invalid email address: "%s"`, email))
+		return nil, nil, errors.New(fmt.Sprintf(`invalid email address: "%s"`, email))
 	}
 
 	if !ValidUsername(username) {
-		return nil, errors.New(fmt.Sprintf(`invalid user name: "%s"`, username))
+		return nil, nil, errors.New(fmt.Sprintf(`invalid user name: "%s"`, username))
 	}
 
 	if !ValidPassword(password) {
-		return nil, errors.New(fmt.Sprintf(`invalid password: "%s"`, password))
+		return nil, nil, errors.New(fmt.Sprintf(`invalid password: "%s"`, password))
 	}
 
 	hashedPassword, err := GeneratePasswordHash(password)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("error while generating password: %s", err))
+		return nil, nil, errors.New(fmt.Sprintf("error while generating password: %s", err))
 	}
 
 	user, err := queries.InsertUser(ctx, db.InsertUserParams{
@@ -74,16 +58,52 @@ func CreateAccount(username, password, email, roleName string) (*db.User, error)
 		RoleName: roleName,
 	})
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("creating new user failed: %s", err))
+		return nil, nil, errors.New(fmt.Sprintf("creating new user failed: %s", err))
 	}
 
-	//role, err := queries.RoleByUserId(ctx, user.ID)
-	//if err != nil {
-	//	return nil, errors.New(fmt.Sprintf("getting user role failed: %s", err))
-	//}
-	//fmt.Println(role.RolePermissions.([]string), roleName)
+	role, err := queries.Role(ctx, user.RoleID)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	return &user, nil
+	return &user, &role, nil
+}
+
+func UserByLoginInfo(loginInfo PasswordLogin) (*db.User, *db.RoleRow, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	user, err := queries.UserByUsernameOrEmail(ctx, sql.NullString{String: loginInfo.UsernameOrEmail, Valid: true})
+	if err != nil {
+		return nil, nil, errors.New("user not found")
+	}
+
+	hexPassword := user.Password
+
+	if !hexPassword.Valid {
+		return nil, nil, errors.New("can't access oauth user (having a nullable password)")
+	}
+
+	var bytePassword []byte
+
+	_, err = hex.Decode([]byte(hexPassword.String), bytePassword)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if !EqualPasswords(bytePassword, []byte(loginInfo.Password)) {
+		return nil, nil, errors.New("incorrect password")
+	}
+
+	role, err := queries.Role(ctx, user.RoleID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &user, &role, nil
+}
+
+func RegisterAccount(username, password, email string) (*db.User, *db.RoleRow, error) {
+	return createAccount(username, password, email, "member")
 }
 
 func DeleteAccount(username string) error {
@@ -95,40 +115,4 @@ func DeleteAccount(username string) error {
 		return errors.New(fmt.Sprintf(`Failed to delete account "%s": %s`, username, err))
 	}
 	return nil
-}
-
-func RegisterAccount(username, password, email string) (*db.User, error) {
-	return CreateAccount(username, password, email, "member")
-}
-
-func RegisterOauthAccount(email string) (*db.User, error) {
-	return CreateOauthAccount(email, "member")
-}
-
-func UserByLoginInfo(usernameOrEmail string, password string) (*db.User, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	user, err := queries.UserByUsernameOrEmail(ctx, sql.NullString{String: usernameOrEmail, Valid: true})
-	if err != nil {
-		return nil, errors.New("user not found")
-	}
-
-	hexPassword := user.Password
-
-	if !hexPassword.Valid {
-		return nil, errors.New("can't access oauth user")
-	}
-
-	var bytePassword []byte
-
-	_, err = hex.Decode([]byte(hexPassword.String), bytePassword)
-	if err != nil {
-		return nil, err
-	}
-
-	if !EqualPasswords(bytePassword, []byte(password)) {
-		return nil, errors.New("incorrect password")
-	}
-
-	return &user, nil
 }

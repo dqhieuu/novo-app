@@ -21,3 +21,9 @@ DELETE
 FROM users
 WHERE user_name = $1;
 
+-- name: CompleteOauthAccount :exec
+UPDATE users
+SET user_name = $2,
+    avatar_image_id = $3
+WHERE id = $1;
+
