@@ -31,22 +31,8 @@ func TestCreateAccount(t *testing.T) {
 	defer db.Close()
 
 	username, password, email := "testuser", "secretpw", "user@atest.com"
-	testRole := "Test"
 
-	_, err := queries.InsertNewRole(ctx, db.InsertNewRoleParams{
-		Name: testRole,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer func() {
-		err := queries.DeleteRole(ctx, testRole)
-		if err != nil {
-			t.Fatal(err)
-		}
-	}()
-
-	_, err = CreateAccount(username, password, email, testRole)
+	_, _, err := RegisterAccount(username, password, email)
 	if err != nil {
 		t.Fatal(err)
 	}
