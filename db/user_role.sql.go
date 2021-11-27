@@ -37,24 +37,23 @@ func (q *Queries) InsertNewRole(ctx context.Context, arg InsertNewRoleParams) (R
 	return i, err
 }
 
-const roleByUserId = `-- name: RoleByUserId :one
+const role = `-- name: Role :one
 SELECT r.name                             role_name,
-       array_agg(module || '.' || action) role_permissions
+       array_agg((module || '.' || action))::text[] role_permissions
 FROM role_permissions rp
-         JOIN roles r on r.id = rp.role_id
-         JOIN users u on r.id = u.role_id
-WHERE u.id = $1
+     JOIN roles r on r.id = rp.role_id
+WHERE rp.role_id = $1
 GROUP BY r.name
 `
 
-type RoleByUserIdRow struct {
-	RoleName        string      `json:"roleName"`
-	RolePermissions interface{} `json:"rolePermissions"`
+type RoleRow struct {
+	RoleName        string   `json:"roleName"`
+	RolePermissions []string `json:"rolePermissions"`
 }
 
-func (q *Queries) RoleByUserId(ctx context.Context, id int32) (RoleByUserIdRow, error) {
-	row := q.db.QueryRow(ctx, roleByUserId, id)
-	var i RoleByUserIdRow
+func (q *Queries) Role(ctx context.Context, roleID int32) (RoleRow, error) {
+	row := q.db.QueryRow(ctx, role, roleID)
+	var i RoleRow
 	err := row.Scan(&i.RoleName, &i.RolePermissions)
 	return i, err
 }

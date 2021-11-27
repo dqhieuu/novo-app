@@ -1,5 +1,6 @@
 INSERT INTO roles (name, description)
-VALUES ('member', 'Default user role when registered.'),
+VALUES ('oauth_incomplete', 'User role created by Oauth login automatically, but username is not defined.'),
+       ('member', 'Default user role after completing registration.'),
        ('moderator', 'The one who moderates contents.'),
        ('admin', 'The Supreme Leader.');
 

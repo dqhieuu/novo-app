@@ -1,9 +1,8 @@
 package server
 
 import (
-	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 func Run() {
@@ -17,10 +16,17 @@ func Run() {
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	r.Use(gin.Recovery())
 
+	// CORS middleware allows cross-origin requests
+	r.Use(cors.Default())
+
 	InitOauth()
+
+	// Auth middleware
 	authMiddleware := AuthMiddleware()
 
+	// For Password login
 	r.POST("/login", authMiddleware.LoginHandler)
+	// For Oauth login
 	r.GET("/login", authMiddleware.LoginHandler)
 
 	//imageHandler := r.Group("/images")
@@ -53,13 +59,9 @@ func Run() {
 
 	r.GET("/oauth/google", GoogleOauthRedirect)
 
-	r.NoRoute(authMiddleware.MiddlewareFunc(), func(c *gin.Context) {
-		claims := jwt.ExtractClaims(c)
-		log.Printf("NoRoute claims: %#v\n", claims)
-		c.JSON(404, gin.H{"code": "PAGE_NOT_FOUND", "message": "Page not found"})
-	})
-
 	auth := r.Group("/auth")
+	auth.Use(authMiddleware.MiddlewareFunc())
+
 	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")

@@ -8,12 +8,10 @@ DELETE
 FROM roles
 WHERE name = $1;
 
--- name: RoleByUserId :one
+-- name: Role :one
 SELECT r.name                             role_name,
-       array_agg(module || '.' || action) role_permissions
+       array_agg((module || '.' || action))::text[] role_permissions
 FROM role_permissions rp
-         JOIN roles r on r.id = rp.role_id
-         JOIN users u on r.id = u.role_id
-WHERE u.id = $1
+     JOIN roles r on r.id = rp.role_id
+WHERE rp.role_id = $1
 GROUP BY r.name;
-
