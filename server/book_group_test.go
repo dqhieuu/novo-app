@@ -37,13 +37,20 @@ func TestCreateBookGroup(t *testing.T) {
 	title := "titleTest"
 	description := "descTest"
 	ownerId := users[r.Int31n(cntUser)].ID
+
+	var authorIds []int32
+	lenAuthors := r.Intn(len(bookAuthors))
+	for i := 0; i < lenAuthors && len(authorIds) <= limitBookGroup; i++ { // xét page 1
+		authorIds = append(authorIds, bookAuthors[i].ID)
+	}
+
 	var genreIds []int32
-	length := r.Intn(len(genres))
-	for i := 0; i < length && len(genreIds) <= limitBookGroup; i++ { // xét page 1
+	lenGenres := r.Intn(len(genres))
+	for i := 0; i < lenGenres && len(genreIds) <= limitBookGroup; i++ { // xét page 1
 		genreIds = append(genreIds, genres[i].ID)
 	}
 
-	bookGroup1, err := CreateBookGroup(title, description, ownerId, genreIds, []int32{})
+	bookGroup1, err := CreateBookGroup(title, description, ownerId, genreIds, authorIds)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -84,15 +91,23 @@ func TestUpdateBookGroup(t *testing.T) {
 	newDesc := "descUpdate"
 	newOwnerId := users[r.Int31n(cntUser)].ID
 
-	length := r.Intn(len(genres))
+	lenAuthors := r.Intn(len(bookAuthors))
+	var authorIds []int32
+	for i := 0; i < lenAuthors && len(authorIds) <= limitGenres; i++ {
+		if r.Intn(1) == 1 {
+			authorIds = append(authorIds, bookAuthors[i].ID)
+		}
+	}
+
+	lenGenres := r.Intn(len(genres))
 	var genreIds []int32
-	for i := 0; i < length && len(genreIds) <= limitGenres; i++ {
+	for i := 0; i < lenGenres && len(genreIds) <= limitGenres; i++ {
 		if r.Intn(1) == 1 {
 			genreIds = append(genreIds, genres[i].ID)
 		}
 	}
 
-	err := UpdateBookGroup(bookGroup1.ID, newTitle, newDesc, newOwnerId, genreIds, []int32{})
+	err := UpdateBookGroup(bookGroup1.ID, newTitle, newDesc, newOwnerId, genreIds, authorIds)
 	bookGroup2, err := queries.BookGroupById(ctx, bookGroup1.ID)
 	if err != nil {
 		t.Fatal(err)
@@ -140,6 +155,15 @@ func TestDeleteBookGroup(t *testing.T) {
 	}
 	if len(genreIds) > 0 {
 		stringErr := fmt.Sprintf("Bảng book_group_genres không cập nhật theo")
+		t.Fatal(stringErr)
+	}
+
+	authorIds, err := GenresByBookGroup(bookGroup1.ID, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(authorIds) > 0 {
+		stringErr := fmt.Sprintf("Bảng book_group_authors không cập nhật theo")
 		t.Fatal(stringErr)
 	}
 
