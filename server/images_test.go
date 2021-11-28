@@ -6,9 +6,6 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"image"
-	"image/color"
-	"image/png"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,50 +14,6 @@ import (
 
 const DefaultWidth = 200
 const DefaultHeight = 100
-
-func CreateImage(width int, height int) (*os.File, int64, string, string, error) {
-	upLeft := image.Point{}
-	lowRight := image.Point{X: width, Y: height}
-
-	img := image.NewRGBA(image.Rectangle{Min: upLeft, Max: lowRight})
-
-	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-	cyan := color.RGBA{R: 100, G: 200, B: 200, A: 0xff}
-
-	// Set color for each pixel.
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			switch {
-			case x < width/2 && y < height/2: // upper left quadrant
-				img.Set(x, y, cyan)
-			case x >= width/2 && y >= height/2: // lower right quadrant
-				img.Set(x, y, color.White)
-			default:
-				// Use zero value.
-			}
-		}
-	}
-	dst := "test/" + "test-" + uuid.NewString() + ".png"
-	fullPath, _, err := checkFileDir(dst, RootFolder)
-	if err != nil {
-		return nil, -1, "", "", err
-	}
-
-	fileStream, setupErr := os.Create(fullPath)
-	setupErr = png.Encode(fileStream, img)
-	if setupErr != nil {
-		return nil, -1, "", "", err
-	}
-	_, err = fileStream.Seek(0, 0)
-	if err != nil {
-		return nil, -1, "", "", err
-	}
-	imageStatus, setupErr := fileStream.Stat()
-	if err != nil {
-		return nil, -1, "", "", err
-	}
-	return fileStream, imageStatus.Size(), dst, fullPath, nil
-}
 
 func TestGenerateImageHash(t *testing.T) {
 	img, _, _, absPath, err := CreateImage(DefaultWidth, DefaultHeight)
@@ -216,7 +169,7 @@ func TestSaveImageFromStream(t *testing.T) {
 		t.Fatalf("Error creating test image: %s\n", err)
 	}
 
-	imageId, err := SaveImageFromStream(img, "test", uuid.NewString(), "")
+	imageId, _, err := SaveImageFromStream(img, "test", uuid.NewString(), "")
 
 	assert.Nil(t, err)
 
