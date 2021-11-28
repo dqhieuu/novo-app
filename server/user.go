@@ -24,19 +24,33 @@ func GeneratePasswordHash(password string) ([]byte, error) {
 }
 
 func ValidPassword(password string) bool {
+	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x1F\x7F\r\n]`, password)
+	if hasInvalidChars == true {
+		return false
+	}
 	validPassword, _ := regexp.MatchString(`^.{8,50}$`, password)
 	return validPassword
 }
 
 func ValidUsername(username string) bool {
-	validUsername, _ := regexp.MatchString(`^\w{6,20}$`, username)
+	hasInvalidChars, _ := regexp.MatchString(` [\x00-\x1F\x7F\r\n]`, username)
+	if hasInvalidChars == true {
+		return false
+	}
+
+	hasInvalidChars, _ = regexp.MatchString(`\s{2}`, username)
+	if hasInvalidChars == true {
+		return false
+	}
+	validUsername, _ := regexp.MatchString(`^.{6,20}$`, username)
 	return validUsername
 }
 
 func createAccount(username, password, email, roleName string) (*db.User, *db.RoleRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-
+	username = strings.TrimSpace(username)
+	email = strings.TrimSpace(email)
 	if _, err := mail.ParseAddress(email); err != nil {
 		return nil, nil, errors.New(fmt.Sprintf(`invalid email address: "%s"`, email))
 	}
