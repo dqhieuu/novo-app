@@ -11,13 +11,14 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
 const DefaultWidth = 200
 const DefaultHeight = 100
 
-func createImage(width int, height int) (*os.File, int64, string) {
+func CreateImage(width int, height int) (*os.File, int64, string, string, error) {
 	upLeft := image.Point{}
 	lowRight := image.Point{X: width, Y: height}
 
@@ -39,25 +40,33 @@ func createImage(width int, height int) (*os.File, int64, string) {
 			}
 		}
 	}
-	dst := "test-" + uuid.NewString() + ".png"
-	fileStream, setupErr := os.Create(dst)
+	dst := "test/" + "test-" + uuid.NewString() + ".png"
+	fullPath, _, err := checkFileDir(dst, RootFolder)
+	if err != nil {
+		return nil, -1, "", "", err
+	}
+
+	fileStream, setupErr := os.Create(fullPath)
 	setupErr = png.Encode(fileStream, img)
 	if setupErr != nil {
-		log.Printf("Error encoding test image: %s\n", setupErr)
+		return nil, -1, "", "", err
 	}
-	_, err := fileStream.Seek(0, 0)
+	_, err = fileStream.Seek(0, 0)
 	if err != nil {
-		log.Printf("Error reseting file pointer: %s\n", setupErr)
+		return nil, -1, "", "", err
 	}
 	imageStatus, setupErr := fileStream.Stat()
 	if err != nil {
-		log.Printf("Error getting image status: %s\n", setupErr)
+		return nil, -1, "", "", err
 	}
-	return fileStream, imageStatus.Size(), dst
+	return fileStream, imageStatus.Size(), dst, fullPath, nil
 }
 
 func TestGenerateImageHash(t *testing.T) {
-	img, _, dst := createImage(DefaultWidth, DefaultHeight)
+	img, _, _, absPath, err := CreateImage(DefaultWidth, DefaultHeight)
+	if err != nil {
+		t.Fatalf("Error creating test image: %s\n", err)
+	}
 	md5Hash, sha1Hash, err := generateHashes(img)
 	log.Println(md5Hash)
 	log.Println(sha1Hash)
@@ -65,7 +74,7 @@ func TestGenerateImageHash(t *testing.T) {
 	if setupErr != nil {
 		t.Fatalf("Error closing file stream: %s\n", err)
 	}
-	setupErr = os.Remove(dst)
+	setupErr = os.Remove(absPath)
 	if setupErr != nil {
 		t.Fatalf("Error removing test image: %s\n", setupErr)
 	}
@@ -73,13 +82,16 @@ func TestGenerateImageHash(t *testing.T) {
 }
 
 func TestGetImageType(t *testing.T) {
-	img, _, dst := createImage(DefaultWidth, DefaultHeight)
+	img, _, _, absPath, err := CreateImage(DefaultWidth, DefaultHeight)
+	if err != nil {
+		t.Fatalf("Error creating test image: %s\n", err)
+	}
 	imgType, err := getImageType(img)
 	setupErr := img.Close()
 	if setupErr != nil {
 		t.Fatalf("Error closing file stream: %s\n", err)
 	}
-	setupErr = os.Remove(dst)
+	setupErr = os.Remove(absPath)
 	if setupErr != nil {
 		t.Fatalf("Error removing test image: %s\n", setupErr)
 	}
@@ -88,9 +100,12 @@ func TestGetImageType(t *testing.T) {
 }
 
 func TestResizeImage(t *testing.T) {
-	img, _, dst := createImage(DefaultWidth, DefaultHeight)
-	resizeDst := "test-" + uuid.NewString() + ".png"
-	err := ResizeImage(img, ResizeImageParams{
+	img, _, _, absPath, err := CreateImage(DefaultWidth, DefaultHeight)
+	if err != nil {
+		t.Fatalf("Error creating test image: %s\n", err)
+	}
+	resizeDst := filepath.Dir(absPath) + "/" + "test-" + uuid.NewString() + ".png"
+	err = ResizeImage(img, ResizeImageParams{
 		InType:  "image/png",
 		OutType: "image/png",
 		OutDst:  resizeDst,
@@ -101,7 +116,7 @@ func TestResizeImage(t *testing.T) {
 	if setupErr != nil {
 		t.Errorf("Error closing file stream: %s\n", err)
 	}
-	setupErr = os.Remove(dst)
+	setupErr = os.Remove(absPath)
 	if setupErr != nil {
 		t.Errorf("Error removing test image: %s\n", setupErr)
 	}
@@ -110,102 +125,6 @@ func TestResizeImage(t *testing.T) {
 		t.Errorf("Error removing resize test image: %s\n", setupErr)
 	}
 	assert.Nil(t, err)
-}
-
-func TestProcessImages(t *testing.T) {
-	db.Init()
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-
-	img1, size1, dst1 := createImage(200, 100)
-	img2, size2, dst2 := createImage(400, 200)
-	img3, size3, dst3 := createImage(600, 300)
-
-	var files []Image
-	files = append(files, Image{
-		Data: img1,
-		Size: size1,
-	})
-	files = append(files, Image{
-		Data: img2,
-		Size: size2,
-	})
-	files = append(files, Image{
-		Data: img3,
-		Size: size3,
-	})
-
-	status := ProcessImages(ReceiveImagesParams{
-		Files:       files,
-		Description: "",
-	})
-
-	for _, stat := range status {
-		assert.Nil(t, stat.Err)
-		log.Println(stat.Id)
-	}
-
-	defer func() {
-		for _, stat := range status {
-			if stat.Id > 0 {
-				err := queries.DeleteTempImage(ctx, stat.Id)
-				if err != nil {
-					t.Fatalf("Error deleting temp image: %s\n", err)
-				}
-				err = queries.DeleteImage(ctx, stat.Id)
-				if err != nil {
-					t.Fatalf("Error deleting image: %s\n", err)
-				}
-			}
-		}
-		err := os.Remove(dst1)
-		if err != nil {
-			t.Fatalf("Error deleting test file: %s\n", err)
-		}
-		err = os.Remove(dst2)
-		if err != nil {
-			t.Fatalf("Error deleting test file: %s\n", err)
-		}
-		err = os.Remove(dst3)
-		if err != nil {
-			t.Fatalf("Error deleting test file: %s\n", err)
-		}
-	}()
-}
-
-func TestServeThumbnail(t *testing.T) {
-	db.Init()
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-
-	img, size, dst := createImage(600, 400)
-
-	_, thumbnailId, err := ServeThumbnail(ServeThumbnailParams{
-		File: img,
-		ResizeParams: ResizeImageParams{
-			InType:  "image/png",
-			OutType: "image/png",
-			OutDst:  "",
-			Width:   300,
-			Height:  0,
-		},
-		Size:          size,
-		Description:   "",
-		ThumbnailType: "user_avatars",
-	})
-
-	assert.Nil(t, err)
-	log.Println(thumbnailId)
-	defer func() {
-		err := queries.DeleteImage(ctx, thumbnailId)
-		if err != nil {
-			t.Fatalf("Error deleting image: %s\n", err)
-		}
-		err = os.Remove(dst)
-		if err != nil {
-			t.Fatalf("Error deleting test file: %s\n", err)
-		}
-	}()
 }
 
 func TestSubmitImages(t *testing.T) {
@@ -267,14 +186,49 @@ func TestCleanImages(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestProcessImageByUrl(t *testing.T) {
+func TestGenerateThumbnail(t *testing.T) {
+	_, _, dst, absPath, err := CreateImage(400, 600)
+	if err != nil {
+		t.Fatalf("Error creating test image: %s\n", err)
+	}
+
+	outType := "image/png"
+
+	newDst, err := GenerateThumbnail(dst, 300, &outType)
+	log.Println(newDst)
+
+	assert.Nil(t, err)
+	defer func() {
+		err = os.Remove(absPath)
+		if err != nil {
+			t.Fatalf("Error deleting test file: %s\n", err)
+		}
+	}()
+}
+
+func TestSaveImageFromStream(t *testing.T) {
 	db.Init()
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	imageId, err := ProcessImageByUrl("https://files.catbox.moe/fwctkw.jpeg", "")
-	log.Println(imageId)
+	img, _, _, absPath, err := CreateImage(400, 600)
+	if err != nil {
+		t.Fatalf("Error creating test image: %s\n", err)
+	}
+
+	imageId, err := SaveImageFromStream(img, "test", uuid.NewString(), "")
+
 	assert.Nil(t, err)
+
+	err = img.Close()
+	if err != nil {
+		t.Errorf("Error closing file stream: %s\n", err)
+	}
+	err = os.Remove(absPath)
+	if err != nil {
+		t.Errorf("Error removing test image: %s\n", err)
+	}
+
 	defer func() {
 		err := queries.DeleteTempImage(ctx, imageId)
 		if err != nil {

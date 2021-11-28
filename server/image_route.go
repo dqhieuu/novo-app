@@ -10,6 +10,7 @@ import (
 	"errors"
 	"github.com/dqhieuu/novo-app/db"
 	"image"
+	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -19,6 +20,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
+
 	//"encoding/json"
 	//"github.com/dqhieuu/novo-app/db"
 	"github.com/disintegration/imaging"
@@ -26,6 +29,42 @@ import (
 )
 
 const MaxSize = 1024 * 1024 * 10
+const RootFolder = "static/images"
+
+type ResizeImageParams struct {
+	InType  string `json:"in_type"`
+	OutType string `json:"out_type"`
+	OutDst  string `json:"out_dst"`
+	Width   int    `json:"width"`
+	Height  int    `json:"height"`
+}
+
+func minInt(a int, b int) int {
+	if a > b {
+		return b
+	}
+	return a
+}
+
+func checkFileDir(path string, rootFolder string) (string, string, error) {
+	dir := filepath.Dir(path)
+	rootDir, err := os.Getwd()
+	if err != nil {
+		return "", "", errors.New("error getting root directory: " + err.Error())
+	}
+	if dir == "." {
+		err = os.MkdirAll(rootDir + "/" + rootFolder, os.ModePerm)
+		if err != nil {
+			return "", "", errors.New("error checking directory: " + err.Error())
+		}
+		return rootDir + "/" + rootFolder + "/" + path, rootDir + "/" + rootFolder + "/" + dir,  nil
+	}
+	err = os.MkdirAll(rootDir + "/" + rootFolder + "/" + dir, os.ModePerm)
+	if err != nil {
+		return "", "", errors.New("error checking directory: " + err.Error())
+	}
+	return rootDir + "/" + rootFolder + "/" + path, rootDir + "/" + rootFolder + "/" + dir, nil
+}
 
 func newFileName (fileType string) string {
 	var ext string
@@ -148,118 +187,60 @@ func GetImageById(imageId int32) (string, error) {
 	}
 }
 
-func ServeThumbnail(params ServeThumbnailParams) (string, int32, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	dirErr := os.MkdirAll("images/" + params.ThumbnailType, os.ModePerm)
-	if dirErr != nil {
-		log.Printf("Error creating new directory: %s\n", dirErr)
-		return "", -1, dirErr
-	}
-
-	if checkFileSize(params.Size) {
-		//c.JSON(413, gin.H{
-		//	"message": "File too large",
-		//})
-		return "", -1, errors.New("file too large")
-	}
-	fileData := params.File
-
-	fileType, err := getImageType(fileData)
+func GenerateThumbnail(path string, size int, filetype *string) (string, error) {
+	fullPath, dirPath, err := checkFileDir(path, RootFolder)
 	if err != nil {
-		return "", -1, errors.New("error getting image type: " + err.Error())
+		return "", errors.New("error checking directory: " + err.Error())
 	}
-	ok := detectImageType(fileType)
-	if !ok {
-		//c.JSON(415, gin.H{
-		//	"message": "Unsupported media type",
-		//})
-		return "", -1, errors.New("unsupported media type")
-	}
+    filestream, err := os.Open(fullPath)
+    if err != nil {
+		return "", errors.New("error opening file: " + err.Error())
+    }
 
-	//default output type is png
-	switch params.ResizeParams.OutType {
-	case "image/jpeg", "image/png", "image/gif":
-	default:
-		params.ResizeParams.OutType = "image/png"
-	}
-
-	//resize the image and save it to dst
-	filename := newFileName(params.ResizeParams.OutType)
-	dst := "images/" + params.ThumbnailType + "/" + filename
-	params.ResizeParams.OutDst = dst
-	err = ResizeImage(fileData, params.ResizeParams)
+	srcType, err := getImageType(filestream)
 	if err != nil {
-		return "", -1, errors.New("error resizing image: " + err.Error())
+		return "", errors.New("error getting source file type: " + err.Error())
 	}
 
-	err = fileData.Close()
+	resolution, _, err := image.DecodeConfig(filestream)
 	if err != nil {
-		return "", -1, errors.New("error closing file stream: " + err.Error())
+		return "", errors.New("error getting resolution: " + err.Error())
+	}
+	_, err = filestream.Seek(0, io.SeekStart)
+	if err != nil {
+		return "", errors.New("error resetting file pointer: " + err.Error())
 	}
 
-	// open the file again to calculate hashes
-	thumbnailFile, err := os.Open(dst)
-	if err != nil {
-		return "", -1, errors.New("error creating destination path: " + err.Error())
-	}
-	
-	// calculate hashes
-	md5Hash, sha1Hash, err := generateHashes(thumbnailFile)
-	if err != nil {
-		return "", -1, errors.New("error generating hashes: " + err.Error())
+	width := minInt(size, resolution.Width)
+	outType := ""
+	if filetype == nil {
+		outType = srcType
+	} else {
+		outType = *filetype
 	}
 
-	err = thumbnailFile.Close()
-	if err != nil {
-		return "", -1, errors.New("error closing thumbnail file: " + err.Error())
-	}
+	filename := newFileName(outType)
+	outDst := dirPath + "/" + filename
 
-	peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
-		Md5:  md5Hash,
-		Sha1: sha1Hash,
+	err = ResizeImage(filestream, ResizeImageParams{
+		InType:  srcType,
+		OutType: outType,
+		OutDst:  outDst,
+		Width:   width,
+		Height:  0,
 	})
 
-	switch {
-	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
-		//inserting the image into the database
-		insertId, err := queries.InsertImage(ctx, db.InsertImageParams{
-			Md5:  md5Hash,
-			Sha1: sha1Hash,
-			Path: dst,
-			Name: sql.NullString{
-				String: filename,
-				Valid:  true,
-			},
-			Description: sql.NullString{
-				String: params.Description,
-				Valid:  true,
-			},
-		})
-		if err != nil {
-			return "", -1, errors.New("error inserting image: " + err.Error())
-		}
-
-		//delete the temp image due to trigger
-		err = queries.DeleteTempImage(ctx, insertId)
-		if err != nil {
-			return "", -1, errors.New("error deleting temp image: " + err.Error())
-		}
-		//send back the file for front-end uses
-		//c.File(dst)
-		return dst, insertId, nil
-	default:
-		err = os.Remove(dst)
-		if err != nil {
-			return "", -1, errors.New("error removing duplicate file: " + err.Error())
-		}
-		return peekRow.Path, peekRow.ID, errors.New("image already exists")
+	if err != nil {
+		return "", errors.New("error resizing image: " + err.Error())
 	}
+
+	return filepath.Dir(path) + "/" + filename, nil
 }
 
 func SubmitImages(submitImages []int32) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
+
 	for _, submitId := range submitImages {
 		err := queries.DeleteTempImage(ctx, submitId)
 		if err != nil {
@@ -289,171 +270,104 @@ func CleanImages() error {
 	return nil
 }
 
-func ProcessImages(params ReceiveImagesParams) []ImageStatus {
+func SaveImageFromStream(filestream multipart.File, location string, fileNameNoExt string, description string) (int32, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	files := params.Files
-	var status []ImageStatus
-	dirErr := os.MkdirAll("images/book_contents", os.ModePerm)
-	if dirErr != nil {
-		log.Printf("Error creating new directory: %s\n", dirErr)
-		return status
+
+	_, dirPath, err := checkFileDir(location + "/" + fileNameNoExt, RootFolder)
+	if err != nil {
+		return -1, errors.New("error getting actual file path: " + err.Error())
 	}
 
-	for _, file := range files {
-		if checkFileSize(file.Size) {
-			//c.JSON(413, gin.H{
-			//	"message": "File too large",
-			//})
-			status = append(status, ImageStatus{
-				Id:  -1,
-				Err: errors.New("file too large"),
-			})
-			continue
+	fileType, err := getImageType(filestream)
+	if err != nil {
+		return -1, errors.New("error getting image type: " + err.Error())
+	}
+
+	ok := detectImageType(fileType)
+	if !ok {
+		return -1, errors.New("unsupported media type")
+	}
+
+	md5Hash, sha1Hash, err := generateHashes(filestream)
+	if err != nil {
+		return -1, errors.New("error generating hash: " + err.Error())
+	}
+	_, err = filestream.Seek(0, io.SeekStart)
+	if err != nil {
+		return -1, errors.New("error resetting file pointer: " + err.Error())
+	}
+
+	//check if the file exist in the database
+	peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+		Md5:  md5Hash,
+		Sha1: sha1Hash,
+	})
+
+	switch {
+	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
+		//saving file to the server
+		extension := ""
+		switch fileType {
+		case "image/jpeg":
+			extension = ".jpg"
+		case "image/png":
+			extension = ".png"
+		case "image/gif":
+			extension = ".gif"
+		}
+		dst := location + "/" + fileNameNoExt + extension
+
+		//err = c.SaveUploadedFile(file, dst)
+		saveFileStream, err := os.Create(dirPath + "/" + fileNameNoExt + extension)
+		if err != nil {
+			return -1, errors.New("error creating new file: " + err.Error())
+		}
+		_, err = io.Copy(saveFileStream, filestream)
+		if err != nil {
+			return -1, errors.New("error copying file: " + err.Error())
+		}
+		err = saveFileStream.Close()
+		if err != nil {
+			return -1, errors.New("error closing save file stream: " + err.Error())
 		}
 
-		//checking if file is an image (jpg, png, gif)
-		fileType, err := getImageType(file.Data)
-		if err != nil {
-			status = append(status, ImageStatus{
-				Id:  -1,
-				Err: errors.New("error getting image type: " + err.Error()),
-			})
-			continue
-		}
-		ok := detectImageType(fileType)
-		if !ok {
-			status = append(status, ImageStatus{
-				Id:  -1,
-				Err: errors.New("unsupported media type"),
-			})
-			continue
-		}
-
-		//generating hash
-		md5Hash, sha1Hash, err := generateHashes(file.Data)
-		if err != nil {
-			status = append(status, ImageStatus{
-				Id:  -1,
-				Err: errors.New("error generating hash: " + err.Error()),
-			})
-			continue
-		}
-		_, err = file.Data.Seek(0, io.SeekStart)
-		if err != nil {
-			status = append(status, ImageStatus{
-				Id:  -1,
-				Err: errors.New("error resetting file pointer: " + err.Error()),
-			})
-			continue
-		}
-
-		//check if the file exist in the database
-		peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
-			Md5:  md5Hash,
-			Sha1: sha1Hash,
+		//inserting image to the database
+		imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
+			Md5:        md5Hash,
+			Sha1:        sha1Hash,
+			Path:        dst,
+			Name:        sql.NullString{
+				String: fileNameNoExt + extension,
+				Valid:  true,
+			},
+			Description: sql.NullString{
+				String: description,
+				Valid:  true,
+			},
 		})
-
-		switch {
-		case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
-			//saving file to the server
-			filename := newFileName(fileType)
-			dst := "images/book_contents/" + filename
-
-			//err = c.SaveUploadedFile(file, dst)
-			saveFileStream, err := os.Create(dst)
-			if err != nil {
-				status = append(status, ImageStatus{
-					Id:  -1,
-					Err: errors.New("error creating new file: " + err.Error()),
-				})
-				continue
-			}
-			_, err = io.Copy(saveFileStream, file.Data)
-			if err != nil {
-				status = append(status, ImageStatus{
-					Id:  -1,
-					Err: errors.New("error copying file: " + err.Error()),
-				})
-				continue
-			}
-			err = saveFileStream.Close()
-			if err != nil {
-				status = append(status, ImageStatus{
-					Id:  -1,
-					Err: errors.New("error closing save file stream: " + err.Error()),
-				})
-				continue
-			}
-
-			//inserting image to the database
-			imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
-				Md5:        md5Hash,
-				Sha1:        sha1Hash,
-				Path:        dst,
-				Name:        sql.NullString{
-					String: filename,
-					Valid:  true,
-				},
-				Description: sql.NullString{
-					String: params.Description,
-					Valid:  true,
-				},
-			})
-			if err != nil {
-				status = append(status, ImageStatus{
-					Id:  -1,
-					Err: errors.New("error inserting image into database: " + err.Error()),
-				})
-				continue
-			}
-
-			status = append(status, ImageStatus{
-				Id:  imageId,
-				Err: nil,
-			})
-
-			//building the return message (may discard some field)
-			//c.JSON(200, Image{
-			//	Id: imageId,
-			//	Filename: filename,
-			//	URL: c.Request.Host + "/images/" + strconv.FormatInt(int64(imageId), 10),
-			//})
-		default:
-			//c.JSON(400, gin.H{
-			//	"message": "File already exist",
-			//	"Id": peekRow.ID,
-			//	"URL": c.Request.Host + "/images/" + strconv.FormatInt(int64(peekRow.ID), 10),
-			//})
-			status = append(status, ImageStatus{
-				Id:  peekRow.ID,
-				Err: errors.New("image already exist"),
-			})
-		}
-		err = file.Data.Close()
 		if err != nil {
-			status = append(status, ImageStatus{
-				Id:  -1,
-				Err: errors.New("error closing file stream: " + err.Error()),
-			})
+			return -1, errors.New("error inserting image into database: " + err.Error())
 		}
+
+		return imageId, nil
+	default:
+		return -1, errors.New("image already exist")
 	}
-	return status
 }
 
-func ProcessImageByUrl(url string, description string) (int32, error) {
+func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, description string) (int32, error){
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	response, err := http.Get(url)
+	_, dirPath, err := checkFileDir(location + "/" + fileNameNoExt, RootFolder)
 	if err != nil {
-		return -1, errors.New("error getting http response: " + err.Error())
+		return -1, errors.New("error getting actual file path: " + err.Error())
 	}
 
-	dirErr := os.MkdirAll("images/url", os.ModePerm)
-	if dirErr != nil {
-		log.Printf("Error creating new directory: %s\n", dirErr)
-		return -1, dirErr
+	response, err := http.Get(fileUrl)
+	if err != nil {
+		return -1, errors.New("error getting http response: " + err.Error())
 	}
 
 	bodyData, err := ioutil.ReadAll(response.Body)
@@ -472,11 +386,19 @@ func ProcessImageByUrl(url string, description string) (int32, error) {
 	switch {
 	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
 		imageType := http.DetectContentType(bodyData)
-		filename := newFileName(imageType)
-		dst := "images/url/" + filename
+		extension := ""
+		switch imageType {
+		case "image/jpeg":
+			extension = ".jpg"
+		case "image/png":
+			extension = ".png"
+		case "image/gif":
+			extension = ".gif"
+		}
+		dst := location + "/" + fileNameNoExt + extension
 		response.Body = ioutil.NopCloser(bytes.NewBuffer(bodyData))
 
-		saveFile, err := os.Create(dst)
+		saveFile, err := os.Create(dirPath + "/" + fileNameNoExt + extension)
 		if err != nil {
 			return -1, errors.New("error creating new file: " + err.Error())
 		}
@@ -498,7 +420,7 @@ func ProcessImageByUrl(url string, description string) (int32, error) {
 			Sha1:        sha1Hash,
 			Path:        dst,
 			Name:        sql.NullString{
-				String: filename,
+				String: dst,
 				Valid: true,
 			},
 			Description: sql.NullString{
@@ -515,5 +437,73 @@ func ProcessImageByUrl(url string, description string) (int32, error) {
 	default:
 		return peekRow.ID, errors.New("image already exists")
 	}
+}
+
+// Đừng để ý bên dưới này, 2 hàm này chỉ để test
+
+func CreateImage(width int, height int) (*os.File, int64, string, string, error) {
+	upLeft := image.Point{}
+	lowRight := image.Point{X: width, Y: height}
+
+	img := image.NewRGBA(image.Rectangle{Min: upLeft, Max: lowRight})
+
+	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
+	cyan := color.RGBA{R: 100, G: 200, B: 200, A: 0xff}
+
+	// Set color for each pixel.
+	for x := 0; x < width; x++ {
+		for y := 0; y < height; y++ {
+			switch {
+			case x < width/2 && y < height/2: // upper left quadrant
+				img.Set(x, y, cyan)
+			case x >= width/2 && y >= height/2: // lower right quadrant
+				img.Set(x, y, color.White)
+			default:
+				// Use zero value.
+			}
+		}
+	}
+	dst := "test/" + "test-" + uuid.NewString() + ".png"
+	fullPath, _, err := checkFileDir(dst, RootFolder)
+	if err != nil {
+		return nil, -1, "", "", err
+	}
+
+	fileStream, setupErr := os.Create(fullPath)
+	setupErr = png.Encode(fileStream, img)
+	if setupErr != nil {
+		return nil, -1, "", "", err
+	}
+	_, err = fileStream.Seek(0, 0)
+	if err != nil {
+		return nil, -1, "", "", err
+	}
+	imageStatus, setupErr := fileStream.Stat()
+	if err != nil {
+		return nil, -1, "", "", err
+	}
+	return fileStream, imageStatus.Size(), dst, fullPath, nil
+}
+
+func TryOutsideTest() {
+	_, _, dst, absPath, err := CreateImage(400, 600)
+	if err != nil {
+		log.Fatalf("Error creating test image: %s\n", err)
+	}
+
+	outType := "image/png"
+
+	newDst, err := GenerateThumbnail(dst, 300, &outType)
+	if err != nil {
+		log.Fatalf("Error generating thumbnail: %s\n", err)
+	}
+	log.Println(newDst)
+
+	defer func() {
+		err = os.Remove(absPath)
+		if err != nil {
+			log.Fatalf("Error deleting test file: %s\n", err)
+		}
+	}()
 }
 
