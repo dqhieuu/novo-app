@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -181,5 +182,12 @@ func RegisterPasswordHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Register successfully",
+	})
+}
+func GetRoleHandler(c *gin.Context) {
+	claims := jwt.ExtractClaims(c)
+	c.JSON(200, gin.H{
+		"role":        claims[RoleNameClaimKey],
+		"permissions": claims[RolePermsClaimKey],
 	})
 }
