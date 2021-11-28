@@ -38,6 +38,9 @@ func Run() {
 		auth.Use(authMiddleware.MiddlewareFunc())
 		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
 		auth.GET("/role", GetRoleHandler)
+		auth.POST("/author", CreateAuthorHandler)
+		auth.PATCH("/author/:authorId", UpdateAuthorHandler)
+		auth.DELETE("/author/:authorId", DeleteAuthorHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

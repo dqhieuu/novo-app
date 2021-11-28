@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS genres
 CREATE TABLE IF NOT EXISTS book_authors
 (
     id              int GENERATED ALWAYS AS IDENTITY,
-    name            text NOT NULL,
+    name            text UNIQUE NOT NULL,
     description     text,
     avatar_image_id int,
     PRIMARY KEY (id),

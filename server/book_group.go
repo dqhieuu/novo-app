@@ -72,6 +72,20 @@ func UpdateBookGroup(id int32, title string, description string, ownerId int32, 
 			return errors.New(stringErr)
 		}
 	}
+
+	err = DeleteAuthorsByBookGroup(id)
+	if err != nil {
+		stringErr := fmt.Sprintf("Update book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+	for i := 0; i < len(authorIds); i++ {
+		_, err = CreateBookGroupAuthor(id, authorIds[i])
+		if err != nil {
+			stringErr := fmt.Sprintf("Update book group failed: %s", err)
+			return errors.New(stringErr)
+		}
+	}
+
 	return nil
 }
 
@@ -97,11 +111,25 @@ func CreateBookGroup(title string, description string, ownerId int32, genreIds [
 			return nil, err
 		}
 	}
+
+	for i := 0; i < len(authorIds); i++ {
+		_, err = CreateBookGroupAuthor(bookGroup.ID, authorIds[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &bookGroup, nil
 }
 
 func DeleteBookGroup(id int32) error {
 	err := DeleteGenresByBookGroup(id)
+	if err != nil {
+		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+
+	err = DeleteAuthorsByBookGroup(id)
 	if err != nil {
 		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
 		return errors.New(stringErr)

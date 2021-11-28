@@ -14,8 +14,10 @@ import (
 var roleNames = []string{"member", "moderator", "admin"}
 var users []*db.User
 var genres []*db.Genre
+var bookAuthors []*db.BookAuthor
 var bookGroups []*db.BookGroup
 var bookGroupGenres []*db.BookGroupGenre
+var bookGroupAuthors []*db.BookGroupAuthor
 var bookChapters []*db.BookChapter
 
 var types = []string{"images", "hypertext"}
@@ -23,8 +25,10 @@ var types = []string{"images", "hypertext"}
 const cntRole int32 = 3
 const cntUser int32 = 5
 const cntGenres int32 = 5
+const cntBookAuthors int32 = 5
 const cntBookGroup int32 = 5
 const cntBookGroupGenres int32 = 10
+const cntBookGroupAuthors int32 = 10
 const cntBookChapter int32 = 5
 
 var r *rand.Rand
@@ -248,7 +252,7 @@ func createBookGroupGenres() {
 		}
 		bookGroupGenres = append(bookGroupGenres, &bookGroupGenre)
 	}
-	//fmt.Println("Create data for genres table", len(bookGroupGenres))
+	//fmt.Println("Create data for book_group_genres table", len(bookGroupGenres))
 	//for i := 0; i < len(bookGroupGenres); i++ {
 	//	fmt.Println(bookGroupGenres[i])
 	//}
@@ -270,19 +274,157 @@ func deleteBookGroupGenres() {
 	bookGroupGenres = []*db.BookGroupGenre{}
 }
 
+func createBookAuthors() {
+	bookAuthors = []*db.BookAuthor{}
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	var name string
+	var description sql.NullString
+	var avatarImageId sql.NullInt32
+	for i := 0; i < int(cntBookAuthors); i++ {
+		stringI := strconv.Itoa(i)
+		name = "name" + stringI
+		err := description.Scan("description" + stringI)
+		if err != nil {
+			fmt.Println(err)
+		}
+		avatarImageId = sql.NullInt32{}
+		bookAuthor, err := queries.InsertBookAuthor(ctx, db.InsertBookAuthorParams{
+			Name:          name,
+			Description:   description,
+			AvatarImageID: avatarImageId,
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		bookAuthors = append(bookAuthors, &bookAuthor)
+	}
+	//fmt.Println("Create data for book_authors table", len(bookAuthors))
+	//for i := 0; i < len(bookAuthors); i++ {
+	//	fmt.Println(bookAuthors[i])
+	//}
+	//fmt.Println("*************************")
+}
+
+func deleteBookAuthors() {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	for i := 0; i < len(bookAuthors); i++ {
+		err := queries.DeleteBookAuthor(ctx, bookAuthors[i].ID)
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	bookAuthors = []*db.BookAuthor{}
+}
+
+func createBookGroupAuthors() {
+	bookGroupAuthors = []*db.BookGroupAuthor{}
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	sqrt := 3
+	for i := 0; i < int(cntBookGroupAuthors); i++ {
+		rand1 := int32(i / sqrt)
+		rand2 := int32(i % sqrt)
+		bookGroupId := bookGroups[rand1].ID
+		bookAuthorId := bookAuthors[rand2].ID
+		bookGroupAuthor, err := queries.InsertBookGroupAuthor(ctx, db.InsertBookGroupAuthorParams{
+			BookGroupID:  bookGroupId,
+			BookAuthorID: bookAuthorId,
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+		bookGroupAuthors = append(bookGroupAuthors, &bookGroupAuthor)
+	}
+	//fmt.Println("Create data for book_group_authors table", len(bookGroupAuthors))
+	//for i := 0; i < len(bookGroupAuthors); i++ {
+	//	fmt.Println(bookGroupAuthors[i])
+	//}
+	//fmt.Println("*************************")
+}
+
+func deleteBookGroupAuthors() {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	for i := 0; i < len(bookGroupAuthors); i++ {
+		err := queries.DeleteBookGroupAuthor(ctx, db.DeleteBookGroupAuthorParams{
+			BookGroupID:  bookGroupAuthors[i].BookGroupID,
+			BookAuthorID: bookGroupAuthors[i].BookAuthorID,
+		})
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
+	bookGroupAuthors = []*db.BookGroupAuthor{}
+}
+
 func createData() {
 	s := rand.NewSource(time.Now().UnixNano())
 	r = rand.New(s)
 	createUsers()
 	createBookGroups()
 	createGenres()
+	createBookAuthors()
 	createBookGroupGenres()
+	createBookGroupAuthors()
 	createBookChapters()
 }
 func removeData() {
 	defer deleteUsers()
 	defer deleteBookGroups()
 	defer deleteGenres()
+	defer deleteBookAuthors()
 	defer deleteBookGroupGenres()
+	defer deleteBookGroupAuthors()
 	defer deleteBookChapters()
 }
+
+//func TestCreateData(t *testing.T) {
+//	db.Init()
+//	defer db.Close()
+//	createData()
+//	fmt.Println("Create data for users table", len(users))
+//	for i := 0; i < len(users); i++ {
+//		fmt.Println(users[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	fmt.Println("Create data for book groups table", len(bookGroups))
+//	for i := 0; i < len(bookGroups); i++ {
+//		fmt.Println(bookGroups[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	fmt.Println("Create data for book chapters table", len(bookChapters))
+//	for i := 0; i < len(bookChapters); i++ {
+//		fmt.Println(bookChapters[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	fmt.Println("Create data for book_authors table", len(bookAuthors))
+//	for i := 0; i < len(bookAuthors); i++ {
+//		fmt.Println(bookAuthors[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	fmt.Println("Create data for book_group_authors table", len(bookGroupAuthors))
+//	for i := 0; i < len(bookGroupAuthors); i++ {
+//		fmt.Println(bookGroupAuthors[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	fmt.Println("Create data for genres table", len(genres))
+//	for i := 0; i < len(genres); i++ {
+//		fmt.Println(genres[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	fmt.Println("Create data for book_group_genres table", len(bookGroupGenres))
+//	for i := 0; i < len(bookGroupGenres); i++ {
+//		fmt.Println(bookGroupGenres[i])
+//	}
+//	fmt.Println("*************************")
+//
+//	defer removeData()
+//}
