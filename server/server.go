@@ -28,7 +28,7 @@ func Run() {
 	r.POST("/login", authMiddleware.LoginHandler)
 	// For Oauth login
 	r.GET("/login", authMiddleware.LoginHandler)
-
+	r.POST("/register", RegisterPasswordHandler)
 	//imageHandler := r.Group("/images")
 	//{
 	//	imageHandler.POST("/upload", ReceiveImages)
