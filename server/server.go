@@ -29,7 +29,7 @@ func Run() {
 	// For Oauth login
 	r.GET("/login", authMiddleware.LoginHandler)
 
-
+	r.POST("/register", RegisterPasswordHandler)
 
 	r.GET("/oauth/google", GoogleOauthRedirect)
 

@@ -7,9 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 	"net/mail"
 	"regexp"
+	"strings"
 )
 
 func EqualPasswords(hashedPassword, password []byte) bool {
@@ -21,19 +24,33 @@ func GeneratePasswordHash(password string) ([]byte, error) {
 }
 
 func ValidPassword(password string) bool {
+	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x1F\x7F\r\n]`, password)
+	if hasInvalidChars == true {
+		return false
+	}
 	validPassword, _ := regexp.MatchString(`^.{8,50}$`, password)
 	return validPassword
 }
 
 func ValidUsername(username string) bool {
-	validUsername, _ := regexp.MatchString(`^\w{6,20}$`, username)
+	hasInvalidChars, _ := regexp.MatchString(` [\x00-\x1F\x7F\r\n]`, username)
+	if hasInvalidChars == true {
+		return false
+	}
+
+	hasInvalidChars, _ = regexp.MatchString(`\s{2}`, username)
+	if hasInvalidChars == true {
+		return false
+	}
+	validUsername, _ := regexp.MatchString(`^.{6,20}$`, username)
 	return validUsername
 }
 
 func createAccount(username, password, email, roleName string) (*db.User, *db.RoleRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-
+	username = strings.TrimSpace(username)
+	email = strings.TrimSpace(email)
 	if _, err := mail.ParseAddress(email); err != nil {
 		return nil, nil, errors.New(fmt.Sprintf(`invalid email address: "%s"`, email))
 	}
@@ -115,4 +132,54 @@ func DeleteAccount(username string) error {
 		return errors.New(fmt.Sprintf(`Failed to delete account "%s": %s`, username, err))
 	}
 	return nil
+}
+
+type Register struct {
+	Username string `json:"username" form:"username" binding:"required"`
+	Password string `json:"password" form:"password" binding:"required"`
+	Email    string `json:"email" form:"email" binding:"required"`
+}
+
+func RegisterPasswordHandler(c *gin.Context) {
+	var r Register
+	if err := c.ShouldBindJSON(&r); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(r.Username) < 6 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Username must be at least 6 characters",
+		})
+		return
+	}
+	if r.Username[0] == ' ' {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Username cannot start with a space",
+		})
+		return
+	}
+
+	if strings.Contains(r.Username, "  ") == true {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Username cannot contain two consecutive spaces",
+		})
+		return
+	}
+
+	if len(r.Password) < 8 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Password must be at least 8 characters",
+		})
+		return
+	}
+	_, _, err := RegisterAccount(r.Username, r.Password, r.Email)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Register successfully",
+	})
 }
