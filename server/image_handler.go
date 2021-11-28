@@ -67,33 +67,20 @@ func UploadImageHandler(c *gin.Context) {
 		return
 	}
 	outType := "image/jpeg"
-	imageWidth, _, err := GetImageResolution(filestream)
+	_, err = GenerateThumbnail(savePath, 512, &outType)
 	if err != nil {
-		log.Printf("error getting file resolution: %s\n", err)
-		return
+		log.Printf("error generating 512 width thumbnail")
 	}
-	if imageWidth > 512 {
-		_, err = GenerateThumbnail(savePath, 512, &outType)
-		if err != nil {
-			log.Printf("error generating 512 width thumbnail")
-		}
+	_, err = GenerateThumbnail(savePath, 256, &outType)
+	if err != nil {
+		log.Printf("error generating 256 width thumbnail")
 	}
-	if imageWidth > 256 {
-		_, err = GenerateThumbnail(savePath, 256, &outType)
-		if err != nil {
-			log.Printf("error generating 256 width thumbnail")
-		}
+	_, err = GenerateThumbnail(savePath, 128, &outType)
+	if err != nil {
+		log.Printf("error generating 128 width thumbnail")
 	}
-	if imageWidth > 128 {
-		_, err = GenerateThumbnail(savePath, 128, &outType)
-		if err != nil {
-			log.Printf("error generating 128 width thumbnail")
-		}
-	}
-	if imageWidth > 64 {
-		_, err = GenerateThumbnail(savePath, 64, &outType)
-		if err != nil {
-			log.Printf("error generating 64 width thumbnail")
-		}
+	_, err = GenerateThumbnail(savePath, 64, &outType)
+	if err != nil {
+		log.Printf("error generating 64 width thumbnail")
 	}
 }
