@@ -33,6 +33,9 @@ func Run() {
 
 	r.GET("/oauth/google", GoogleOauthRedirect)
 
+	r.POST("/auth/upload/:imageType", UploadImageHandler)
+	r.StaticFS("/image", gin.Dir("static/images", false))
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
