@@ -8,6 +8,7 @@ import (
 func main() {
 	db.Init()
 	defer db.Pool().Close()
+	//server.TryOutsideTest()
 
 	server.Run()
 }
