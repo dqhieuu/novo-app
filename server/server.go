@@ -34,9 +34,10 @@ func Run() {
 	r.GET("/oauth/google", GoogleOauthRedirect)
 
 	auth := r.Group("/auth")
-	auth.Use(authMiddleware.MiddlewareFunc())
-
-	auth.GET("/refresh_token", authMiddleware.RefreshHandler)
-
+	{
+		auth.Use(authMiddleware.MiddlewareFunc())
+		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+		auth.GET("/role", GetRoleHandler)
+	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

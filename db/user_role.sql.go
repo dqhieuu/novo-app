@@ -39,10 +39,10 @@ func (q *Queries) InsertNewRole(ctx context.Context, arg InsertNewRoleParams) (R
 
 const role = `-- name: Role :one
 SELECT r.name                             role_name,
-       array_agg((module || '.' || action))::text[] role_permissions
-FROM role_permissions rp
-     JOIN roles r on r.id = rp.role_id
-WHERE rp.role_id = $1
+       array_agg(module || '.' || action)::text[] role_permissions
+FROM roles r
+         LEFT JOIN role_permissions rp on r.id = rp.role_id
+WHERE r.id = $1
 GROUP BY r.name
 `
 
@@ -51,8 +51,8 @@ type RoleRow struct {
 	RolePermissions []string `json:"rolePermissions"`
 }
 
-func (q *Queries) Role(ctx context.Context, roleID int32) (RoleRow, error) {
-	row := q.db.QueryRow(ctx, role, roleID)
+func (q *Queries) Role(ctx context.Context, id int32) (RoleRow, error) {
+	row := q.db.QueryRow(ctx, role, id)
 	var i RoleRow
 	err := row.Scan(&i.RoleName, &i.RolePermissions)
 	return i, err
