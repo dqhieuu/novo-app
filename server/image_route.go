@@ -8,6 +8,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/dqhieuu/novo-app/db"
 	"image"
 	"image/color"
@@ -21,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	//"encoding/json"
 	//"github.com/dqhieuu/novo-app/db"
@@ -120,6 +122,18 @@ func generateHashes(fileStream io.Reader) (string, string, error) {
 	return hex.EncodeToString(md5Hash.Sum(nil)), hex.EncodeToString(sha1Hash.Sum(nil)), nil
 }
 
+func GetImageResolution(filestream multipart.File) (int, int, error) {
+	resolution, _, err := image.DecodeConfig(filestream)
+	if err != nil {
+		return -1, -1, errors.New("error getting image resolution: " + err.Error())
+	}
+	_, err = filestream.Seek(0, io.SeekStart)
+	if err != nil {
+		return -1, -1, errors.New("error resetting file pointer: " + err.Error())
+	}
+	return resolution.Width, resolution.Height, nil
+}
+
 func ResizeImage(fileStream multipart.File, params ResizeImageParams) error {
 	var srcImg image.Image
 	var err error
@@ -158,6 +172,10 @@ func ResizeImage(fileStream multipart.File, params ResizeImageParams) error {
 		return err
 	}
 	err = out.Close()
+	if err != nil {
+		return err
+	}
+	_, err = fileStream.Seek(0, io.SeekStart)
 	if err != nil {
 		return err
 	}
@@ -219,8 +237,10 @@ func GenerateThumbnail(path string, size int, filetype *string) (string, error) 
 		outType = *filetype
 	}
 
-	filename := newFileName(outType)
-	outDst := dirPath + "/" + filename
+	extension := filepath.Ext(path)
+	orgFileName := strings.TrimSuffix(filepath.Base(path), extension)
+	thumbFileName := fmt.Sprintf("%s-%d%s", orgFileName, size, extension)
+	outDst := fmt.Sprintf("%s/%s", dirPath, thumbFileName)
 
 	err = ResizeImage(filestream, ResizeImageParams{
 		InType:  srcType,
@@ -234,7 +254,7 @@ func GenerateThumbnail(path string, size int, filetype *string) (string, error) 
 		return "", errors.New("error resizing image: " + err.Error())
 	}
 
-	return filepath.Dir(path) + "/" + filename, nil
+	return filepath.Dir(path) + "/" + thumbFileName, nil
 }
 
 func SubmitImages(submitImages []int32) error {
@@ -270,32 +290,32 @@ func CleanImages() error {
 	return nil
 }
 
-func SaveImageFromStream(filestream multipart.File, location string, fileNameNoExt string, description string) (int32, error) {
+func SaveImageFromStream(filestream multipart.File, location string, fileNameNoExt string, description string) (int32, string, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
 	_, dirPath, err := checkFileDir(location + "/" + fileNameNoExt, RootFolder)
 	if err != nil {
-		return -1, errors.New("error getting actual file path: " + err.Error())
+		return -1, "", errors.New("error getting actual file path: " + err.Error())
 	}
 
 	fileType, err := getImageType(filestream)
 	if err != nil {
-		return -1, errors.New("error getting image type: " + err.Error())
+		return -1, "", errors.New("error getting image type: " + err.Error())
 	}
 
 	ok := detectImageType(fileType)
 	if !ok {
-		return -1, errors.New("unsupported media type")
+		return -1, "", errors.New("unsupported media type")
 	}
 
 	md5Hash, sha1Hash, err := generateHashes(filestream)
 	if err != nil {
-		return -1, errors.New("error generating hash: " + err.Error())
+		return -1, "", errors.New("error generating hash: " + err.Error())
 	}
 	_, err = filestream.Seek(0, io.SeekStart)
 	if err != nil {
-		return -1, errors.New("error resetting file pointer: " + err.Error())
+		return -1, "", errors.New("error resetting file pointer: " + err.Error())
 	}
 
 	//check if the file exist in the database
@@ -321,15 +341,15 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 		//err = c.SaveUploadedFile(file, dst)
 		saveFileStream, err := os.Create(dirPath + "/" + fileNameNoExt + extension)
 		if err != nil {
-			return -1, errors.New("error creating new file: " + err.Error())
+			return -1, "", errors.New("error creating new file: " + err.Error())
 		}
 		_, err = io.Copy(saveFileStream, filestream)
 		if err != nil {
-			return -1, errors.New("error copying file: " + err.Error())
+			return -1, "", errors.New("error copying file: " + err.Error())
 		}
 		err = saveFileStream.Close()
 		if err != nil {
-			return -1, errors.New("error closing save file stream: " + err.Error())
+			return -1, "", errors.New("error closing save file stream: " + err.Error())
 		}
 
 		//inserting image to the database
@@ -347,12 +367,12 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 			},
 		})
 		if err != nil {
-			return -1, errors.New("error inserting image into database: " + err.Error())
+			return -1, "", errors.New("error inserting image into database: " + err.Error())
 		}
 
-		return imageId, nil
+		return imageId, dst, nil
 	default:
-		return -1, errors.New("image already exist")
+		return -1, "", errors.New("image already exist")
 	}
 }
 
