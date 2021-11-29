@@ -49,8 +49,16 @@ func TestCreateBookGroup(t *testing.T) {
 	for i := 0; i < lenGenres && len(genreIds) <= limitBookGroup; i++ { // xét page 1
 		genreIds = append(genreIds, genres[i].ID)
 	}
-
-	bookGroup1, err := CreateBookGroup(title, description, ownerId, genreIds, authorIds)
+	bookGroupParams := CreateBookGroupParams{
+		Title:             title,
+		Description:       description,
+		AuthorIds:         authorIds,
+		GenreIds:          genreIds,
+		CoverArtIds:       []int32{},
+		PrimaryCoverArtId: 0,
+		OwnerId:           ownerId,
+	}
+	bookGroup1, err := CreateBookGroup(&bookGroupParams)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +127,7 @@ func TestUpdateBookGroup(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, bookGroup2.Description, tmp, "Compare description")
-	assert.Equal(t, bookGroup2.Ownerid, newOwnerId, "Compare ownerID")
+	assert.Equal(t, bookGroup2.OwnerID, newOwnerId, "Compare ownerID")
 
 	genreIds2, err := GenresByBookGroup(bookGroup1.ID, 1)
 	if err != nil {

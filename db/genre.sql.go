@@ -39,6 +39,21 @@ func (q *Queries) ALLGenre(ctx context.Context) ([]Genre, error) {
 	return items, nil
 }
 
+const checkGenreExistById = `-- name: CheckGenreExistById :one
+SELECT EXISTS(
+   SELECT 1
+   FROM genres
+   WHERE id = $1
+)
+`
+
+func (q *Queries) CheckGenreExistById(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, checkGenreExistById, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const deleteGenre = `-- name: DeleteGenre :exec
 DELETE
 FROM genres

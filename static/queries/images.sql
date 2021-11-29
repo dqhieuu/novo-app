@@ -18,7 +18,12 @@ DELETE FROM images WHERE id = $1;
 -- name: DeleteTempImage :exec
 DELETE FROM temp_images WHERE image_id = $1;
 
-
+-- name: CheckImageExistById :one
+SELECT EXISTS(
+   SELECT 1
+   FROM images
+   WHERE id = $1
+);
 
 
 

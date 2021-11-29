@@ -100,7 +100,7 @@ func createBookGroups() {
 		}
 		ownerId = users[r.Intn(len(users))].ID
 		bookGroup, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
-			Title: title, Description: description, Ownerid: ownerId,
+			Title: title, Description: description, OwnerID: ownerId,
 		})
 		if err != nil {
 			fmt.Println(err)

@@ -81,19 +81,25 @@ func (q *Queries) DeleteBookGroup(ctx context.Context, id int32) error {
 }
 
 const insertBookGroup = `-- name: InsertBookGroup :one
-INSERT INTO book_groups(title, description,owner_id)
-VALUES ($1, $2,$3)
+INSERT INTO book_groups(title, description,owner_id,primary_cover_art_id)
+VALUES ($1, $2,$3,$4)
 RETURNING id, title, description, date_created, owner_id, primary_cover_art_id
 `
 
 type InsertBookGroupParams struct {
-	Title       string         `json:"title"`
-	Description sql.NullString `json:"description"`
-	OwnerID     int32          `json:"ownerID"`
+	Title             string         `json:"title"`
+	Description       sql.NullString `json:"description"`
+	OwnerID           int32          `json:"ownerID"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
 }
 
 func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) (BookGroup, error) {
-	row := q.db.QueryRow(ctx, insertBookGroup, arg.Title, arg.Description, arg.OwnerID)
+	row := q.db.QueryRow(ctx, insertBookGroup,
+		arg.Title,
+		arg.Description,
+		arg.OwnerID,
+		arg.PrimaryCoverArtID,
+	)
 	var i BookGroup
 	err := row.Scan(
 		&i.ID,

@@ -19,8 +19,8 @@ SET title = $2,
 WHERE id = $1;
 
 -- name: InsertBookGroup :one
-INSERT INTO book_groups(title, description,owner_id)
-VALUES (@title, @description,@owner_id)
+INSERT INTO book_groups(title, description,owner_id,primary_cover_art_id)
+VALUES (@title, @description,@owner_id,@primary_cover_art_id)
 RETURNING *;
 
 -- name: DeleteBookGroup :exec

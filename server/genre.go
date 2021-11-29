@@ -22,6 +22,16 @@ func GenreById(id int32) (*db.Genre, error) {
 	return &genre, err
 }
 
+func CheckGenreExistById(id int32) (bool, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	result, err := queries.CheckGenreExistById(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+}
+
 func Genres(page int32) ([]*db.Genre, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
