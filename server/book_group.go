@@ -185,35 +185,35 @@ func CreateBookGroupHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("Title before ", bookGroup.Title)
-	fmt.Println("Description before ", bookGroup.Description)
-	fmt.Println("AuthorIds before ", bookGroup.AuthorIds)
-	fmt.Println("GenreIds before ", bookGroup.GenreIds)
-	fmt.Println("CoverArtIds before ", bookGroup.CoverArtIds)
-	fmt.Println("PrimaryCoverArtId before ", bookGroup.PrimaryCoverArtId)
-	fmt.Println("OwnerId before ", bookGroup.OwnerId)
+	//fmt.Println("Title before ", bookGroup.Title)
+	//fmt.Println("Description before ", bookGroup.Description)
+	//fmt.Println("AuthorIds before ", bookGroup.AuthorIds)
+	//fmt.Println("GenreIds before ", bookGroup.GenreIds)
+	//fmt.Println("CoverArtIds before ", bookGroup.CoverArtIds)
+	//fmt.Println("PrimaryCoverArtId before ", bookGroup.PrimaryCoverArtId)
+	//fmt.Println("OwnerId before ", bookGroup.OwnerId)
 	if err := ValidTitle(&bookGroup.Title); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("Title after ", bookGroup.Title)
+	//fmt.Println("Title after ", bookGroup.Title)
 	if err := ValidDescription(&bookGroup.Description); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("Description after ", bookGroup.Description)
+	//fmt.Println("Description after ", bookGroup.Description)
 	ValidAuthors(&bookGroup.AuthorIds)
-	fmt.Println("AuthorIds after ", bookGroup.AuthorIds)
+	//fmt.Println("AuthorIds after ", bookGroup.AuthorIds)
 	ValidGenres(&bookGroup.GenreIds)
-	fmt.Println("GenreIds after ", bookGroup.GenreIds)
+	//fmt.Println("GenreIds after ", bookGroup.GenreIds)
 	ValidCoverArt(&bookGroup.CoverArtIds)
-	fmt.Println("CoverArtIds after ", bookGroup.CoverArtIds)
+	//fmt.Println("CoverArtIds after ", bookGroup.CoverArtIds)
 	ValidPrimaryCoverArtId(&bookGroup.PrimaryCoverArtId, &bookGroup.CoverArtIds)
+	//fmt.Println("PrimaryCoverArtId after ", bookGroup.PrimaryCoverArtId)
 	if _, err := CreateBookGroup(&bookGroup); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	fmt.Println("PrimaryCoverArtId after ", bookGroup.PrimaryCoverArtId)
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Create book group successfully",
 	})
@@ -330,4 +330,5 @@ func ValidPrimaryCoverArtId(PrimaryCoverArtId *int32, coverArtIds *[]int32) {
 	if length > 1 {
 		*PrimaryCoverArtId = (*coverArtIds)[length-1]
 	}
+	*PrimaryCoverArtId = 0
 }
