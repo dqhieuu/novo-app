@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
 (
     book_chapter_id int NOT NULL,
     image_id        int NOT NULL,
-    PRIMARY KEY (book_chapter_id, image_id),
+    rank int NOT NULL DEFAULT 1,
     CONSTRAINT fk_book_chapter_images_book_chapters
         FOREIGN KEY (book_chapter_id)
             REFERENCES book_chapters (id),

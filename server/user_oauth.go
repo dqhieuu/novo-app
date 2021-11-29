@@ -168,7 +168,7 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 	if err := c.ShouldBindJSON(&user); err != nil {
 		log.Printf("error parsing json: %s\n", err)
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err,
+			"error": "error parsing json",
 		})
 		return
 	}
