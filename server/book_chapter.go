@@ -220,7 +220,7 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	 }
 
 	//check content
-	if HasControlCharacters(newHypertextChapter.Content) || CheckEmptyString(newHypertextChapter.Content) {
+	if HasControlCharacters(newHypertextChapter.Content) && CheckEmptyString(newHypertextChapter.Content) {
 		log.Println("invalid content")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid content",
