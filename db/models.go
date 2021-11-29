@@ -47,11 +47,12 @@ type BookComment struct {
 }
 
 type BookGroup struct {
-	ID          int32          `json:"id"`
-	Title       string         `json:"title"`
-	Description sql.NullString `json:"description"`
-	DateCreated sql.NullTime   `json:"dateCreated"`
-	Ownerid     int32          `json:"ownerid"`
+	ID                int32          `json:"id"`
+	Title             string         `json:"title"`
+	Description       sql.NullString `json:"description"`
+	DateCreated       sql.NullTime   `json:"dateCreated"`
+	OwnerID           int32          `json:"ownerID"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
 }
 
 type BookGroupAltTitle struct {

@@ -99,11 +99,15 @@ CREATE TABLE IF NOT EXISTS book_groups
     title        text NOT NULL,
     description  text,
     date_created timestamptz DEFAULT now(),
-    ownerID      int  NOT NULL,
+    owner_id      int  NOT NULL,
+    primary_cover_art_id int,
     PRIMARY KEY (id),
     CONSTRAINT fk_book_groups_users
-        FOREIGN KEY (ownerID)
-            REFERENCES users (id)
+        FOREIGN KEY (owner_id)
+            REFERENCES users (id),
+    CONSTRAINT fk_book_groups_images
+        FOREIGN KEY (primary_cover_art_id)
+            REFERENCES images (id)
 );
 
 CREATE TABLE IF NOT EXISTS book_group_alt_titles

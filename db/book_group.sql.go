@@ -9,7 +9,7 @@ import (
 )
 
 const bookGroupById = `-- name: BookGroupById :one
-SELECT id, title, description, date_created, ownerid
+SELECT id, title, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
 WHERE id = $1
 `
@@ -22,13 +22,14 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error
 		&i.Title,
 		&i.Description,
 		&i.DateCreated,
-		&i.Ownerid,
+		&i.OwnerID,
+		&i.PrimaryCoverArtID,
 	)
 	return i, err
 }
 
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
-SELECT id, title, description, date_created, ownerid
+SELECT id, title, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
 WHERE  LOWER(title) LIKE '%' || $1 || '%'
 ORDER BY id
@@ -56,7 +57,8 @@ func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitlePa
 			&i.Title,
 			&i.Description,
 			&i.DateCreated,
-			&i.Ownerid,
+			&i.OwnerID,
+			&i.PrimaryCoverArtID,
 		); err != nil {
 			return nil, err
 		}
@@ -79,26 +81,27 @@ func (q *Queries) DeleteBookGroup(ctx context.Context, id int32) error {
 }
 
 const insertBookGroup = `-- name: InsertBookGroup :one
-INSERT INTO book_groups(title, description,ownerid)
+INSERT INTO book_groups(title, description,owner_id)
 VALUES ($1, $2,$3)
-RETURNING id, title, description, date_created, ownerid
+RETURNING id, title, description, date_created, owner_id, primary_cover_art_id
 `
 
 type InsertBookGroupParams struct {
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	Ownerid     int32          `json:"ownerid"`
+	OwnerID     int32          `json:"ownerID"`
 }
 
 func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) (BookGroup, error) {
-	row := q.db.QueryRow(ctx, insertBookGroup, arg.Title, arg.Description, arg.Ownerid)
+	row := q.db.QueryRow(ctx, insertBookGroup, arg.Title, arg.Description, arg.OwnerID)
 	var i BookGroup
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
 		&i.Description,
 		&i.DateCreated,
-		&i.Ownerid,
+		&i.OwnerID,
+		&i.PrimaryCoverArtID,
 	)
 	return i, err
 }
@@ -107,7 +110,7 @@ const updateBookGroup = `-- name: UpdateBookGroup :exec
 UPDATE book_groups
 SET title = $2,
     description=$3,
-    ownerid=$4
+    owner_id=$4
 WHERE id = $1
 `
 
@@ -115,7 +118,7 @@ type UpdateBookGroupParams struct {
 	ID          int32          `json:"id"`
 	Title       string         `json:"title"`
 	Description sql.NullString `json:"description"`
-	Ownerid     int32          `json:"ownerid"`
+	OwnerID     int32          `json:"ownerID"`
 }
 
 func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams) error {
@@ -123,7 +126,7 @@ func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams
 		arg.ID,
 		arg.Title,
 		arg.Description,
-		arg.Ownerid,
+		arg.OwnerID,
 	)
 	return err
 }

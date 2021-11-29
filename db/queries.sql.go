@@ -8,7 +8,7 @@ import (
 )
 
 const listBookGroups = `-- name: ListBookGroups :many
-SELECT id, title, description, date_created, ownerid FROM book_groups
+SELECT id, title, description, date_created, owner_id, primary_cover_art_id FROM book_groups
 FETCH FIRST $1 ROWS ONLY
 `
 
@@ -26,7 +26,8 @@ func (q *Queries) ListBookGroups(ctx context.Context, limit int32) ([]BookGroup,
 			&i.Title,
 			&i.Description,
 			&i.DateCreated,
-			&i.Ownerid,
+			&i.OwnerID,
+			&i.PrimaryCoverArtID,
 		); err != nil {
 			return nil, err
 		}
