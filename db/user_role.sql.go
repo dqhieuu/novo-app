@@ -19,6 +19,17 @@ func (q *Queries) DeleteRole(ctx context.Context, name string) error {
 	return err
 }
 
+const getMemberRoleId = `-- name: GetMemberRoleId :one
+SELECT id FROM roles WHERE name = 'member'
+`
+
+func (q *Queries) GetMemberRoleId(ctx context.Context) (int32, error) {
+	row := q.db.QueryRow(ctx, getMemberRoleId)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const insertNewRole = `-- name: InsertNewRole :one
 INSERT INTO roles (name, description)
 VALUES ($1, $2)

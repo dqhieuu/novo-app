@@ -11,7 +11,8 @@ import (
 const completeOauthAccount = `-- name: CompleteOauthAccount :exec
 UPDATE users
 SET user_name = $2,
-    avatar_image_id = $3
+    avatar_image_id = $3,
+    role_id = $4
 WHERE id = $1
 `
 
@@ -19,10 +20,16 @@ type CompleteOauthAccountParams struct {
 	ID            int32          `json:"id"`
 	UserName      sql.NullString `json:"userName"`
 	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
+	RoleID        int32          `json:"roleID"`
 }
 
 func (q *Queries) CompleteOauthAccount(ctx context.Context, arg CompleteOauthAccountParams) error {
-	_, err := q.db.Exec(ctx, completeOauthAccount, arg.ID, arg.UserName, arg.AvatarImageID)
+	_, err := q.db.Exec(ctx, completeOauthAccount,
+		arg.ID,
+		arg.UserName,
+		arg.AvatarImageID,
+		arg.RoleID,
+	)
 	return err
 }
 
