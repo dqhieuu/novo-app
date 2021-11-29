@@ -30,6 +30,7 @@ type BookChapter struct {
 type BookChapterImage struct {
 	BookChapterID int32 `json:"bookChapterID"`
 	ImageID       int32 `json:"imageID"`
+	Rank          int32 `json:"rank"`
 }
 
 type BookChapterView struct {

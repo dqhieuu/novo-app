@@ -21,7 +21,14 @@ const limitNameCharacter = 50
 type HypertextChapter struct {
 	ChapterNumber string `json:"chapter_number" binding:"required"`
 	Name string `json:"name"`
-	Content string `json:"content" binding:"required"`
+	TextContent string `json:"text_content" binding:"required"`
+	BookGroupId int32 `json:"book_group_id" binding:"required"`
+}
+
+type ImageChapter struct {
+	ChapterNumber string `json:"chapter_number" binding:"required"`
+	Name string `json:"name"`
+	Images []int32 `json:"images" binding:"required"`
 	BookGroupId int32 `json:"book_group_id" binding:"required"`
 }
 
@@ -211,7 +218,7 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	}
 
 	 //check chapter name
-	 if checkChapterName(newHypertextChapter.Name) {
+	 if !checkChapterName(newHypertextChapter.Name) {
 		 log.Println("invalid chapter name")
 		 c.JSON(http.StatusBadRequest, gin.H{
 			 "error": "invalid chapter name",
@@ -220,7 +227,7 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	 }
 
 	//check content
-	if HasControlCharacters(newHypertextChapter.Content) && CheckEmptyString(newHypertextChapter.Content) {
+	if HasControlCharacters(newHypertextChapter.TextContent) && CheckEmptyString(newHypertextChapter.TextContent) {
 		log.Println("invalid content")
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "invalid content",
@@ -233,7 +240,7 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	newChapter, err := CreateBookChapter(
 		newHypertextChapter.ChapterNumber,
 		newHypertextChapter.Name,
-		newHypertextChapter.Content,
+		newHypertextChapter.TextContent,
 		"hypertext",
 		newHypertextChapter.BookGroupId,
 		int32(extract[UserIdClaimKey].(float64)))
@@ -245,6 +252,92 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 		})
 		return
 	}
+	c.JSON(200, gin.H{
+		"id": newChapter.ID,
+	})
+}
+
+func CreateImagesChapterHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	var newImageChapter ImageChapter
+	if err := c.ShouldBindJSON(&newImageChapter); err != nil {
+		log.Printf("error parsing json: %s\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "error parsing json",
+		})
+		return
+	}
+
+	//check chapter number
+	if CheckEmptyString(newImageChapter.ChapterNumber) {
+		log.Println("invalid chapter number")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid chapter number",
+		})
+		return
+	}
+
+	//check chapter name
+	if !checkChapterName(newImageChapter.Name) {
+		log.Println("invalid chapter name")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid chapter name",
+		})
+		return
+	}
+
+	extract := jwt.ExtractClaims(c)
+
+	newChapter, err := CreateBookChapter(
+		newImageChapter.ChapterNumber,
+		newImageChapter.Name,
+		"",
+		"images",
+		newImageChapter.BookGroupId,
+		int32(extract[UserIdClaimKey].(float64)))
+
+	if err != nil {
+		log.Printf("error creating new images chapter: %s\n", err)
+		c.JSON(500, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	//adding images
+	for index, imageId := range newImageChapter.Images {
+		peekRow, err := queries.GetImageBasedOnId(ctx, imageId)
+		if err != nil {
+			log.Printf("error getting image: %s\n", err)
+			c.JSON(500, gin.H{
+				"error": err,
+			})
+			return
+		}
+		switch {
+		case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
+			log.Printf("image does not exist")
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "image does not exist",
+			})
+		default:
+			err = queries.InsertBookChapterImage(ctx, db.InsertBookChapterImageParams{
+				BookChapterID: newChapter.ID,
+				ImageID:       imageId,
+				Rank: int32(index + 1),
+			})
+			if err != nil {
+				log.Printf("error adding book chapter images: %s\n", err)
+				c.JSON(500, gin.H{
+					"error": "error adding book chapter images" + err.Error(),
+				})
+				return
+			}
+		}
+	}
+
 	c.JSON(200, gin.H{
 		"id": newChapter.ID,
 	})
