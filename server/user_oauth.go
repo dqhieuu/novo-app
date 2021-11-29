@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
@@ -12,10 +13,16 @@ import (
 	"golang.org/x/oauth2/google"
 	googleOauth2 "google.golang.org/api/oauth2/v2"
 	"google.golang.org/api/option"
+	"log"
 	"net/http"
 )
 
 var googleConfig *oauth2.Config
+
+type CompleteOath struct{
+	Username string `json:"username" binding:"required" form:"username"`
+	Avatar int32 `json:"avatar" form:"avatar"`
+}
 
 func InitOauth() {
 	if googleConfig == nil {
@@ -105,7 +112,7 @@ func RegisterOauthAccount(email string) (*db.User, *db.RoleRow, error) {
 	return createOauthAccount(email, "oauth_incomplete")
 }
 
-func CompleteOauthRegistration(userId int32, name string, avatarId *int32) error {
+func CompleteOauthRegistration(userId int32, name string, avatarId *int32, roleId int32) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
@@ -120,6 +127,7 @@ func CompleteOauthRegistration(userId int32, name string, avatarId *int32) error
 				String: name,
 				Valid:  true,
 			},
+			RoleID: roleId,
 		})
 		if err != nil {
 			return err
@@ -135,6 +143,7 @@ func CompleteOauthRegistration(userId int32, name string, avatarId *int32) error
 				Int32: *avatarId,
 				Valid: true,
 			},
+			RoleID: roleId,
 		})
 		if err != nil {
 			return err
@@ -149,4 +158,44 @@ func GoogleOauthRedirect(c *gin.Context) {
 
 	url := conf.AuthCodeURL("unused", oauth2.AccessTypeOffline)
 	c.Redirect(http.StatusFound, url)
+}
+
+func CompleteOauthAccountHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	
+	var user CompleteOath
+	if err := c.ShouldBindJSON(&user); err != nil {
+		log.Printf("error parsing json: %s\n", err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	memberId, err := queries.GetRoleId(ctx, "member")
+	if err != nil {
+		log.Printf("error getting member role id: %s\n", err)
+		c.JSON(500, gin.H{
+			"error": err,
+		})
+		return
+	}
+
+	extract := jwt.ExtractClaims(c)
+	var avatarIdPointer *int32
+	if user.Avatar != 0 {
+		avatarIdPointer = &user.Avatar
+	}
+
+	err = CompleteOauthRegistration(int32(extract[UserIdClaimKey].(float64)), user.Username, avatarIdPointer, memberId)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err,
+		})
+		return
+	}
+	c.JSON(200, gin.H{
+		"message": "Complete Oauth successfully",
+	})
 }

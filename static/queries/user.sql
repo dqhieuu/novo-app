@@ -24,6 +24,7 @@ WHERE user_name = $1;
 -- name: CompleteOauthAccount :exec
 UPDATE users
 SET user_name = $2,
-    avatar_image_id = $3
+    avatar_image_id = $3,
+    role_id = $4
 WHERE id = $1;
 

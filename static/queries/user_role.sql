@@ -15,3 +15,6 @@ FROM roles r
          LEFT JOIN role_permissions rp on r.id = rp.role_id
 WHERE r.id = $1
 GROUP BY r.name;
+
+-- name: GetRoleId :one
+SELECT id FROM roles WHERE name = $1;

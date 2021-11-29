@@ -25,9 +25,9 @@ type OauthLogin struct {
 	Code     string `form:"code" json:"code" binding:"required"`
 }
 
-var UserIdClaimKey = "uid"
-var RoleNameClaimKey = "rol"
-var RolePermsClaimKey = "rolp"
+const UserIdClaimKey = "uid"
+const RoleNameClaimKey = "rol"
+const RolePermsClaimKey = "rolp"
 
 // AuthMiddleware is a jwt auth(enticator/orizator)
 func AuthMiddleware() *jwt.GinJWTMiddleware {
