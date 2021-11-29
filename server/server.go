@@ -3,15 +3,8 @@ package server
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
 )
 
-type Test struct {
-	Message string `json:"message" binding:"required"`
-	Number int `json:"number"`
-	Array []int `json:"array"`
-}
 func Run() {
 	r := gin.Default()
 
@@ -42,23 +35,6 @@ func Run() {
 
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
-
-	r.POST("/test", func(c *gin.Context){
-		var test Test
-		if err := c.ShouldBindJSON(&test); err != nil {
-			log.Printf("error parsing json: %s\n", err)
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "error parsing json",
-			})
-			return
-		}
-		log.Println(test.Message)
-		log.Println(test.Number)
-		log.Println(test.Array)
-		c.JSON(200, gin.H{
-			"message": "success",
-		})
-	})
 
 	auth := r.Group("/auth")
 	{
