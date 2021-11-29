@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS book_chapters
     id             int GENERATED ALWAYS AS IDENTITY,
     date_created   timestamptz NOT NULL DEFAULT now(),
     chapter_number decimal     NOT NULL,
-    description    text,
+    name    text,
     text_context   text,
     type           text        NOT NULL CHECK (type IN ('images', 'hypertext')),
     book_group_id  int         NOT NULL,

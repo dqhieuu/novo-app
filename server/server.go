@@ -45,6 +45,7 @@ func Run() {
 		auth.PATCH("/author/:authorId", UpdateAuthorHandler)
 		auth.DELETE("/author/:authorId", DeleteAuthorHandler)
 		auth.POST("/complete-oauth-register", CompleteOauthAccountHandler)
+		auth.POST("/chapter/hypertext", CreateHypertextChapterHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
