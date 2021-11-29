@@ -173,7 +173,7 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		return
 	}
 
-	memberId, err := queries.GetMemberRoleId(ctx)
+	memberId, err := queries.GetRoleId(ctx, "member")
 	if err != nil {
 		log.Printf("error getting member role id: %s\n", err)
 		c.JSON(500, gin.H{
@@ -188,7 +188,7 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		avatarIdPointer = &user.Avatar
 	}
 
-	err = CompleteOauthRegistration(int32(extract["uid"].(float64)), user.Username, avatarIdPointer, memberId)
+	err = CompleteOauthRegistration(int32(extract[UserIdClaimKey].(float64)), user.Username, avatarIdPointer, memberId)
 	if err != nil {
 		c.JSON(500, gin.H{
 			"error": err,
@@ -196,6 +196,6 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{
-		"message": "Complete Oauth sucessfully",
+		"message": "Complete Oauth successfully",
 	})
 }
