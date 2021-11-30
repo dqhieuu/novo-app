@@ -48,6 +48,7 @@ func Run() {
 		auth.POST("/book", CreateBookGroupHandler)
 		auth.POST("/chapter/hypertext", CreateHypertextChapterHandler)
 		auth.POST("/chapter/images", CreateImagesChapterHandler)
+		auth.POST("/comment", CreateCommentHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }
