@@ -260,7 +260,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					return
 				}
 				responseObject.Chapters = append(responseObject.Chapters, Chapter{
-					ChapterNumber: ConvertNumericToFloat(chapter.ChapterNumber),
+					ChapterNumber: chapter.ChapterNumber,
 					Name:          chapter.Name.String,
 					Id:            chapter.ID,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
