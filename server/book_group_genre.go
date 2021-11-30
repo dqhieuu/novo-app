@@ -7,6 +7,11 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 )
 
+type Genre struct {
+	Id int32 `json:"id" binding:"required"`
+	Name string `json:"name" binding:"required"`
+}
+
 func BookGroupGenre(bookGroupId, genreId int32) (bool, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())

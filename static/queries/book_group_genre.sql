@@ -45,3 +45,9 @@ WHERE genre_id = $1;
 DELETE
 FROM book_group_genres
 WHERE book_group_id = $1;
+
+-- name: GetBookGroupGenres :many
+SELECT genres.id, genres.name
+FROM genres JOIN book_group_genres bgg on genres.id = bgg.genre_id
+            JOIN book_groups bg on bgg.book_group_id = bg.id
+WHERE bg.id = $1;

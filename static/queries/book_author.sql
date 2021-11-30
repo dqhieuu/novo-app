@@ -40,3 +40,9 @@ SET name        = $2,
     description = $3,
     avatar_image_id    = $4
 WHERE id = $1;
+
+-- name: GetBookGroupAuthors :many
+SELECT book_authors.id, book_authors.name
+FROM book_authors JOIN book_group_authors bga on book_authors.id = bga.book_author_id
+                    JOIN book_groups bg on bga.book_group_id = bg.id
+WHERE bg.id = $1;

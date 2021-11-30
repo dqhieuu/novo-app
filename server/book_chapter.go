@@ -12,11 +12,18 @@ import (
 	"log"
 	"net/http"
 	"regexp"
-	"strings"
 )
 
 const limitChapter = 50
 const limitNameCharacter = 50
+
+type Chapter struct {
+	ChapterNumber pgtype.Numeric `json:"chapter_number" binding:"required"`
+	Name string `json:"name"`
+	Id int32 `json:"id" binding:"required"`
+	TimePosted int64 `json:"time_posted" binding:"required"`
+	UserPosted Author `json:"user_posted" binding:"required"`
+}
 
 type HypertextChapter struct {
 	ChapterNumber string `json:"chapter_number" binding:"required"`
@@ -30,21 +37,6 @@ type ImageChapter struct {
 	Name          string  `json:"name"`
 	Images        []int32 `json:"images" binding:"required"`
 	BookGroupId   int32   `json:"book_group_id" binding:"required"`
-}
-
-func HasControlCharacters(content string) bool {
-	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x1F\x7F]`, content)
-	if hasInvalidChars {
-		return true
-	}
-	return false
-}
-
-func CheckEmptyString(content string) bool {
-	if len(strings.TrimSpace(content)) == 0 {
-		return true
-	}
-	return false
 }
 
 func checkChapterName(name string) bool {

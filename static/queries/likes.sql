@@ -10,4 +10,7 @@ VALUES ($1, $2, -1);
 DELETE FROM book_group_likes WHERE user_id = $1 AND book_group_id = $2;
 
 -- name: GetLikes :one
-SELECT SUM(point) as totalLikes FROM book_group_likes WHERE book_group_id = $1;
+SELECT coalesce(SUM(point), 0) as totalLikes FROM book_group_likes WHERE book_group_id = $1 AND point > 0;
+
+-- name: GetDislikes :one
+SELECT coalesce(SUM(point), 0) as totalLikes FROM book_group_likes WHERE book_group_id = $1 AND point < 0;

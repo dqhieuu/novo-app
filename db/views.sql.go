@@ -8,43 +8,57 @@ import (
 	"time"
 )
 
+const getBookGroupView = `-- name: GetBookGroupView :one
+SELECT COALESCE(sum(count), 0) as totalView
+FROM book_chapter_views JOIN book_chapters bc on book_chapter_views.book_chapter_id = bc.id
+                        JOIN book_groups bg on bc.book_group_id = bg.id
+WHERE bg.id = $1
+`
+
+func (q *Queries) GetBookGroupView(ctx context.Context, id int32) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getBookGroupView, id)
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
+}
+
 const getViewByMonth = `-- name: GetViewByMonth :one
-SELECT SUM(count) as viewByMonth FROM book_chapter_views
+SELECT COALESCE(sum(count), 0) as viewByMonth FROM book_chapter_views
 WHERE book_chapter_id = $1
 AND view_date >= now() - interval '1 month'
 `
 
-func (q *Queries) GetViewByMonth(ctx context.Context, bookChapterID int32) (int64, error) {
+func (q *Queries) GetViewByMonth(ctx context.Context, bookChapterID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getViewByMonth, bookChapterID)
-	var viewbymonth int64
-	err := row.Scan(&viewbymonth)
-	return viewbymonth, err
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
 }
 
 const getViewByWeek = `-- name: GetViewByWeek :one
-SELECT SUM(count) as viewByWeek FROM book_chapter_views
+SELECT COALESCE(sum(count), 0) as viewByWeek FROM book_chapter_views
 WHERE book_chapter_id = $1
   AND view_date >= now() - interval '1 week'
 `
 
-func (q *Queries) GetViewByWeek(ctx context.Context, bookChapterID int32) (int64, error) {
+func (q *Queries) GetViewByWeek(ctx context.Context, bookChapterID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getViewByWeek, bookChapterID)
-	var viewbyweek int64
-	err := row.Scan(&viewbyweek)
-	return viewbyweek, err
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
 }
 
 const getViewByYear = `-- name: GetViewByYear :one
-SELECT SUM(count) as viewByYear FROM book_chapter_views
+SELECT COALESCE(sum(count), 0) as viewByYear FROM book_chapter_views
 WHERE book_chapter_id = $1
   AND view_date >= now() - interval '1 year'
 `
 
-func (q *Queries) GetViewByYear(ctx context.Context, bookChapterID int32) (int64, error) {
+func (q *Queries) GetViewByYear(ctx context.Context, bookChapterID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getViewByYear, bookChapterID)
-	var viewbyyear int64
-	err := row.Scan(&viewbyyear)
-	return viewbyyear, err
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
 }
 
 const upsertViewByDate = `-- name: UpsertViewByDate :exec

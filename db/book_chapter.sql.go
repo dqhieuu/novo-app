@@ -6,6 +6,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 
 	"github.com/jackc/pgtype"
 )
@@ -95,6 +96,82 @@ WHERE id = $1
 func (q *Queries) DeleteBookChapterById(ctx context.Context, id int32) error {
 	_, err := q.db.Exec(ctx, deleteBookChapterById, id)
 	return err
+}
+
+const getBookChapterOwner = `-- name: GetBookChapterOwner :one
+SELECT users.id, users.user_name
+FROM users JOIN book_chapters bc on users.id = bc.owner_id
+WHERE bc.id = $1
+`
+
+type GetBookChapterOwnerRow struct {
+	ID       int32          `json:"id"`
+	UserName sql.NullString `json:"userName"`
+}
+
+func (q *Queries) GetBookChapterOwner(ctx context.Context, id int32) (GetBookChapterOwnerRow, error) {
+	row := q.db.QueryRow(ctx, getBookChapterOwner, id)
+	var i GetBookChapterOwnerRow
+	err := row.Scan(&i.ID, &i.UserName)
+	return i, err
+}
+
+const getBookGroupChapters = `-- name: GetBookGroupChapters :many
+SELECT book_chapters.id, book_chapters.date_created, chapter_number, name, text_context, type, book_group_id, book_chapters.owner_id, bg.id, title, description, bg.date_created, bg.owner_id, primary_cover_art_id
+FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
+WHERE bg.id = $1
+`
+
+type GetBookGroupChaptersRow struct {
+	ID                int32          `json:"id"`
+	DateCreated       time.Time      `json:"dateCreated"`
+	ChapterNumber     pgtype.Numeric `json:"chapterNumber"`
+	Name              sql.NullString `json:"name"`
+	TextContext       sql.NullString `json:"textContext"`
+	Type              string         `json:"type"`
+	BookGroupID       int32          `json:"bookGroupID"`
+	OwnerID           int32          `json:"ownerID"`
+	ID_2              int32          `json:"id2"`
+	Title             string         `json:"title"`
+	Description       sql.NullString `json:"description"`
+	DateCreated_2     sql.NullTime   `json:"dateCreated2"`
+	OwnerID_2         int32          `json:"ownerID2"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+}
+
+func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBookGroupChaptersRow, error) {
+	rows, err := q.db.Query(ctx, getBookGroupChapters, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBookGroupChaptersRow
+	for rows.Next() {
+		var i GetBookGroupChaptersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.DateCreated,
+			&i.ChapterNumber,
+			&i.Name,
+			&i.TextContext,
+			&i.Type,
+			&i.BookGroupID,
+			&i.OwnerID,
+			&i.ID_2,
+			&i.Title,
+			&i.Description,
+			&i.DateCreated_2,
+			&i.OwnerID_2,
+			&i.PrimaryCoverArtID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertBookChapter = `-- name: InsertBookChapter :one

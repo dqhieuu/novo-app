@@ -34,3 +34,13 @@ WHERE id = $1;
 DELETE
 FROM book_chapters
 WHERE book_group_id = $1;
+
+-- name: GetBookGroupChapters :many
+SELECT *
+FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
+WHERE bg.id = $1;
+
+-- name: GetBookChapterOwner :one
+SELECT users.id, users.user_name
+FROM users JOIN book_chapters bc on users.id = bc.owner_id
+WHERE bc.id = $1;

@@ -12,6 +12,11 @@ import (
 
 const limitBookAuthors = 50
 
+type Author struct {
+	Name string `json:"name" binding:"required"`
+	Id int32 `json:"id" binding:"required"`
+}
+
 func BookAuthorById(id int32) (*db.BookAuthor, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
