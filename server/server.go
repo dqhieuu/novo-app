@@ -36,6 +36,8 @@ func Run() {
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
 
+	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())

@@ -536,3 +536,13 @@ func CheckImageExistById(id int32) (bool, error) {
 	}
 	return result, nil
 }
+
+func ImagesByBookChapter(bookChapterId int32) (*[]string, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	images, err := queries.ImagesByBookChapter(ctx, bookChapterId)
+	if err != nil {
+		return nil, err
+	}
+	return &images, nil
+}
