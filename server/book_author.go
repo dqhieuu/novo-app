@@ -118,10 +118,20 @@ func DeleteBookAuthor(id int32) error {
 	return nil
 }
 
-func CheckAuthorExist(name string) (bool, error) {
+func CheckAuthorExistByName(name string) (bool, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	result, err := queries.CheckAuthorExist(ctx, name)
+	result, err := queries.CheckAuthorExistByName(ctx, name)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+}
+
+func CheckAuthorExistById(id int32) (bool, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	result, err := queries.CheckAuthorExistById(ctx, id)
 	if err != nil {
 		return false, err
 	}
@@ -154,7 +164,7 @@ func CreateAuthorHandler(c *gin.Context) {
 		return
 	}
 
-	exist, err := CheckAuthorExist(a.Name)
+	exist, err := CheckAuthorExistByName(a.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -223,7 +233,7 @@ func UpdateAuthorHandler(c *gin.Context) {
 		})
 		return
 	}
-	exist, err := CheckAuthorExist(a.Name)
+	exist, err := CheckAuthorExistByName(a.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

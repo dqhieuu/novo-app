@@ -8,6 +8,21 @@ import (
 	"database/sql"
 )
 
+const checkImageExistById = `-- name: CheckImageExistById :one
+SELECT EXISTS(
+   SELECT 1
+   FROM images
+   WHERE id = $1
+)
+`
+
+func (q *Queries) CheckImageExistById(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, checkImageExistById, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const clearTempImages = `-- name: ClearTempImages :many
 DELETE FROM temp_images RETURNING image_id
 `

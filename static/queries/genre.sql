@@ -1,3 +1,10 @@
+-- name: CheckGenreExistById :one
+SELECT EXISTS(
+   SELECT 1
+   FROM genres
+   WHERE id = $1
+);
+
 -- name: ALLGenre :many
 SELECT *
 FROM genres

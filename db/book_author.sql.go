@@ -64,7 +64,22 @@ func (q *Queries) BookAuthors(ctx context.Context, arg BookAuthorsParams) ([]Boo
 	return items, nil
 }
 
-const checkAuthorExist = `-- name: CheckAuthorExist :one
+const checkAuthorExistById = `-- name: CheckAuthorExistById :one
+SELECT EXISTS(
+   SELECT 1
+   FROM book_authors
+   WHERE id = $1
+)
+`
+
+func (q *Queries) CheckAuthorExistById(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, checkAuthorExistById, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkAuthorExistByName = `-- name: CheckAuthorExistByName :one
 SELECT EXISTS(
    SELECT 1
    FROM book_authors
@@ -72,8 +87,8 @@ SELECT EXISTS(
 )
 `
 
-func (q *Queries) CheckAuthorExist(ctx context.Context, name string) (bool, error) {
-	row := q.db.QueryRow(ctx, checkAuthorExist, name)
+func (q *Queries) CheckAuthorExistByName(ctx context.Context, name string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkAuthorExistByName, name)
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err

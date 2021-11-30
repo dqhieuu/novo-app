@@ -15,12 +15,12 @@ OFFSET $2 ROWS
 UPDATE book_groups
 SET title = $2,
     description=$3,
-    ownerid=$4
+    owner_id=$4
 WHERE id = $1;
 
 -- name: InsertBookGroup :one
-INSERT INTO book_groups(title, description,ownerid)
-VALUES (@title, @description,@ownerid)
+INSERT INTO book_groups(title, description,owner_id,primary_cover_art_id)
+VALUES (@title, @description,@owner_id,@primary_cover_art_id)
 RETURNING *;
 
 -- name: DeleteBookGroup :exec

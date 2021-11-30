@@ -1,8 +1,15 @@
--- name: CheckAuthorExist :one
+-- name: CheckAuthorExistByName :one
 SELECT EXISTS(
    SELECT 1
    FROM book_authors
    WHERE name = $1
+);
+
+-- name: CheckAuthorExistById :one
+SELECT EXISTS(
+   SELECT 1
+   FROM book_authors
+   WHERE id = $1
 );
 
 -- name: BookAuthorById :one

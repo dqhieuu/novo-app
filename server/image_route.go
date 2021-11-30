@@ -55,20 +55,20 @@ func checkFileDir(path string, rootFolder string) (string, string, error) {
 		return "", "", errors.New("error getting root directory: " + err.Error())
 	}
 	if dir == "." {
-		err = os.MkdirAll(rootDir + "/" + rootFolder, os.ModePerm)
+		err = os.MkdirAll(rootDir+"/"+rootFolder, os.ModePerm)
 		if err != nil {
 			return "", "", errors.New("error checking directory: " + err.Error())
 		}
-		return rootDir + "/" + rootFolder + "/" + path, rootDir + "/" + rootFolder + "/" + dir,  nil
+		return rootDir + "/" + rootFolder + "/" + path, rootDir + "/" + rootFolder + "/" + dir, nil
 	}
-	err = os.MkdirAll(rootDir + "/" + rootFolder + "/" + dir, os.ModePerm)
+	err = os.MkdirAll(rootDir+"/"+rootFolder+"/"+dir, os.ModePerm)
 	if err != nil {
 		return "", "", errors.New("error checking directory: " + err.Error())
 	}
 	return rootDir + "/" + rootFolder + "/" + path, rootDir + "/" + rootFolder + "/" + dir, nil
 }
 
-func newFileName (fileType string) string {
+func newFileName(fileType string) string {
 	var ext string
 	switch fileType {
 	case "image/jpeg":
@@ -210,10 +210,10 @@ func GenerateThumbnail(path string, size int, filetype *string) (string, error) 
 	if err != nil {
 		return "", errors.New("error checking directory: " + err.Error())
 	}
-    filestream, err := os.Open(fullPath)
-    if err != nil {
+	filestream, err := os.Open(fullPath)
+	if err != nil {
 		return "", errors.New("error opening file: " + err.Error())
-    }
+	}
 
 	srcType, err := getImageType(filestream)
 	if err != nil {
@@ -294,7 +294,7 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	_, dirPath, err := checkFileDir(location + "/" + fileNameNoExt, RootFolder)
+	_, dirPath, err := checkFileDir(location+"/"+fileNameNoExt, RootFolder)
 	if err != nil {
 		return -1, "", errors.New("error getting actual file path: " + err.Error())
 	}
@@ -354,10 +354,10 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 
 		//inserting image to the database
 		imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
-			Md5:        md5Hash,
-			Sha1:        sha1Hash,
-			Path:        dst,
-			Name:        sql.NullString{
+			Md5:  md5Hash,
+			Sha1: sha1Hash,
+			Path: dst,
+			Name: sql.NullString{
 				String: fileNameNoExt + extension,
 				Valid:  true,
 			},
@@ -376,11 +376,11 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 	}
 }
 
-func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, description string) (int32, error){
+func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, description string) (int32, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	_, dirPath, err := checkFileDir(location + "/" + fileNameNoExt, RootFolder)
+	_, dirPath, err := checkFileDir(location+"/"+fileNameNoExt, RootFolder)
 	if err != nil {
 		return -1, errors.New("error getting actual file path: " + err.Error())
 	}
@@ -436,16 +436,16 @@ func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, des
 		}
 
 		imageId, err := queries.InsertImage(ctx, db.InsertImageParams{
-			Md5:         md5Hash,
-			Sha1:        sha1Hash,
-			Path:        dst,
-			Name:        sql.NullString{
+			Md5:  md5Hash,
+			Sha1: sha1Hash,
+			Path: dst,
+			Name: sql.NullString{
 				String: dst,
-				Valid: true,
+				Valid:  true,
 			},
 			Description: sql.NullString{
 				String: description,
-				Valid: true,
+				Valid:  true,
 			},
 		})
 
@@ -527,3 +527,12 @@ func TryOutsideTest() {
 	}()
 }
 
+func CheckImageExistById(id int32) (bool, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	result, err := queries.CheckImageExistById(ctx, id)
+	if err != nil {
+		return false, err
+	}
+	return result, nil
+}
