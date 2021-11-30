@@ -8,37 +8,6 @@ import (
 	"database/sql"
 )
 
-const aLLGenre = `-- name: ALLGenre :many
-SELECT id, name, description, image_id
-FROM genres
-ORDER BY id
-`
-
-func (q *Queries) ALLGenre(ctx context.Context) ([]Genre, error) {
-	rows, err := q.db.Query(ctx, aLLGenre)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Genre
-	for rows.Next() {
-		var i Genre
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.ImageID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const checkGenreExistById = `-- name: CheckGenreExistById :one
 SELECT EXISTS(
    SELECT 1
@@ -110,6 +79,37 @@ func (q *Queries) Genres(ctx context.Context, arg GenresParams) ([]Genre, error)
 			&i.Description,
 			&i.ImageID,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllGenre = `-- name: GetAllGenre :many
+SELECT name, id
+FROM genres
+ORDER BY name ASC
+`
+
+type GetAllGenreRow struct {
+	Name string `json:"name"`
+	ID   int32  `json:"id"`
+}
+
+func (q *Queries) GetAllGenre(ctx context.Context) ([]GetAllGenreRow, error) {
+	rows, err := q.db.Query(ctx, getAllGenre)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetAllGenreRow
+	for rows.Next() {
+		var i GetAllGenreRow
+		if err := rows.Scan(&i.Name, &i.ID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

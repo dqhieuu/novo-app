@@ -38,6 +38,8 @@ func Run() {
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 
+	r.GET("/genre/all", ListAllGenresHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())

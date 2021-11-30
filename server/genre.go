@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 const limitGenres = 50
@@ -124,4 +126,26 @@ func DeleteGenre(id int32) error {
 		return errors.New(stringErr)
 	}
 	return nil
+}
+
+func GetAllGenres() (*[]db.GetAllGenreRow, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	genres, err := queries.GetAllGenre(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &genres, nil
+}
+
+func ListAllGenresHandler(c *gin.Context) {
+	genres, err := GetAllGenres()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+	if *genres == nil {
+		*genres = []db.GetAllGenreRow{}
+	}
+	c.JSON(http.StatusOK, *genres)
 }
