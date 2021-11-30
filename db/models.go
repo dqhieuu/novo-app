@@ -5,8 +5,6 @@ package db
 import (
 	"database/sql"
 	"time"
-
-	"github.com/jackc/pgtype"
 )
 
 type BookAuthor struct {
@@ -19,7 +17,7 @@ type BookAuthor struct {
 type BookChapter struct {
 	ID            int32          `json:"id"`
 	DateCreated   time.Time      `json:"dateCreated"`
-	ChapterNumber pgtype.Numeric `json:"chapterNumber"`
+	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
 	TextContext   sql.NullString `json:"textContext"`
 	Type          string         `json:"type"`

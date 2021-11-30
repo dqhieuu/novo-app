@@ -181,7 +181,7 @@ RETURNING id, date_created, chapter_number, name, text_context, type, book_group
 `
 
 type InsertBookChapterParams struct {
-	ChapterNumber pgtype.Numeric `json:"chapterNumber"`
+	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
 	TextContext   sql.NullString `json:"textContext"`
 	Type          string         `json:"type"`
@@ -225,7 +225,7 @@ WHERE id = $1
 
 type UpdateBookChapterParams struct {
 	ID            int32          `json:"id"`
-	ChapterNumber pgtype.Numeric `json:"chapterNumber"`
+	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
 	TextContext   sql.NullString `json:"textContext"`
 	Type          string         `json:"type"`

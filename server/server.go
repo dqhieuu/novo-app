@@ -54,6 +54,8 @@ func Run() {
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 
+	r.GET("/genre/all", ListAllGenresHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
@@ -68,6 +70,7 @@ func Run() {
 		auth.POST("/chapter/images", CreateImagesChapterHandler)
 		auth.POST("/comment", CreateCommentHandler)
 		auth.GET("/book/:bookGroupId", GetBookGroupContentHandler)
+		auth.DELETE("chapter/:chapterId", DeleteBookChapterHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

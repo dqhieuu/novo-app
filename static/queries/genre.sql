@@ -5,10 +5,10 @@ SELECT EXISTS(
    WHERE id = $1
 );
 
--- name: ALLGenre :many
-SELECT *
+-- name: GetAllGenre :many
+SELECT name, id
 FROM genres
-ORDER BY id;
+ORDER BY name ASC;
 
 -- name: GenreById :one
 SELECT *
