@@ -33,7 +33,7 @@ func TestUpdateBookChapter(t *testing.T) {
 
 	intRandom := r.Intn(len(bookChapters))
 	bookChapter1 := bookChapters[intRandom]
-	chapterNumber := "1224.123"
+	chapterNumber := 1224.123
 	description := "descriptionUpdate"
 	textContext := "textContextUpdate"
 	chapterType := types[r.Intn(len(types))]
@@ -54,7 +54,7 @@ func TestUpdateBookChapter(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, bookChapter2.ChapterNumber, tmp)
-	assert.Equal(t, bookChapter2.Description.String, description)
+	assert.Equal(t, bookChapter2.Name.String, description)
 	assert.Equal(t, bookChapter2.TextContext.String, textContext)
 	assert.Equal(t, bookChapter2.Type, chapterType)
 	assert.Equal(t, bookChapter2.BookGroupID, bookGroupID)
@@ -84,7 +84,7 @@ func TestCreateBookChapter(t *testing.T) {
 	createData()
 	defer removeData()
 
-	chapterNumber := "1224.123"
+	chapterNumber := 1224.123
 	description := "descriptionUpdate"
 	textContext := "textContextUpdate"
 	chapterType := types[r.Intn(len(types))]
@@ -105,7 +105,7 @@ func TestCreateBookChapter(t *testing.T) {
 		t.Fatal(err)
 	}
 	assert.Equal(t, bookChapter2.ChapterNumber, tmp)
-	assert.Equal(t, bookChapter2.Description.String, description)
+	assert.Equal(t, bookChapter2.Name.String, description)
 	assert.Equal(t, bookChapter2.TextContext.String, textContext)
 	assert.Equal(t, bookChapter2.Type, chapterType)
 	assert.Equal(t, bookChapter2.BookGroupID, bookGroupID)

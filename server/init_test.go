@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
-	"github.com/jackc/pgtype"
 	"math/rand"
 	"strconv"
 	"time"
@@ -132,17 +131,14 @@ func createBookChapters() {
 	bookChapters = []*db.BookChapter{}
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	var chapterNumberSql pgtype.Numeric
+	var chapterNumber float64
 	var descriptionSql, textContextSql sql.NullString
 	var chapterType string
 	var bookGroupID, ownerID int32
 	for i := 0; i < int(cntBookChapter); i++ {
 		stringI := strconv.Itoa(i)
-		err := chapterNumberSql.Scan(stringI)
-		if err != nil {
-			fmt.Println(err)
-		}
-		err = descriptionSql.Scan("description" + stringI)
+		chapterNumber = float64(i)
+		err := descriptionSql.Scan("description" + stringI)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -157,8 +153,8 @@ func createBookChapters() {
 		bookGroupID = bookGroups[r.Intn(len(bookGroups))].ID
 		ownerID = users[r.Intn(len(users))].ID
 		bookChapter, err := queries.InsertBookChapter(ctx, db.InsertBookChapterParams{
-			ChapterNumber: chapterNumberSql,
-			Description:   descriptionSql,
+			ChapterNumber: chapterNumber,
+			Name:          descriptionSql,
 			TextContext:   textContextSql,
 			Type:          chapterType,
 			BookGroupID:   bookGroupID,
