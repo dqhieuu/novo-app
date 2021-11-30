@@ -105,6 +105,38 @@ func (q *Queries) DeleteBookAuthor(ctx context.Context, id int32) error {
 	return err
 }
 
+const getBookGroupAuthors = `-- name: GetBookGroupAuthors :many
+SELECT book_authors.id, book_authors.name
+FROM book_authors JOIN book_group_authors bga on book_authors.id = bga.book_author_id
+                    JOIN book_groups bg on bga.book_group_id = bg.id
+WHERE bg.id = $1
+`
+
+type GetBookGroupAuthorsRow struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) GetBookGroupAuthors(ctx context.Context, id int32) ([]GetBookGroupAuthorsRow, error) {
+	rows, err := q.db.Query(ctx, getBookGroupAuthors, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBookGroupAuthorsRow
+	for rows.Next() {
+		var i GetBookGroupAuthorsRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertBookAuthor = `-- name: InsertBookAuthor :one
 INSERT INTO book_authors(name, description, avatar_image_id)
 VALUES ($1, $2, $3)

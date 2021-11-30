@@ -22,15 +22,26 @@ func (q *Queries) DisLikes(ctx context.Context, arg DisLikesParams) error {
 	return err
 }
 
-const getLikes = `-- name: GetLikes :one
-SELECT SUM(point) as totalLikes FROM book_group_likes WHERE book_group_id = $1
+const getDislikes = `-- name: GetDislikes :one
+SELECT coalesce(SUM(point), 0) as totalLikes FROM book_group_likes WHERE book_group_id = $1 AND point < 0
 `
 
-func (q *Queries) GetLikes(ctx context.Context, bookGroupID int32) (int64, error) {
+func (q *Queries) GetDislikes(ctx context.Context, bookGroupID int32) (interface{}, error) {
+	row := q.db.QueryRow(ctx, getDislikes, bookGroupID)
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
+}
+
+const getLikes = `-- name: GetLikes :one
+SELECT coalesce(SUM(point), 0) as totalLikes FROM book_group_likes WHERE book_group_id = $1 AND point > 0
+`
+
+func (q *Queries) GetLikes(ctx context.Context, bookGroupID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getLikes, bookGroupID)
-	var totallikes int64
-	err := row.Scan(&totallikes)
-	return totallikes, err
+	var coalesce interface{}
+	err := row.Scan(&coalesce)
+	return coalesce, err
 }
 
 const likes = `-- name: Likes :exec

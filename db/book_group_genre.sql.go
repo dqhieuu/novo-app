@@ -161,6 +161,38 @@ func (q *Queries) GenresByBookGroup(ctx context.Context, arg GenresByBookGroupPa
 	return items, nil
 }
 
+const getBookGroupGenres = `-- name: GetBookGroupGenres :many
+SELECT genres.id, genres.name
+FROM genres JOIN book_group_genres bgg on genres.id = bgg.genre_id
+            JOIN book_groups bg on bgg.book_group_id = bg.id
+WHERE bg.id = $1
+`
+
+type GetBookGroupGenresRow struct {
+	ID   int32  `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) GetBookGroupGenres(ctx context.Context, id int32) ([]GetBookGroupGenresRow, error) {
+	rows, err := q.db.Query(ctx, getBookGroupGenres, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetBookGroupGenresRow
+	for rows.Next() {
+		var i GetBookGroupGenresRow
+		if err := rows.Scan(&i.ID, &i.Name); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertBookGroupGenre = `-- name: InsertBookGroupGenre :one
 INSERT INTO book_group_genres(book_group_id, genre_id)
 VALUES ($1, $2)

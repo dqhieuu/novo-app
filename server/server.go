@@ -35,6 +35,22 @@ func Run() {
 
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
+	//r.GET("/test", func(c *gin.Context){
+	//	ctx := context.Background()
+	//	queries := db.New(db.Pool())
+	//
+	//	testView, err := queries.GetBookGroupView(ctx, 3)
+	//
+	//	if err != nil {
+	//		ReportError(c, err, "error getting total view", 500)
+	//		return
+	//	}
+	//
+	//	log.Printf("%+v\n", testView)
+	//	c.JSON(200, gin.H{
+	//		"message": "success",
+	//	})
+	//})
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 
@@ -49,10 +65,11 @@ func Run() {
 		auth.PATCH("/author/:authorId", UpdateAuthorHandler)
 		auth.DELETE("/author/:authorId", DeleteAuthorHandler)
 		auth.POST("/complete-oauth-register", CompleteOauthAccountHandler)
-		auth.POST("/book", CreateBookGroupHandler)
+		//auth.POST("/book", CreateBookGroupHandler)
 		auth.POST("/chapter/hypertext", CreateHypertextChapterHandler)
 		auth.POST("/chapter/images", CreateImagesChapterHandler)
 		auth.POST("/comment", CreateCommentHandler)
+		auth.GET("/book/:bookGroupId", GetBookGroupContentHandler)
 		auth.DELETE("chapter/:chapterId", DeleteBookChapterHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
