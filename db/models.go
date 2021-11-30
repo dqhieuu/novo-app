@@ -20,7 +20,7 @@ type BookChapter struct {
 	ID            int32          `json:"id"`
 	DateCreated   time.Time      `json:"dateCreated"`
 	ChapterNumber pgtype.Numeric `json:"chapterNumber"`
-	Description   sql.NullString `json:"description"`
+	Name          sql.NullString `json:"name"`
 	TextContext   sql.NullString `json:"textContext"`
 	Type          string         `json:"type"`
 	BookGroupID   int32          `json:"bookGroupID"`
@@ -30,6 +30,7 @@ type BookChapter struct {
 type BookChapterImage struct {
 	BookChapterID int32 `json:"bookChapterID"`
 	ImageID       int32 `json:"imageID"`
+	Rank          int32 `json:"rank"`
 }
 
 type BookChapterView struct {

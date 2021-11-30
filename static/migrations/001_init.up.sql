@@ -176,7 +176,7 @@ CREATE TABLE IF NOT EXISTS book_chapters
     id             int GENERATED ALWAYS AS IDENTITY,
     date_created   timestamptz NOT NULL DEFAULT now(),
     chapter_number decimal     NOT NULL,
-    description    text,
+    name    text,
     text_context   text,
     type           text        NOT NULL CHECK (type IN ('images', 'hypertext')),
     book_group_id  int         NOT NULL,
@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
 (
     book_chapter_id int NOT NULL,
     image_id        int NOT NULL,
-    PRIMARY KEY (book_chapter_id, image_id),
+    rank int NOT NULL DEFAULT 1,
     CONSTRAINT fk_book_chapter_images_book_chapters
         FOREIGN KEY (book_chapter_id)
             REFERENCES book_chapters (id),

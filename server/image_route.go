@@ -165,7 +165,7 @@ func ResizeImage(fileStream multipart.File, params ResizeImageParams) error {
 	case "image/gif":
 		err = gif.Encode(out, dstImg, nil)
 	default:
-		err = png.Encode(out, dstImg)
+		err = jpeg.Encode(out, dstImg, nil)
 	}
 
 	if err != nil {
