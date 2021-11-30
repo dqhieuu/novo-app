@@ -381,3 +381,33 @@ func GetBookChapterContentHandler(c *gin.Context) {
 		})
 	}
 }
+
+func DeleteBookChapterHandler(c *gin.Context) {
+	var chapterId int32
+	_, err := fmt.Sscan(c.Param("chapterId"), &chapterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	oldChapter, err := BookChapterById(chapterId)
+	if oldChapter == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Chapter not exist",
+		})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err = DeleteBookChapterById(chapterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Delete Chapter successfully",
+	})
+}
