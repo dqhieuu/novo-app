@@ -20,16 +20,16 @@ const limitNameCharacter = 50
 
 type HypertextChapter struct {
 	ChapterNumber string `json:"chapter_number" binding:"required"`
-	Name string `json:"name"`
-	TextContent string `json:"text_content" binding:"required"`
-	BookGroupId int32 `json:"book_group_id" binding:"required"`
+	Name          string `json:"name"`
+	TextContent   string `json:"text_content" binding:"required"`
+	BookGroupId   int32  `json:"book_group_id" binding:"required"`
 }
 
 type ImageChapter struct {
-	ChapterNumber string `json:"chapter_number" binding:"required"`
-	Name string `json:"name"`
-	Images []int32 `json:"images" binding:"required"`
-	BookGroupId int32 `json:"book_group_id" binding:"required"`
+	ChapterNumber string  `json:"chapter_number" binding:"required"`
+	Name          string  `json:"name"`
+	Images        []int32 `json:"images" binding:"required"`
+	BookGroupId   int32   `json:"book_group_id" binding:"required"`
 }
 
 func HasControlCharacters(content string) bool {
@@ -122,7 +122,7 @@ func UpdateBookChapter(id int32, chapterNumber, description, textContext, chapte
 	err = queries.UpdateBookChapter(ctx, db.UpdateBookChapterParams{
 		ID:            id,
 		ChapterNumber: chapterNumberSql,
-		Name:   descriptionSql,
+		Name:          descriptionSql,
 		TextContext:   textContextSql,
 		Type:          chapterType,
 		BookGroupID:   bookGroupID,
@@ -164,7 +164,7 @@ func CreateBookChapter(chapterNumber, description, textContext, chapterType stri
 
 	bookChapter, err := queries.InsertBookChapter(ctx, db.InsertBookChapterParams{
 		ChapterNumber: chapterNumberSql,
-		Name:   descriptionSql,
+		Name:          descriptionSql,
 		TextContext:   textContextSql,
 		Type:          chapterType,
 		BookGroupID:   bookGroupID,
@@ -217,14 +217,14 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 		return
 	}
 
-	 //check chapter name
-	 if !checkChapterName(newHypertextChapter.Name) {
-		 log.Println("invalid chapter name")
-		 c.JSON(http.StatusBadRequest, gin.H{
-			 "error": "invalid chapter name",
-		 })
-		 return
-	 }
+	//check chapter name
+	if !checkChapterName(newHypertextChapter.Name) {
+		log.Println("invalid chapter name")
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid chapter name",
+		})
+		return
+	}
 
 	//check content
 	if HasControlCharacters(newHypertextChapter.TextContent) && CheckEmptyString(newHypertextChapter.TextContent) {
@@ -326,7 +326,7 @@ func CreateImagesChapterHandler(c *gin.Context) {
 			err = queries.InsertBookChapterImage(ctx, db.InsertBookChapterImageParams{
 				BookChapterID: newChapter.ID,
 				ImageID:       imageId,
-				Rank: int32(index + 1),
+				Rank:          int32(index + 1),
 			})
 			if err != nil {
 				log.Printf("error adding book chapter images: %s\n", err)
@@ -341,4 +341,43 @@ func CreateImagesChapterHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"id": newChapter.ID,
 	})
+}
+func GetBookChapterContentHandler(c *gin.Context) {
+	var chapterId int32
+	_, err := fmt.Sscan(c.Param("chapterId"), &chapterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	bookChapter, err := BookChapterById(chapterId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if bookChapter.Type == "images" {
+		images, err := ImagesByBookChapter(chapterId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if *images == nil {
+			images = &[]string{}
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"type":          bookChapter.Type,
+			"bookGroupId":   bookChapter.BookGroupID,
+			"chapterNumber": bookChapter.ChapterNumber.Int,
+			"name":          bookChapter.Name.String,
+			"images":        *images,
+		})
+
+	} else {
+		c.JSON(http.StatusOK, gin.H{
+			"type":          bookChapter.Type,
+			"bookGroupId":   bookChapter.BookGroupID,
+			"chapterNumber": bookChapter.ChapterNumber.Int,
+			"name":          bookChapter.Name.String,
+			"textContent":   bookChapter.TextContext.String,
+		})
+	}
 }
