@@ -18,25 +18,25 @@ const limitChapter = 50
 const limitNameCharacter = 50
 
 type Chapter struct {
-	ChapterNumber pgtype.Numeric `json:"chapter_number" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
 	Name string `json:"name"`
 	Id int32 `json:"id" binding:"required"`
-	TimePosted int64 `json:"time_posted" binding:"required"`
-	UserPosted Author `json:"user_posted" binding:"required"`
+	TimePosted int64 `json:"timePosted" binding:"required"`
+	UserPosted Author `json:"userPosted" binding:"required"`
 }
 
 type HypertextChapter struct {
-	ChapterNumber string `json:"chapter_number" binding:"required"`
+	ChapterNumber string `json:"chapterNumber" binding:"required"`
 	Name          string `json:"name"`
-	TextContent   string `json:"text_content" binding:"required"`
-	BookGroupId   int32  `json:"book_group_id" binding:"required"`
+	TextContent   string `json:"textContent" binding:"required"`
+	BookGroupId   int32  `json:"bookGroupId" binding:"required"`
 }
 
 type ImageChapter struct {
-	ChapterNumber string  `json:"chapter_number" binding:"required"`
+	ChapterNumber string  `json:"chapterNumber" binding:"required"`
 	Name          string  `json:"name"`
 	Images        []int32 `json:"images" binding:"required"`
-	BookGroupId   int32   `json:"book_group_id" binding:"required"`
+	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
 }
 
 func checkChapterName(name string) bool {

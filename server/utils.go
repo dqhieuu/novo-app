@@ -2,7 +2,9 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgtype"
 	"log"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -27,4 +29,10 @@ func ReportError(c *gin.Context, err error, message string, code int) {
 	c.JSON(code, gin.H{
 		"error": err,
 	})
+}
+
+func ConvertNumericToFloat(num pgtype.Numeric) float64 {
+	integer := num.Int.Int64()
+	exp := -num.Exp
+	return float64(integer) / math.Pow10(int(exp))
 }

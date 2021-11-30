@@ -17,13 +17,13 @@ type BookGroup struct {
 	Name string `json:"name" binding:"required"`
 	Description string `json:"description"`
 	Views int64 `json:"views"`
-	LikeCount int64 `json:"like_count"`
-	DislikeCount int64 `json:"dislike_count"`
+	LikeCount int64 `json:"likeCount"`
+	DislikeCount int64 `json:"dislikeCount"`
 	Authors []Author `json:"authors"`
 	Genres []Genre `json:"genres"`
 	Chapters []Chapter `json:"chapters"`
-	CoverArts []string `json:"cover_arts"`
-	PrimaryCoverArt string `json:"primary_cover_art"`
+	CoverArts []string `json:"coverArts"`
+	PrimaryCoverArt string `json:"primaryCoverArt"`
 }
 
 func BookGroupById(id int32) (*db.BookGroup, error) {
@@ -255,8 +255,12 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					ReportError(c, err, "error getting book chapter owner", 500)
 					return
 				}
+				if err != nil {
+					ReportError(c, err, "error parsing chapter number", 500)
+					return
+				}
 				responseObject.Chapters = append(responseObject.Chapters, Chapter{
-					ChapterNumber: chapter.ChapterNumber,
+					ChapterNumber: ConvertNumericToFloat(chapter.ChapterNumber),
 					Name:          chapter.Name.String,
 					Id:            chapter.ID,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
