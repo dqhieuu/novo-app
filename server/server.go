@@ -1,11 +1,8 @@
 package server
 
 import (
-	"context"
-	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 func Run() {
@@ -38,22 +35,22 @@ func Run() {
 
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
-	r.GET("/test", func(c *gin.Context){
-		ctx := context.Background()
-		queries := db.New(db.Pool())
-
-		testView, err := queries.GetBookGroupView(ctx, 3)
-
-		if err != nil {
-			ReportError(c, err, "error getting total view", 500)
-			return
-		}
-
-		log.Printf("%+v\n", testView)
-		c.JSON(200, gin.H{
-			"message": "success",
-		})
-	})
+	//r.GET("/test", func(c *gin.Context){
+	//	ctx := context.Background()
+	//	queries := db.New(db.Pool())
+	//
+	//	testView, err := queries.GetBookGroupView(ctx, 3)
+	//
+	//	if err != nil {
+	//		ReportError(c, err, "error getting total view", 500)
+	//		return
+	//	}
+	//
+	//	log.Printf("%+v\n", testView)
+	//	c.JSON(200, gin.H{
+	//		"message": "success",
+	//	})
+	//})
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 
