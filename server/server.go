@@ -69,7 +69,7 @@ func Run() {
 		auth.PATCH("/author/:authorId", UpdateAuthorHandler)
 		auth.DELETE("/author/:authorId", DeleteAuthorHandler)
 		auth.POST("/complete-oauth-register", CompleteOauthAccountHandler)
-		//auth.POST("/book", CreateBookGroupHandler)
+		auth.POST("/book", CreateBookGroupHandler)
 		auth.POST("/chapter/hypertext", CreateHypertextChapterHandler)
 		auth.POST("/chapter/images", CreateImagesChapterHandler)
 		auth.POST("/comment", CreateCommentHandler)
