@@ -17,9 +17,9 @@ WHERE bg.id = $1
 
 func (q *Queries) GetBookGroupView(ctx context.Context, id int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getBookGroupView, id)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var totalview interface{}
+	err := row.Scan(&totalview)
+	return totalview, err
 }
 
 const getViewByMonth = `-- name: GetViewByMonth :one
@@ -30,9 +30,9 @@ AND view_date >= now() - interval '1 month'
 
 func (q *Queries) GetViewByMonth(ctx context.Context, bookChapterID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getViewByMonth, bookChapterID)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var viewbymonth interface{}
+	err := row.Scan(&viewbymonth)
+	return viewbymonth, err
 }
 
 const getViewByWeek = `-- name: GetViewByWeek :one
@@ -43,9 +43,9 @@ WHERE book_chapter_id = $1
 
 func (q *Queries) GetViewByWeek(ctx context.Context, bookChapterID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getViewByWeek, bookChapterID)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var viewbyweek interface{}
+	err := row.Scan(&viewbyweek)
+	return viewbyweek, err
 }
 
 const getViewByYear = `-- name: GetViewByYear :one
@@ -56,9 +56,9 @@ WHERE book_chapter_id = $1
 
 func (q *Queries) GetViewByYear(ctx context.Context, bookChapterID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getViewByYear, bookChapterID)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var viewbyyear interface{}
+	err := row.Scan(&viewbyyear)
+	return viewbyyear, err
 }
 
 const upsertViewByDate = `-- name: UpsertViewByDate :exec
