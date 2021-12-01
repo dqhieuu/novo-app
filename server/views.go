@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-type InsertViewParams struct{
+type InsertViewParams struct {
 	ChapterId int32
-	ViewDate time.Time
+	ViewDate  time.Time
 }
 
 func InsertView(params InsertViewParams) error {
@@ -22,4 +22,14 @@ func InsertView(params InsertViewParams) error {
 		return errors.New("error inserting view: " + err.Error())
 	}
 	return nil
+}
+
+func GetViewInBookGroup(bookGroupId int32) (int64, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	count, err := queries.GetBookGroupView(ctx, bookGroupId)
+	if err != nil {
+		return 0, err
+	}
+	return count.(int64), nil
 }

@@ -20,17 +20,17 @@ type CommentParams struct {
 }
 
 type Comment struct {
-	Comment string `json:"comment" binding:"required"`
-	UserName string `json:"userName" binding:"required"`
-	UserId int32 `json:"userId" binding:"required"`
-	UserAvatar string `json:"userAvatar" binding:"required"`
-	TimePosted int64 `json:"timePosted" binding:"required"`
-	ChapterId int32 `json:"chapterId" binding:"required"`
-	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
+	Comment       string  `json:"comment" binding:"required"`
+	UserName      string  `json:"userName" binding:"required"`
+	UserId        int32   `json:"userId" binding:"required"`
+	UserAvatar    string  `json:"userAvatar" binding:"required"`
+	TimePosted    int64   `json:"timePosted" binding:"required"`
+	ChapterId     int32   `json:"chapterId"`
+	ChapterNumber float64 `json:"chapterNumber"`
 }
 
 type CommentPage struct {
-	LastPage int32 `json:"lastPage"`
+	LastPage int32     `json:"lastPage"`
 	Comments []Comment `json:"comments"`
 }
 
@@ -54,7 +54,7 @@ func InsertComment(params CommentParams) error {
 			Valid: true,
 		},
 		BookChapterID: chapterId,
-		Content: params.Content,
+		Content:       params.Content,
 	})
 
 	if err != nil {
@@ -92,7 +92,7 @@ func CommentsByBookChapter(bookChapterId int32, page int) {
 
 }
 
-func CreateCommentHandler(c *gin.Context){
+func CreateCommentHandler(c *gin.Context) {
 	var comment string
 	reg := regexp.MustCompile(`(\r\n|\n){3,}`)
 
@@ -199,10 +199,10 @@ func GetCommentsHandler(c *gin.Context) {
 			responseObj.LastPage = 1
 			break
 		} else {
-			if totalChapterComments % 20 != 0 {
+			if totalChapterComments%20 != 0 {
 				responseObj.LastPage = int32(totalChapterComments/20) + 1
 			} else {
-				responseObj.LastPage = int32(totalChapterComments/20)
+				responseObj.LastPage = int32(totalChapterComments / 20)
 			}
 		}
 
@@ -212,7 +212,7 @@ func GetCommentsHandler(c *gin.Context) {
 				Int32: chapterId,
 				Valid: true,
 			},
-			Offset:        20 * (page - 1),
+			Offset: 20 * (page - 1),
 		})
 		switch {
 		case len(chapterComments) == 0:
@@ -261,10 +261,10 @@ func GetCommentsHandler(c *gin.Context) {
 			responseObj.LastPage = 1
 			break
 		} else {
-			if totalBookComments % 20 != 0 {
+			if totalBookComments%20 != 0 {
 				responseObj.LastPage = int32(totalBookComments/20) + 1
 			} else {
-				responseObj.LastPage = int32(totalBookComments/20)
+				responseObj.LastPage = int32(totalBookComments / 20)
 			}
 		}
 
@@ -274,7 +274,7 @@ func GetCommentsHandler(c *gin.Context) {
 				Int32: bookId,
 				Valid: true,
 			},
-			Offset:        20 * (page - 1),
+			Offset: 20 * (page - 1),
 		})
 		switch {
 		case len(bookComments) == 0:
@@ -308,4 +308,17 @@ func GetCommentsHandler(c *gin.Context) {
 		}
 	}
 	c.JSON(200, responseObj)
+}
+
+func CountCommentInBookGroup(bookGroupId int32) (int32, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	cnt, err := queries.CountCommentInBookGroup(ctx, sql.NullInt32{
+		Int32: bookGroupId,
+		Valid: bookGroupId > 0,
+	})
+	if err != nil {
+		return 0, err
+	}
+	return int32(cnt), nil
 }

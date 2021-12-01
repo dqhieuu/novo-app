@@ -8,7 +8,7 @@ import (
 )
 
 type Genre struct {
-	Id int32 `json:"id" binding:"required"`
+	Id   int32  `json:"id" binding:"required"`
 	Name string `json:"name" binding:"required"`
 }
 
@@ -102,4 +102,14 @@ func DeleteBookGroupsByGenre(genre int32) error {
 		return errors.New(stringErr)
 	}
 	return nil
+}
+
+func NumberBookGroupInGenre(genreId int32) (int32, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	numberRows, err := queries.NumberRowBookGroupInGenre(ctx, genreId)
+	if err != nil {
+		return 0, err
+	}
+	return int32(numberRows), nil
 }

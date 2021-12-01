@@ -48,3 +48,9 @@ WHERE bc.id = $1;
 SELECT book_chapters.id, book_chapters.chapter_number
 FROM book_chapters JOIN book_comments bc on book_chapters.id = bc.book_chapter_id
 WHERE bc.id = $1;
+
+
+-- name: CountCommentInBookGroup :one
+SELECT COUNT(id )
+FROM book_comments
+WHERE book_group_id = $1;
