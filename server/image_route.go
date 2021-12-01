@@ -369,7 +369,7 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 
 		return imageId, dst, nil
 	case (len(peekRow.Md5) > 0 || len(peekRow.Sha1) > 0) && err == nil:
-		return -1, "", errors.New("image already exist")
+		return peekRow.ID, "", errors.New("image already exist")
 	default:
 		return -1, "", errors.New("error inserting image to database")
 	}
@@ -454,7 +454,7 @@ func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, des
 
 		return imageId, nil
 	case (len(peekRow.Md5) > 0 || len(peekRow.Sha1) > 0) && err == nil:
-		return -1, errors.New("image already exist")
+		return peekRow.ID, errors.New("image already exist")
 	default:
 		return -1, errors.New("error inserting image to database")
 	}
