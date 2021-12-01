@@ -41,7 +41,7 @@ type BookComment struct {
 	ID            int32         `json:"id"`
 	Content       string        `json:"content"`
 	UserID        int32         `json:"userID"`
-	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookGroupID   int32         `json:"bookGroupID"`
 	BookChapterID sql.NullInt32 `json:"bookChapterID"`
 	PostedTime    time.Time     `json:"postedTime"`
 }

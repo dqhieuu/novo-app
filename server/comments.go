@@ -25,8 +25,8 @@ type Comment struct {
 	UserId int32 `json:"userId" binding:"required"`
 	UserAvatar string `json:"userAvatar" binding:"required"`
 	TimePosted int64 `json:"timePosted" binding:"required"`
-	ChapterId int32 `json:"chapterId" binding:"required"`
-	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
+	ChapterId int32 `json:"chapterId"`
+	ChapterNumber float64 `json:"chapterNumber"`
 }
 
 type CommentPage struct {
@@ -49,10 +49,7 @@ func InsertComment(params CommentParams) error {
 
 	err := db.New(db.Pool()).AddComment(context.Background(), db.AddCommentParams{
 		UserID: params.UserId,
-		BookGroupID: sql.NullInt32{
-			Int32: *params.BookId,
-			Valid: true,
-		},
+		BookGroupID: *params.BookId,
 		BookChapterID: chapterId,
 		Content: params.Content,
 	})
@@ -233,7 +230,7 @@ func GetCommentsHandler(c *gin.Context) {
 					Comment:       comment.Content,
 					UserName:      userPosted.UserName.String,
 					UserId:        userPosted.ID,
-					UserAvatar:    userPosted.Path,
+					UserAvatar:    userPosted.Path.String,
 					TimePosted:    comment.PostedTime.UnixMicro(),
 					ChapterId:     chapterId,
 					ChapterNumber: chapter.ChapterNumber,
@@ -253,10 +250,7 @@ func GetCommentsHandler(c *gin.Context) {
 		bookId := int32(bookGroupId64)
 
 		//get last page
-		totalBookComments, err := queries.GetTotalBookGroupComments(ctx, sql.NullInt32{
-			Int32: bookId,
-			Valid: true,
-		})
+		totalBookComments, err := queries.GetTotalBookGroupComments(ctx, bookId)
 		if totalBookComments == 0 {
 			responseObj.LastPage = 1
 			break
@@ -270,10 +264,7 @@ func GetCommentsHandler(c *gin.Context) {
 
 		//get comments
 		bookComments, err := queries.GetBookGroupComments(ctx, db.GetBookGroupCommentsParams{
-			BookGroupID: sql.NullInt32{
-				Int32: bookId,
-				Valid: true,
-			},
+			BookGroupID: bookId,
 			Offset:        20 * (page - 1),
 		})
 		switch {
@@ -292,7 +283,7 @@ func GetCommentsHandler(c *gin.Context) {
 						Comment:       comment.Content,
 						UserName:      userPosted.UserName.String,
 						UserId:        userPosted.ID,
-						UserAvatar:    userPosted.Path,
+						UserAvatar:    userPosted.Path.String,
 						TimePosted:    comment.PostedTime.UnixMicro(),
 						ChapterId:     chapter.ID,
 						ChapterNumber: chapter.ChapterNumber,

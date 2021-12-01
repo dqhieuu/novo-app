@@ -14,7 +14,7 @@ INSERT INTO book_comments(user_id, book_group_id, book_chapter_id, content) VALU
 
 type AddCommentParams struct {
 	UserID        int32         `json:"userID"`
-	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookGroupID   int32         `json:"bookGroupID"`
 	BookChapterID sql.NullInt32 `json:"bookChapterID"`
 	Content       string        `json:"content"`
 }
@@ -87,7 +87,7 @@ LIMIT 20 OFFSET $3
 `
 
 type GetBookGroupAndChapterCommentsParams struct {
-	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookGroupID   int32         `json:"bookGroupID"`
 	BookChapterID sql.NullInt32 `json:"bookChapterID"`
 	Offset        int32         `json:"offset"`
 }
@@ -128,8 +128,8 @@ LIMIT 20 OFFSET $2
 `
 
 type GetBookGroupCommentsParams struct {
-	BookGroupID sql.NullInt32 `json:"bookGroupID"`
-	Offset      int32         `json:"offset"`
+	BookGroupID int32 `json:"bookGroupID"`
+	Offset      int32 `json:"offset"`
 }
 
 func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupCommentsParams) ([]BookComment, error) {
@@ -180,14 +180,14 @@ func (q *Queries) GetCommentChapterInfo(ctx context.Context, id int32) (GetComme
 const getCommenter = `-- name: GetCommenter :one
 SELECT users.id, users.user_name, i.path
 FROM users JOIN book_comments bc on users.id = bc.user_id
-            JOIN images i on users.avatar_image_id = i.id
+            LEFT JOIN images i on users.avatar_image_id = i.id
 WHERE bc.id = $1
 `
 
 type GetCommenterRow struct {
 	ID       int32          `json:"id"`
 	UserName sql.NullString `json:"userName"`
-	Path     string         `json:"path"`
+	Path     sql.NullString `json:"path"`
 }
 
 func (q *Queries) GetCommenter(ctx context.Context, id int32) (GetCommenterRow, error) {
@@ -213,7 +213,7 @@ SELECT count(*) FROM book_comments WHERE book_group_id = $1 AND book_chapter_id 
 `
 
 type GetTotalBookGroupAndChapterCommentsParams struct {
-	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookGroupID   int32         `json:"bookGroupID"`
 	BookChapterID sql.NullInt32 `json:"bookChapterID"`
 }
 
@@ -228,7 +228,7 @@ const getTotalBookGroupComments = `-- name: GetTotalBookGroupComments :one
 SELECT count(*) FROM book_comments WHERE book_group_id = $1
 `
 
-func (q *Queries) GetTotalBookGroupComments(ctx context.Context, bookGroupID sql.NullInt32) (int64, error) {
+func (q *Queries) GetTotalBookGroupComments(ctx context.Context, bookGroupID int32) (int64, error) {
 	row := q.db.QueryRow(ctx, getTotalBookGroupComments, bookGroupID)
 	var count int64
 	err := row.Scan(&count)
