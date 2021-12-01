@@ -59,3 +59,13 @@ func UnlikeBookGroup(params UserLikeParams) error {
 //	//})
 //	return likes, nil
 //}
+
+func CountLikesInBookGroup(bookGroupId int32) (int64, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	count, err := queries.GetLikes(ctx, bookGroupId)
+	if err != nil {
+		return 0, err
+	}
+	return count.(int64), nil
+}

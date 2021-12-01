@@ -210,3 +210,16 @@ func (q *Queries) InsertBookGroupGenre(ctx context.Context, arg InsertBookGroupG
 	err := row.Scan(&i.BookGroupID, &i.GenreID)
 	return i, err
 }
+
+const numberRowBookGroupInGenre = `-- name: NumberRowBookGroupInGenre :one
+SELECT count(*)
+FROM book_group_genres
+WHERE genre_id = $1
+`
+
+func (q *Queries) NumberRowBookGroupInGenre(ctx context.Context, genreID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, numberRowBookGroupInGenre, genreID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
