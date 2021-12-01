@@ -268,9 +268,6 @@ func SubmitImages(submitImages []int32) error {
 		}
 	}
 
-	//c.JSON(200, gin.H{
-	//	"message": "Submit successful",
-	//})
 	return nil
 }
 
@@ -325,7 +322,7 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 	})
 
 	switch {
-	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
+	case (len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0) && err == sql.ErrNoRows:
 		//saving file to the server
 		extension := ""
 		switch fileType {
@@ -371,8 +368,10 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 		}
 
 		return imageId, dst, nil
-	default:
+	case (len(peekRow.Md5) > 0 || len(peekRow.Sha1) > 0) && err == nil:
 		return -1, "", errors.New("image already exist")
+	default:
+		return -1, "", errors.New("error inserting image to database")
 	}
 }
 
@@ -404,7 +403,7 @@ func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, des
 	})
 
 	switch {
-	case err == sql.ErrNoRows || len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
+	case (len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0) && err == sql.ErrNoRows:
 		imageType := http.DetectContentType(bodyData)
 		extension := ""
 		switch imageType {
@@ -454,8 +453,10 @@ func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, des
 		}
 
 		return imageId, nil
+	case (len(peekRow.Md5) > 0 || len(peekRow.Sha1) > 0) && err == nil:
+		return -1, errors.New("image already exist")
 	default:
-		return peekRow.ID, errors.New("image already exists")
+		return -1, errors.New("error inserting image to database")
 	}
 }
 
