@@ -180,7 +180,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 	bookGroup, err := BookGroupById(int32(bookGroupId64))
 
 	switch {
-	case err == sql.ErrNoRows || len(bookGroup.Title) == 0:
+	case err == sql.ErrNoRows || len(bookGroup.Title) == 0 || bookGroup.ID == 0:
 		ReportError(c, err, "book group does not exist", http.StatusBadRequest)
 		return
 	case err == nil:
@@ -255,12 +255,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					ReportError(c, err, "error getting book chapter owner", 500)
 					return
 				}
-				if err != nil {
-					ReportError(c, err, "error parsing chapter number", 500)
-					return
-				}
 				responseObject.Chapters = append(responseObject.Chapters, Chapter{
-					ChapterNumber: ConvertNumericToFloat(chapter.ChapterNumber),
+					ChapterNumber: chapter.ChapterNumber,
 					Name:          chapter.Name.String,
 					Id:            chapter.ID,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
@@ -288,8 +284,11 @@ func GetBookGroupContentHandler(c *gin.Context) {
 		primaryCoverArt, err := queries.GetImageBasedOnId(ctx, bookGroup.PrimaryCoverArtID.Int32)
 		switch {
 		case err == sql.ErrNoRows || len(primaryCoverArt.Md5) == 0:
-		default:
+		case len(primaryCoverArt.Md5) > 0:
 			responseObject.PrimaryCoverArt = primaryCoverArt.Path
+		default:
+			ReportError(c, err, "error getting primary art", 500)
+			return
 		}
 	default:
 		ReportError(c, err, "error getting book group", 500)

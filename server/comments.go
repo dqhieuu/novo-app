@@ -20,6 +20,21 @@ type CommentParams struct {
 	Content   string
 }
 
+type Comment struct {
+	Comment string `json:"comment" binding:"required"`
+	UserName string `json:"userName" binding:"required"`
+	UserId int32 `json:"userId" binding:"required"`
+	UserAvatar string `json:"userAvatar" binding:"required"`
+	TimePosted int64 `json:"timePosted" binding:"required"`
+	ChapterId int32 `json:"chapterId"`
+	ChapterNumber float64 `json:"chapterNumber"`
+}
+
+type CommentPage struct {
+	LastPage int32 `json:"lastPage"`
+	Comments []Comment `json:"comments"`
+}
+
 func InsertComment(params CommentParams) error {
 	if params.BookId == nil {
 		return errors.New("book group id is required")
@@ -156,4 +171,157 @@ func CreateCommentHandler(c *gin.Context){
 	c.JSON(200, gin.H{
 		"message": "insert comment successful",
 	})
+}
+
+func GetCommentsHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	bookGroupIdString := c.Query("bookGroupId")
+	bookChapterIdString := c.Query("bookChapterId")
+	pageString := c.Query("page")
+
+	if len(bookGroupIdString) == 0 && len(bookChapterIdString) == 0 {
+		ReportError(c, errors.New("need book group or book chapter id"), "missing propertied", http.StatusBadRequest)
+		return
+	}
+
+	var responseObj CommentPage
+
+	var page int32
+	if len(pageString) == 0 {
+		page = 1
+	} else {
+		page64, err := strconv.ParseInt(pageString, 10, 32)
+		if err != nil {
+			ReportError(c, err, "error parsing page number", 500)
+			return
+		}
+		page = int32(page64)
+	}
+
+	switch {
+	case len(bookGroupIdString) == 0:
+		bookChapterId64, err := strconv.ParseInt(bookChapterIdString, 10, 32)
+		if err != nil {
+			ReportError(c, err, "error parsing book chapter id", 500)
+			return
+		}
+		chapterId := int32(bookChapterId64)
+
+		//get last page
+		totalChapterComments, err := queries.GetTotalBookChapterComments(ctx, sql.NullInt32{
+			Int32: chapterId,
+			Valid: true,
+		})
+		if totalChapterComments == 0 {
+			responseObj.LastPage = 1
+			break
+		} else {
+			if totalChapterComments % 20 != 0 {
+				responseObj.LastPage = int32(totalChapterComments/20) + 1
+			} else {
+				responseObj.LastPage = int32(totalChapterComments/20)
+			}
+		}
+
+		//get comments
+		chapterComments, err := queries.GetBookChapterComments(ctx, db.GetBookChapterCommentsParams{
+			BookChapterID: sql.NullInt32{
+				Int32: chapterId,
+				Valid: true,
+			},
+			Offset:        20 * (page - 1),
+		})
+		switch {
+		case len(chapterComments) == 0:
+		case len(chapterComments) > 0:
+			for _, comment := range chapterComments {
+				userPosted, err := queries.GetCommenter(ctx, comment.ID)
+				if err != nil {
+					ReportError(c, err, "error getting commenter", 500)
+					return
+				}
+				chapter, err := queries.GetCommentChapterInfo(ctx, comment.ID)
+				if err != nil {
+					ReportError(c, err, "error getting chapter", 500)
+					return
+				}
+				responseObj.Comments = append(responseObj.Comments, Comment{
+					Comment:       comment.Content,
+					UserName:      userPosted.UserName.String,
+					UserId:        userPosted.ID,
+					UserAvatar:    userPosted.Path,
+					TimePosted:    comment.PostedTime.UnixMicro(),
+					ChapterId:     chapterId,
+					ChapterNumber: chapter.ChapterNumber,
+				})
+			}
+		default:
+			ReportError(c, err, "error getting comment", 500)
+			return
+		}
+
+	case len(bookChapterIdString) == 0:
+		bookGroupId64, err := strconv.ParseInt(bookGroupIdString, 10, 32)
+		if err != nil {
+			ReportError(c, err, "error parsing book group id", 500)
+			return
+		}
+		bookId := int32(bookGroupId64)
+
+		//get last page
+		totalBookComments, err := queries.GetTotalBookGroupComments(ctx, sql.NullInt32{
+			Int32: bookId,
+			Valid: true,
+		})
+		if totalBookComments == 0 {
+			responseObj.LastPage = 1
+			break
+		} else {
+			if totalBookComments % 20 != 0 {
+				responseObj.LastPage = int32(totalBookComments/20) + 1
+			} else {
+				responseObj.LastPage = int32(totalBookComments/20)
+			}
+		}
+
+		//get comments
+		bookComments, err := queries.GetBookGroupComments(ctx, db.GetBookGroupCommentsParams{
+			BookGroupID: sql.NullInt32{
+				Int32: bookId,
+				Valid: true,
+			},
+			Offset:        20 * (page - 1),
+		})
+		switch {
+		case len(bookComments) == 0:
+		case len(bookComments) > 0 && err == nil:
+			for _, comment := range bookComments {
+				userPosted, err := queries.GetCommenter(ctx, comment.ID)
+				if err != nil {
+					ReportError(c, err, "error getting commenter", 500)
+					return
+				}
+				chapter, err := queries.GetCommentChapterInfo(ctx, comment.ID)
+				if err != nil {
+					ReportError(c, err, "error getting chapter", 500)
+					return
+				}
+				responseObj.Comments = append(responseObj.Comments, Comment{
+					Comment:       comment.Content,
+					UserName:      userPosted.UserName.String,
+					UserId:        userPosted.ID,
+					UserAvatar:    userPosted.Path,
+					TimePosted:    comment.PostedTime.UnixMicro(),
+					ChapterId:     chapter.ID,
+					ChapterNumber: chapter.ChapterNumber,
+				})
+			}
+		default:
+			ReportError(c, err, "error getting comment", 500)
+			return
+		}
+	}
+	c.JSON(200, responseObj)
 }

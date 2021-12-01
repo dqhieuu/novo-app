@@ -39,14 +39,14 @@ func Run() {
 	//	ctx := context.Background()
 	//	queries := db.New(db.Pool())
 	//
-	//	testView, err := queries.GetBookGroupView(ctx, 3)
+	//	testAuthors, err := queries.GetBookGroupAuthors(ctx, 3)
 	//
 	//	if err != nil {
 	//		ReportError(c, err, "error getting total view", 500)
 	//		return
 	//	}
 	//
-	//	log.Printf("%+v\n", testView)
+	//	log.Printf("%+v\n", testAuthors)
 	//	c.JSON(200, gin.H{
 	//		"message": "success",
 	//	})
@@ -55,6 +55,8 @@ func Run() {
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 
 	r.GET("/genre/all", ListAllGenresHandler)
+
+	r.GET("/comment", GetCommentsHandler)
 
 	auth := r.Group("/auth")
 	{

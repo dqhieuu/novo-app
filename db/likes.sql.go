@@ -28,9 +28,9 @@ SELECT coalesce(SUM(point), 0) as totalLikes FROM book_group_likes WHERE book_gr
 
 func (q *Queries) GetDislikes(ctx context.Context, bookGroupID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getDislikes, bookGroupID)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var totallikes interface{}
+	err := row.Scan(&totallikes)
+	return totallikes, err
 }
 
 const getLikes = `-- name: GetLikes :one
@@ -39,9 +39,9 @@ SELECT coalesce(SUM(point), 0) as totalLikes FROM book_group_likes WHERE book_gr
 
 func (q *Queries) GetLikes(ctx context.Context, bookGroupID int32) (interface{}, error) {
 	row := q.db.QueryRow(ctx, getLikes, bookGroupID)
-	var coalesce interface{}
-	err := row.Scan(&coalesce)
-	return coalesce, err
+	var totallikes interface{}
+	err := row.Scan(&totallikes)
+	return totallikes, err
 }
 
 const likes = `-- name: Likes :exec

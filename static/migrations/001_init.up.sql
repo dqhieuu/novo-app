@@ -223,6 +223,7 @@ CREATE TABLE IF NOT EXISTS book_comments
     user_id         int  NOT NULL,
     book_group_id   int,
     book_chapter_id int,
+    posted_time timestamptz NOT NULL DEFAULT now(),
     Primary Key (id),
     CONSTRAINT fk_book_comments_users
         FOREIGN KEY (user_id)

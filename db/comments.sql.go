@@ -38,6 +38,203 @@ func (q *Queries) DeleteComment(ctx context.Context, id int32) error {
 	return err
 }
 
+const getBookChapterComments = `-- name: GetBookChapterComments :many
+SELECT id, content, user_id, book_group_id, book_chapter_id, posted_time
+FROM book_comments
+WHERE book_chapter_id = $1
+ORDER BY posted_time
+LIMIT 20 OFFSET $2
+`
+
+type GetBookChapterCommentsParams struct {
+	BookChapterID sql.NullInt32 `json:"bookChapterID"`
+	Offset        int32         `json:"offset"`
+}
+
+func (q *Queries) GetBookChapterComments(ctx context.Context, arg GetBookChapterCommentsParams) ([]BookComment, error) {
+	rows, err := q.db.Query(ctx, getBookChapterComments, arg.BookChapterID, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookComment
+	for rows.Next() {
+		var i BookComment
+		if err := rows.Scan(
+			&i.ID,
+			&i.Content,
+			&i.UserID,
+			&i.BookGroupID,
+			&i.BookChapterID,
+			&i.PostedTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBookGroupAndChapterComments = `-- name: GetBookGroupAndChapterComments :many
+SELECT id, content, user_id, book_group_id, book_chapter_id, posted_time
+FROM book_comments
+WHERE book_group_id = $1 AND book_chapter_id = $2
+ORDER BY posted_time
+LIMIT 20 OFFSET $3
+`
+
+type GetBookGroupAndChapterCommentsParams struct {
+	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookChapterID sql.NullInt32 `json:"bookChapterID"`
+	Offset        int32         `json:"offset"`
+}
+
+func (q *Queries) GetBookGroupAndChapterComments(ctx context.Context, arg GetBookGroupAndChapterCommentsParams) ([]BookComment, error) {
+	rows, err := q.db.Query(ctx, getBookGroupAndChapterComments, arg.BookGroupID, arg.BookChapterID, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookComment
+	for rows.Next() {
+		var i BookComment
+		if err := rows.Scan(
+			&i.ID,
+			&i.Content,
+			&i.UserID,
+			&i.BookGroupID,
+			&i.BookChapterID,
+			&i.PostedTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getBookGroupComments = `-- name: GetBookGroupComments :many
+SELECT id, content, user_id, book_group_id, book_chapter_id, posted_time
+FROM book_comments
+WHERE book_group_id = $1
+ORDER BY posted_time
+LIMIT 20 OFFSET $2
+`
+
+type GetBookGroupCommentsParams struct {
+	BookGroupID sql.NullInt32 `json:"bookGroupID"`
+	Offset      int32         `json:"offset"`
+}
+
+func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupCommentsParams) ([]BookComment, error) {
+	rows, err := q.db.Query(ctx, getBookGroupComments, arg.BookGroupID, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookComment
+	for rows.Next() {
+		var i BookComment
+		if err := rows.Scan(
+			&i.ID,
+			&i.Content,
+			&i.UserID,
+			&i.BookGroupID,
+			&i.BookChapterID,
+			&i.PostedTime,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCommentChapterInfo = `-- name: GetCommentChapterInfo :one
+SELECT book_chapters.id, book_chapters.chapter_number
+FROM book_chapters JOIN book_comments bc on book_chapters.id = bc.book_chapter_id
+WHERE bc.id = $1
+`
+
+type GetCommentChapterInfoRow struct {
+	ID            int32   `json:"id"`
+	ChapterNumber float64 `json:"chapterNumber"`
+}
+
+func (q *Queries) GetCommentChapterInfo(ctx context.Context, id int32) (GetCommentChapterInfoRow, error) {
+	row := q.db.QueryRow(ctx, getCommentChapterInfo, id)
+	var i GetCommentChapterInfoRow
+	err := row.Scan(&i.ID, &i.ChapterNumber)
+	return i, err
+}
+
+const getCommenter = `-- name: GetCommenter :one
+SELECT users.id, users.user_name, i.path
+FROM users JOIN book_comments bc on users.id = bc.user_id
+            JOIN images i on users.avatar_image_id = i.id
+WHERE bc.id = $1
+`
+
+type GetCommenterRow struct {
+	ID       int32          `json:"id"`
+	UserName sql.NullString `json:"userName"`
+	Path     string         `json:"path"`
+}
+
+func (q *Queries) GetCommenter(ctx context.Context, id int32) (GetCommenterRow, error) {
+	row := q.db.QueryRow(ctx, getCommenter, id)
+	var i GetCommenterRow
+	err := row.Scan(&i.ID, &i.UserName, &i.Path)
+	return i, err
+}
+
+const getTotalBookChapterComments = `-- name: GetTotalBookChapterComments :one
+SELECT count(*) FROM book_comments WHERE book_chapter_id = $1
+`
+
+func (q *Queries) GetTotalBookChapterComments(ctx context.Context, bookChapterID sql.NullInt32) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalBookChapterComments, bookChapterID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalBookGroupAndChapterComments = `-- name: GetTotalBookGroupAndChapterComments :one
+SELECT count(*) FROM book_comments WHERE book_group_id = $1 AND book_chapter_id = $2
+`
+
+type GetTotalBookGroupAndChapterCommentsParams struct {
+	BookGroupID   sql.NullInt32 `json:"bookGroupID"`
+	BookChapterID sql.NullInt32 `json:"bookChapterID"`
+}
+
+func (q *Queries) GetTotalBookGroupAndChapterComments(ctx context.Context, arg GetTotalBookGroupAndChapterCommentsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalBookGroupAndChapterComments, arg.BookGroupID, arg.BookChapterID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const getTotalBookGroupComments = `-- name: GetTotalBookGroupComments :one
+SELECT count(*) FROM book_comments WHERE book_group_id = $1
+`
+
+func (q *Queries) GetTotalBookGroupComments(ctx context.Context, bookGroupID sql.NullInt32) (int64, error) {
+	row := q.db.QueryRow(ctx, getTotalBookGroupComments, bookGroupID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const updateComment = `-- name: UpdateComment :exec
 UPDATE book_comments SET content = $2 WHERE id = $1
 `

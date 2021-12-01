@@ -7,8 +7,6 @@ import (
 	"context"
 	"database/sql"
 	"time"
-
-	"github.com/jackc/pgtype"
 )
 
 const bookChapterById = `-- name: BookChapterById :one
@@ -125,7 +123,7 @@ WHERE bg.id = $1
 type GetBookGroupChaptersRow struct {
 	ID                int32          `json:"id"`
 	DateCreated       time.Time      `json:"dateCreated"`
-	ChapterNumber     pgtype.Numeric `json:"chapterNumber"`
+	ChapterNumber     float64        `json:"chapterNumber"`
 	Name              sql.NullString `json:"name"`
 	TextContext       sql.NullString `json:"textContext"`
 	Type              string         `json:"type"`
