@@ -41,7 +41,7 @@ LIMIT 20 OFFSET $3;
 -- name: GetCommenter :one
 SELECT users.id, users.user_name, i.path
 FROM users JOIN book_comments bc on users.id = bc.user_id
-            JOIN images i on users.avatar_image_id = i.id
+            LEFT JOIN images i on users.avatar_image_id = i.id
 WHERE bc.id = $1;
 
 -- name: GetCommentChapterInfo :one

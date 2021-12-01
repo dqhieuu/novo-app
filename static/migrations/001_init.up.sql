@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS book_comments
     id           int GENERATED ALWAYS AS IDENTITY,
     content         text NOT NULL,
     user_id         int  NOT NULL,
-    book_group_id   int,
+    book_group_id   int NOT NULL,
     book_chapter_id int,
     posted_time timestamptz NOT NULL DEFAULT now(),
     Primary Key (id),
