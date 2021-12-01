@@ -7,7 +7,6 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
-	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -26,8 +25,8 @@ type Comment struct {
 	UserId int32 `json:"userId" binding:"required"`
 	UserAvatar string `json:"userAvatar" binding:"required"`
 	TimePosted int64 `json:"timePosted" binding:"required"`
-	ChapterId int32 `json:"chapterId"`
-	ChapterNumber float64 `json:"chapterNumber"`
+	ChapterId int32 `json:"chapterId" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
 }
 
 type CommentPage struct {
@@ -99,18 +98,12 @@ func CreateCommentHandler(c *gin.Context){
 
 	err := c.ShouldBindJSON(comment)
 	if err != nil {
-		log.Printf("error parsing json: %s\n", err)
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "error parsing json",
-		})
+		ReportError(c, err, "error parsing json", http.StatusBadRequest)
 		return
 	}
 	comment = reg.ReplaceAllString(comment, "\n\n")
 	if len(comment) < 10 || len(comment) > 500 {
-		log.Println("invalid comment length")
-		c.JSON(500, gin.H{
-			"error": "invalid comment length",
-		})
+		ReportError(c, errors.New("invalid comment length"), "error", http.StatusBadRequest)
 		return
 	}
 
@@ -118,18 +111,12 @@ func CreateCommentHandler(c *gin.Context){
 	bookGroupId := c.Query("bookGroupId")
 	if len(bookGroupId) == 0 {
 		//maybe check some invalid string in the future
-		log.Println("missing book group id")
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "missing book group id",
-		})
+		ReportError(c, errors.New("missing book group id"), "error", http.StatusBadRequest)
 		return
 	}
 	bookGroupId64, err := strconv.ParseInt(bookGroupId, 10, 32)
 	if err != nil {
-		log.Printf("error parsing book group id: %s\n", err)
-		c.JSON(500, gin.H{
-			"error": err,
-		})
+		ReportError(c, err, "error parsing book group id", 500)
 		return
 	}
 	bookId := int32(bookGroupId64)
@@ -142,10 +129,7 @@ func CreateCommentHandler(c *gin.Context){
 		//maybe have some more advance string checking in the future
 		bookChapterId64, err := strconv.ParseInt(bookChapterId, 10, 32)
 		if err != nil {
-			log.Printf("error parsing book group id: %s\n", err)
-			c.JSON(500, gin.H{
-				"error": err,
-			})
+			ReportError(c, err, "error parsing book chapter id", 500)
 		} else {
 			chapterIdValue = int32(bookChapterId64)
 			chapterId = &chapterIdValue
@@ -162,10 +146,7 @@ func CreateCommentHandler(c *gin.Context){
 		Content:   comment,
 	})
 	if err != nil {
-		log.Printf("error inserting comment: %s\n", err)
-		c.JSON(500, gin.H{
-			"error": err,
-		})
+		ReportError(c, err, "error inserting comment", 500)
 		return
 	}
 	c.JSON(200, gin.H{
@@ -201,7 +182,7 @@ func GetCommentsHandler(c *gin.Context) {
 	}
 
 	switch {
-	case len(bookGroupIdString) == 0:
+	case len(bookChapterIdString) != 0:
 		bookChapterId64, err := strconv.ParseInt(bookChapterIdString, 10, 32)
 		if err != nil {
 			ReportError(c, err, "error parsing book chapter id", 500)
@@ -235,6 +216,7 @@ func GetCommentsHandler(c *gin.Context) {
 		})
 		switch {
 		case len(chapterComments) == 0:
+			responseObj.Comments = make([]Comment, 0)
 		case len(chapterComments) > 0:
 			for _, comment := range chapterComments {
 				userPosted, err := queries.GetCommenter(ctx, comment.ID)
@@ -262,7 +244,7 @@ func GetCommentsHandler(c *gin.Context) {
 			return
 		}
 
-	case len(bookChapterIdString) == 0:
+	case len(bookGroupIdString) != 0:
 		bookGroupId64, err := strconv.ParseInt(bookGroupIdString, 10, 32)
 		if err != nil {
 			ReportError(c, err, "error parsing book group id", 500)
@@ -296,6 +278,7 @@ func GetCommentsHandler(c *gin.Context) {
 		})
 		switch {
 		case len(bookComments) == 0:
+			responseObj.Comments = make([]Comment, 0)
 		case len(bookComments) > 0 && err == nil:
 			for _, comment := range bookComments {
 				userPosted, err := queries.GetCommenter(ctx, comment.ID)
@@ -304,19 +287,20 @@ func GetCommentsHandler(c *gin.Context) {
 					return
 				}
 				chapter, err := queries.GetCommentChapterInfo(ctx, comment.ID)
-				if err != nil {
+				if chapter.ID == 0 || err == nil {
+					responseObj.Comments = append(responseObj.Comments, Comment{
+						Comment:       comment.Content,
+						UserName:      userPosted.UserName.String,
+						UserId:        userPosted.ID,
+						UserAvatar:    userPosted.Path,
+						TimePosted:    comment.PostedTime.UnixMicro(),
+						ChapterId:     chapter.ID,
+						ChapterNumber: chapter.ChapterNumber,
+					})
+				} else if err != nil {
 					ReportError(c, err, "error getting chapter", 500)
 					return
 				}
-				responseObj.Comments = append(responseObj.Comments, Comment{
-					Comment:       comment.Content,
-					UserName:      userPosted.UserName.String,
-					UserId:        userPosted.ID,
-					UserAvatar:    userPosted.Path,
-					TimePosted:    comment.PostedTime.UnixMicro(),
-					ChapterId:     chapter.ID,
-					ChapterNumber: chapter.ChapterNumber,
-				})
 			}
 		default:
 			ReportError(c, err, "error getting comment", 500)
