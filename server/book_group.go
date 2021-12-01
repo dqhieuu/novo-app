@@ -327,7 +327,7 @@ func ValidPrimaryCoverArtId(PrimaryCoverArtId *int32, coverArtIds *[]int32) {
 	if found == true {
 		return
 	}
-	if length > 1 {
+	if length > 0 {
 		*PrimaryCoverArtId = (*coverArtIds)[length-1]
 	} else {
 		*PrimaryCoverArtId = 0
