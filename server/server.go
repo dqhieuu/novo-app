@@ -36,20 +36,11 @@ func Run() {
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
 	//r.GET("/test", func(c *gin.Context){
-	//	ctx := context.Background()
-	//	queries := db.New(db.Pool())
 	//
-	//	testAuthors, err := queries.GetBookGroupAuthors(ctx, 3)
-	//
-	//	if err != nil {
-	//		ReportError(c, err, "error getting total view", 500)
-	//		return
-	//	}
-	//
-	//	log.Printf("%+v\n", testAuthors)
-	//	c.JSON(200, gin.H{
-	//		"message": "success",
-	//	})
+	//	var testObj BookGroup
+	//	testObj.Authors = make([]Author, 0)
+	//	testObj.Chapters = make([]Chapter, 0)
+	//	c.JSON(200, testObj)
 	//})
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)

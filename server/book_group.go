@@ -240,6 +240,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					Id:   author.ID,
 				})
 			}
+		} else {
+			responseObject.Authors = make([]Author, 0)
 		}
 
 		//get genres
@@ -255,6 +257,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					Name: genre.Name,
 				})
 			}
+		} else {
+			responseObject.Genres = make([]Genre, 0)
 		}
 
 		//get chapters
@@ -281,6 +285,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					},
 				})
 			}
+		} else {
+			responseObject.Chapters = make([]Chapter, 0)
 		}
 
 		//get cover arts
@@ -293,6 +299,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 			for _, imagePath := range coverArts {
 				responseObject.CoverArts = append(responseObject.CoverArts, imagePath)
 			}
+		} else {
+			responseObject.CoverArts = make([]string, 0)
 		}
 
 		//get primary cover art
