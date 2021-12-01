@@ -24,14 +24,14 @@ type Chapter struct {
 }
 
 type HypertextChapter struct {
-	ChapterNumber float64 `json:"chapter_number" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
 	Name          string  `json:"name"`
-	TextContent   string  `json:"text_content" binding:"required"`
-	BookGroupId   int32   `json:"book_group_id" binding:"required"`
+	TextContent   string  `json:"textContent" binding:"required"`
+	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
 }
 
 type ImageChapter struct {
-	ChapterNumber float64 `json:"chapter_number" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
 	Name          string  `json:"name"`
 	Images        []int32 `json:"images" binding:"required"`
 	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
