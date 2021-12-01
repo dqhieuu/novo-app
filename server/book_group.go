@@ -8,22 +8,23 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"sort"
 	"strconv"
 )
 
-const limitBookGroup = 50
+const limitBookGroup = 40
 
 type BookGroup struct {
-	Name string `json:"name" binding:"required"`
-	Description string `json:"description"`
-	Views int64 `json:"views"`
-	LikeCount int64 `json:"likeCount"`
-	DislikeCount int64 `json:"dislikeCount"`
-	Authors []Author `json:"authors"`
-	Genres []Genre `json:"genres"`
-	Chapters []Chapter `json:"chapters"`
-	CoverArts []string `json:"coverArts"`
-	PrimaryCoverArt string `json:"primaryCoverArt"`
+	Name            string    `json:"name" binding:"required"`
+	Description     string    `json:"description"`
+	Views           int64     `json:"views"`
+	LikeCount       int64     `json:"likeCount"`
+	DislikeCount    int64     `json:"dislikeCount"`
+	Authors         []Author  `json:"authors"`
+	Genres          []Genre   `json:"genres"`
+	Chapters        []Chapter `json:"chapters"`
+	CoverArts       []string  `json:"coverArts"`
+	PrimaryCoverArt string    `json:"primaryCoverArt"`
 }
 
 func BookGroupById(id int32) (*db.BookGroup, error) {
@@ -260,8 +261,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					Name:          chapter.Name.String,
 					Id:            chapter.ID,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
-					UserPosted:    Author{
-						Id: userPosted.ID,
+					UserPosted: Author{
+						Id:   userPosted.ID,
 						Name: userPosted.UserName.String,
 					},
 				})
@@ -296,4 +297,129 @@ func GetBookGroupContentHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, responseObject)
+}
+
+type BookByGenreHandler struct {
+	Id            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Title         string      `json:"title"`
+	LatestChapter interface{} `json:"latestChapter"`
+	Comments      int32       `json:"comments"`
+	Views         int64       `json:"views"`
+	Likes         int64       `json:"likes"`
+}
+
+func GetBookByGenreHandler(c *gin.Context) {
+
+	var genreId int32
+	_, err := fmt.Sscan(c.Param("genreId"), &genreId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var page int32
+	stringTmp := c.Query("page")
+	if len(stringTmp) > 0 {
+		_, err = fmt.Sscan(stringTmp, &page)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		page = 1
+	}
+
+	bookIds, err := BookGroupsByGenre(genreId, page)
+	books := []BookByGenreHandler{} //non-nil-slice
+	var book *BookByGenreHandler
+	for i := 0; i < len(bookIds); i++ {
+		book, err = GetInfoBook(bookIds[i])
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		books = append(books, *book)
+	}
+
+	sort.Slice(books, func(i, j int) bool {
+		if books[i].LatestChapter == nil {
+			return false
+		}
+		if books[j].LatestChapter == nil {
+			return true
+		}
+		tmpI := books[i].LatestChapter.(*db.LastChapterInBookGroupRow)
+		tmpJ := books[j].LatestChapter.(*db.LastChapterInBookGroupRow)
+		fmt.Println(tmpI, tmpJ)
+		return tmpI.DateCreated.After(tmpJ.DateCreated)
+	})
+	for i := 0; i < len(books); i++ {
+		if books[i].LatestChapter == nil {
+			continue
+		}
+		tmp := books[i].LatestChapter.(*db.LastChapterInBookGroupRow)
+		books[i].LatestChapter = tmp.ChapterNumber // loại bỏ trường date_create
+	}
+
+	var latestPage interface{}
+	tmp, err := NumberBookGroupInGenre(genreId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if tmp > 0 {
+		latestPage = (tmp-1)/limitBookGroup + 1
+	} else {
+		latestPage = nil
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"latestPage": latestPage,
+		"books":      books,
+	})
+}
+
+func GetInfoBook(id int32) (*BookByGenreHandler, error) {
+	var book BookByGenreHandler
+	tmp, err := BookGroupById(id)
+	if err != nil {
+		return nil, err
+	}
+	book.Id = id
+	book.Title = tmp.Title
+
+	if tmp.PrimaryCoverArtID.Valid == true {
+		book.Image, err = GetImageById(tmp.PrimaryCoverArtID.Int32)
+		if err != nil {
+			return nil, errors.New("error image:" + err.Error())
+		}
+	} else {
+		book.Image = nil
+	}
+
+	book.Comments, err = CountCommentInBookGroup(id)
+	if err != nil {
+		return nil, errors.New("error comment:" + err.Error())
+	}
+
+	book.Likes, err = CountLikesInBookGroup(id)
+	if err != nil {
+		return nil, errors.New("error like:" + err.Error())
+	}
+
+	book.Views, err = GetViewInBookGroup(id)
+	if err != nil {
+		return nil, errors.New("error view:" + err.Error())
+	}
+
+	book.LatestChapter, err = LatestCreatedInBookGroup(id)
+	if err != nil {
+		if err.Error() != "no rows in result set" {
+			return nil, errors.New("error latestChapter:" + err.Error())
+		} else {
+			book.LatestChapter = nil
+		}
+	}
+	return &book, nil
 }

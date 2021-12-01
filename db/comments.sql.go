@@ -29,6 +29,19 @@ func (q *Queries) AddComment(ctx context.Context, arg AddCommentParams) error {
 	return err
 }
 
+const countCommentInBookGroup = `-- name: CountCommentInBookGroup :one
+SELECT COUNT(id )
+FROM book_comments
+WHERE book_group_id = $1
+`
+
+func (q *Queries) CountCommentInBookGroup(ctx context.Context, bookGroupID sql.NullInt32) (int64, error) {
+	row := q.db.QueryRow(ctx, countCommentInBookGroup, bookGroupID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const deleteComment = `-- name: DeleteComment :exec
 DELETE FROM book_comments WHERE id = $1
 `

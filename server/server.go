@@ -58,6 +58,8 @@ func Run() {
 
 	r.GET("/comment", GetCommentsHandler)
 
+	r.GET("/genre/:genreId", GetBookByGenreHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())

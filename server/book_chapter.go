@@ -18,10 +18,10 @@ const limitNameCharacter = 50
 
 type Chapter struct {
 	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
-	Name string `json:"name"`
-	Id int32 `json:"id" binding:"required"`
-	TimePosted int64 `json:"timePosted" binding:"required"`
-	UserPosted Author `json:"userPosted" binding:"required"`
+	Name          string  `json:"name"`
+	Id            int32   `json:"id" binding:"required"`
+	TimePosted    int64   `json:"timePosted" binding:"required"`
+	UserPosted    Author  `json:"userPosted" binding:"required"`
 }
 
 type HypertextChapter struct {
@@ -387,4 +387,14 @@ func DeleteBookChapterHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Delete Chapter successfully",
 	})
+}
+
+func LatestCreatedInBookGroup(bookGroupId int32) (*db.LastChapterInBookGroupRow, error) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	chapterNumber, err := queries.LastChapterInBookGroup(ctx, bookGroupId)
+	if err != nil {
+		return nil, err
+	}
+	return &chapterNumber, nil
 }
