@@ -410,15 +410,6 @@ func GetInfoBook(id int32) (*BookByGenreHandler, error) {
 	book.Id = id
 	book.Title = tmp.Title
 
-	if tmp.PrimaryCoverArtID.Valid == true {
-		book.Image, err = GetImageById(tmp.PrimaryCoverArtID.Int32)
-		if err != nil {
-			return nil, errors.New("error image:" + err.Error())
-		}
-	} else {
-		book.Image = nil
-	}
-
 	book.Comments, err = CountCommentInBookGroup(id)
 	if err != nil {
 		return nil, errors.New("error comment:" + err.Error())
