@@ -70,6 +70,8 @@ func Run() {
 
 	r.GET("/search-suggest/:query", GetSearchSuggestionHandler)
 
+	r.GET("/search/:query", GetSearchResultHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())

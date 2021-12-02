@@ -563,3 +563,58 @@ func GetSearchSuggestionHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"books": books})
 }
+
+func GetSearchResultHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	query := c.Param("query")
+
+	var page int32
+	stringTmp := c.Query("page")
+	if len(stringTmp) > 0 {
+		_, err := fmt.Sscan(stringTmp, &page)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		page = 1
+	}
+
+	books, err := queries.SearchResult(ctx, db.SearchResultParams{
+		Query: sql.NullString{
+			String: query,
+			Valid:  true,
+		},
+		Offset: (page - 1) * limitBookGroup,
+		Limit:  limitBookGroup,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if books == nil {
+		books = []db.SearchResultRow{}
+	}
+
+	var latestPage interface{}
+	tmp, err := queries.NumberBookGroupSearchResult(ctx, sql.NullString{
+		String: query,
+		Valid:  true,
+	})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error get latestPage": err.Error()})
+		return
+	}
+	if tmp > 0 {
+		latestPage = (tmp-1)/limitBookGroup + 1
+	} else {
+		latestPage = nil
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"latestPage": latestPage,
+		"books":      books,
+	})
+}
