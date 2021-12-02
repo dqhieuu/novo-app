@@ -187,6 +187,7 @@ func checkFileSize(size int64) bool {
 }
 
 func GenerateThumbnail(path string, size int, filetype *string) (string, error) {
+	//log.Println(*filetype)
 	fullPath, dirPath, err := checkFileDir(path, RootFolder)
 	if err != nil {
 		return "", errors.New("error checking directory: " + err.Error())
@@ -218,7 +219,17 @@ func GenerateThumbnail(path string, size int, filetype *string) (string, error) 
 		outType = *filetype
 	}
 
-	extension := filepath.Ext(path)
+	extension := ""
+	switch outType {
+	case "image/jpeg":
+		extension = ".jpg"
+	case "image/png":
+		extension = ".png"
+	case "image/gif":
+		extension = ".gif"
+	default:
+		extension = ".jpg"
+	}
 	thumbFileName := fmt.Sprintf("%s.%d%s", filepath.Base(path), size, extension)
 	outDst := fmt.Sprintf("%s/%s", dirPath, thumbFileName)
 
