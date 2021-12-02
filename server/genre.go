@@ -34,24 +34,6 @@ func CheckGenreExistById(id int32) (bool, error) {
 	return result, nil
 }
 
-func Genres(page int32) ([]*db.Genre, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	genres, err := queries.Genres(ctx, db.GenresParams{
-		Offset: (page - 1) * limitGenres,
-		Limit:  limitGenres,
-	})
-	if err != nil {
-		stringErr := fmt.Sprintf("Get genres list failed: %s", err)
-		return nil, errors.New(stringErr)
-	}
-	var outData []*db.Genre
-	for i := 0; i < len(genres); i++ {
-		outData = append(outData, &genres[i])
-	}
-	return outData, err
-}
-
 func UpdateGenre(id int32, name, description string, imageID int32) error {
 
 	ctx := context.Background()
@@ -128,24 +110,16 @@ func DeleteGenre(id int32) error {
 	return nil
 }
 
-func GetAllGenres() (*[]db.GetAllGenreRow, error) {
+func ListAllGenresHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	genres, err := queries.GetAllGenre(ctx)
 	if err != nil {
-		return nil, err
-	}
-	return &genres, nil
-}
-
-func ListAllGenresHandler(c *gin.Context) {
-	genres, err := GetAllGenres()
-	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
-	if *genres == nil {
-		*genres = []db.GetAllGenreRow{}
+	if genres == nil {
+		genres = []db.GetAllGenreRow{}
 	}
-	c.JSON(http.StatusOK, *genres)
+	c.JSON(http.StatusOK, genres)
 }

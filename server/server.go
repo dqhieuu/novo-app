@@ -68,6 +68,8 @@ func Run() {
 
 	r.GET("/genre/:genreId", GetBookByGenreHandler)
 
+	r.GET("/search-suggest/:query", GetSearchSuggestionHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())

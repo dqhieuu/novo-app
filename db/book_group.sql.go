@@ -112,6 +112,51 @@ func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams
 	return i, err
 }
 
+const searchSuggestion = `-- name: SearchSuggestion :many
+SELECT bg.title AS title,
+       bg.id AS id,
+       (array_agg(i.path))[1] AS image,
+       (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter
+FROM book_groups AS bg
+         LEFT JOIN images i on bg.primary_cover_art_id = i.id
+         LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
+WHERE bg.title LIKE '%'||$1||'%'
+GROUP BY bg.id
+LIMIT 5
+`
+
+type SearchSuggestionRow struct {
+	Title         string      `json:"title"`
+	ID            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Latestchapter interface{} `json:"latestchapter"`
+}
+
+func (q *Queries) SearchSuggestion(ctx context.Context, query sql.NullString) ([]SearchSuggestionRow, error) {
+	rows, err := q.db.Query(ctx, searchSuggestion, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchSuggestionRow
+	for rows.Next() {
+		var i SearchSuggestionRow
+		if err := rows.Scan(
+			&i.Title,
+			&i.ID,
+			&i.Image,
+			&i.Latestchapter,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateBookGroup = `-- name: UpdateBookGroup :exec
 UPDATE book_groups
 SET title = $2,

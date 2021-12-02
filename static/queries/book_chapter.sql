@@ -53,6 +53,7 @@ FROM users
          JOIN book_chapters bc on users.id = bc.owner_id
 WHERE bc.id = $1;
 
+
 -- name: LastChapterInBookGroup :one
 SELECT chapter_number, date_created
 FROM book_chapters AS bc
