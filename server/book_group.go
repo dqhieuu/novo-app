@@ -545,3 +545,21 @@ func ValidPrimaryCoverArtId(PrimaryCoverArtId *int32, coverArtIds *[]int32) {
 		*PrimaryCoverArtId = 0
 	}
 }
+
+func GetSearchSuggestionHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	query := c.Param("query")
+	books, err := queries.SearchSuggestion(ctx, sql.NullString{
+		String: query,
+		Valid:  true,
+	})
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if books == nil {
+		books = []db.SearchSuggestionRow{}
+	}
+	c.JSON(http.StatusOK, gin.H{"books": books})
+}
