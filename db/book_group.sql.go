@@ -112,6 +112,101 @@ func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams
 	return i, err
 }
 
+const numberBookGroupSearchResult = `-- name: NumberBookGroupSearchResult :one
+SELECT COUNT(id)
+FROM book_groups
+WHERE title LIKE '%' || $1 || '%'
+`
+
+func (q *Queries) NumberBookGroupSearchResult(ctx context.Context, query sql.NullString) (int64, error) {
+	row := q.db.QueryRow(ctx, numberBookGroupSearchResult, query)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const searchResult = `-- name: SearchResult :many
+SELECT bg.id id,
+       (array_agg(i.path))[1] AS image,
+       bg.title AS title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups AS bg
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+         LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+         LEFT JOIN images i ON bg.primary_cover_art_id = i.id
+WHERE bg.title LIKE '%'||$3||'%'
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY lastUpdated DESC  NULLS LAST
+OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
+`
+
+type SearchResultParams struct {
+	Offset int32          `json:"offset"`
+	Limit  int32          `json:"limit"`
+	Query  sql.NullString `json:"query"`
+}
+
+type SearchResultRow struct {
+	ID            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Title         string      `json:"title"`
+	Latestchapter interface{} `json:"latestchapter"`
+	Lastupdated   interface{} `json:"lastupdated"`
+	Views         interface{} `json:"views"`
+	Comments      int64       `json:"comments"`
+	Likes         interface{} `json:"likes"`
+}
+
+func (q *Queries) SearchResult(ctx context.Context, arg SearchResultParams) ([]SearchResultRow, error) {
+	rows, err := q.db.Query(ctx, searchResult, arg.Offset, arg.Limit, arg.Query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchResultRow
+	for rows.Next() {
+		var i SearchResultRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Image,
+			&i.Title,
+			&i.Latestchapter,
+			&i.Lastupdated,
+			&i.Views,
+			&i.Comments,
+			&i.Likes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchSuggestion = `-- name: SearchSuggestion :many
 SELECT bg.title AS title,
        bg.id AS id,
