@@ -79,7 +79,6 @@ FROM book_comments
 WHERE book_comments.book_group_id = $1
   AND book_chapter_id = $2
 ORDER BY posted_time
-<<<<<<< Updated upstream
 LIMIT 20 OFFSET $3;
 
 -- name: GetCommenter :one
@@ -98,6 +97,3 @@ WHERE bc.id = $1;
 SELECT COUNT(id )
 FROM book_comments
 WHERE book_group_id = $1;
-=======
-LIMIT 20 OFFSET $3;
->>>>>>> Stashed changes

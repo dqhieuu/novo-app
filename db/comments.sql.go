@@ -31,19 +31,6 @@ func (q *Queries) AddComment(ctx context.Context, arg AddCommentParams) error {
 	return err
 }
 
-<<<<<<< Updated upstream
-const countCommentInBookGroup = `-- name: CountCommentInBookGroup :one
-SELECT COUNT(id )
-FROM book_comments
-WHERE book_group_id = $1
-`
-
-func (q *Queries) CountCommentInBookGroup(ctx context.Context, bookGroupID sql.NullInt32) (int64, error) {
-	row := q.db.QueryRow(ctx, countCommentInBookGroup, bookGroupID)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-=======
 const checkIfCommentExist = `-- name: CheckIfCommentExist :one
 SELECT EXISTS(select 1 from book_comments where id = $1)
 `
@@ -53,7 +40,19 @@ func (q *Queries) CheckIfCommentExist(ctx context.Context, id int32) (bool, erro
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
->>>>>>> Stashed changes
+}
+
+const countCommentInBookGroup = `-- name: CountCommentInBookGroup :one
+SELECT COUNT(id )
+FROM book_comments
+WHERE book_group_id = $1
+`
+
+func (q *Queries) CountCommentInBookGroup(ctx context.Context, bookGroupID int32) (int64, error) {
+	row := q.db.QueryRow(ctx, countCommentInBookGroup, bookGroupID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const deleteComment = `-- name: DeleteComment :exec
@@ -247,6 +246,44 @@ func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupComm
 		return nil, err
 	}
 	return items, nil
+}
+
+const getCommentChapterInfo = `-- name: GetCommentChapterInfo :one
+SELECT book_chapters.id, book_chapters.chapter_number
+FROM book_chapters JOIN book_comments bc on book_chapters.id = bc.book_chapter_id
+WHERE bc.id = $1
+`
+
+type GetCommentChapterInfoRow struct {
+	ID            int32   `json:"id"`
+	ChapterNumber float64 `json:"chapterNumber"`
+}
+
+func (q *Queries) GetCommentChapterInfo(ctx context.Context, id int32) (GetCommentChapterInfoRow, error) {
+	row := q.db.QueryRow(ctx, getCommentChapterInfo, id)
+	var i GetCommentChapterInfoRow
+	err := row.Scan(&i.ID, &i.ChapterNumber)
+	return i, err
+}
+
+const getCommenter = `-- name: GetCommenter :one
+SELECT users.id, users.user_name, i.path
+FROM users JOIN book_comments bc on users.id = bc.user_id
+            LEFT JOIN images i on users.avatar_image_id = i.id
+WHERE bc.id = $1
+`
+
+type GetCommenterRow struct {
+	ID       int32          `json:"id"`
+	UserName sql.NullString `json:"userName"`
+	Path     sql.NullString `json:"path"`
+}
+
+func (q *Queries) GetCommenter(ctx context.Context, id int32) (GetCommenterRow, error) {
+	row := q.db.QueryRow(ctx, getCommenter, id)
+	var i GetCommenterRow
+	err := row.Scan(&i.ID, &i.UserName, &i.Path)
+	return i, err
 }
 
 const getTotalBookChapterComments = `-- name: GetTotalBookChapterComments :one
