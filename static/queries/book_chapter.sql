@@ -21,8 +21,8 @@ SET chapter_number=$2,
 WHERE id = $1;
 
 -- name: InsertBookChapter :one
-INSERT INTO book_chapters(chapter_number,name,text_context,type,book_group_id,owner_id)
-VALUES (@chapter_number,@name,@text_context,@type,@book_group_id,@owner_id)
+INSERT INTO book_chapters(chapter_number, name, text_context, type, book_group_id, owner_id)
+VALUES (@chapter_number, @name, @text_context, @type, @book_group_id, @owner_id)
 RETURNING *;
 
 -- name: DeleteBookChapterById :exec
@@ -36,19 +36,28 @@ FROM book_chapters
 WHERE book_group_id = $1;
 
 -- name: GetBookGroupChapters :many
-SELECT
-       book_chapters.chapter_number,
+SELECT book_chapters.chapter_number,
        book_chapters.name,
        book_chapters.id as chapterId,
        book_chapters.date_created,
-       u.id as userId,
+       u.id             as userId,
        u.user_name
-FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
-                   JOIN users u on book_chapters.owner_id = u.id
+FROM book_chapters
+         JOIN book_groups bg on book_chapters.book_group_id = bg.id
+         JOIN users u on book_chapters.owner_id = u.id
 WHERE bg.id = $1;
 
 -- name: GetBookChapterOwner :one
 SELECT users.id, users.user_name
-FROM users JOIN book_chapters bc on users.id = bc.owner_id
+FROM users
+         JOIN book_chapters bc on users.id = bc.owner_id
 WHERE bc.id = $1;
 
+
+-- name: LastChapterInBookGroup :one
+SELECT chapter_number, date_created
+FROM book_chapters AS bc
+WHERE bc.book_group_id = $1
+  AND date_created IN (SELECT MAX(date_created) as max_date_created
+                       FROM book_chapters AS bc
+                       WHERE bc.book_group_id = $1);

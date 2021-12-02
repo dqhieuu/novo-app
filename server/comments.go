@@ -14,12 +14,13 @@ import (
 
 type CommentParams struct {
 	UserId    int32
-	BookId    *int32
+	BookId    int32
 	ChapterId *int32
 	Content   string
 }
 
 type Comment struct {
+	Id            int32   `json:"id" binding:"required"`
 	Comment       string  `json:"comment" binding:"required"`
 	UserName      string  `json:"userName" binding:"required"`
 	UserId        int32   `json:"userId" binding:"required"`
@@ -35,10 +36,6 @@ type CommentPage struct {
 }
 
 func InsertComment(params CommentParams) error {
-	if params.BookId == nil {
-		return errors.New("book group id is required")
-	}
-
 	var chapterId sql.NullInt32
 	if params.ChapterId == nil {
 		chapterId.Valid = false
@@ -49,7 +46,7 @@ func InsertComment(params CommentParams) error {
 
 	err := db.New(db.Pool()).AddComment(context.Background(), db.AddCommentParams{
 		UserID:        params.UserId,
-		BookGroupID:   *params.BookId,
+		BookGroupID:   params.BookId,
 		BookChapterID: chapterId,
 		Content:       params.Content,
 	})
@@ -90,6 +87,9 @@ func CommentsByBookChapter(bookChapterId int32, page int) {
 }
 
 func CreateCommentHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
 	var comment string
 	reg := regexp.MustCompile(`(\r\n|\n){3,}`)
 
@@ -105,47 +105,110 @@ func CreateCommentHandler(c *gin.Context) {
 	}
 
 	//get book group id
-	bookGroupId := c.Query("bookGroupId")
-	if len(bookGroupId) == 0 {
-		//maybe check some invalid string in the future
-		ReportError(c, errors.New("missing book group id"), "error", http.StatusBadRequest)
-		return
-	}
-	bookGroupId64, err := strconv.ParseInt(bookGroupId, 10, 32)
-	if err != nil {
-		ReportError(c, err, "error parsing book group id", 500)
-		return
-	}
-	bookId := int32(bookGroupId64)
+	bookGroupIdString := c.Query("bookGroupId")
+	bookChapterIdString := c.Query("bookChapterId")
 
-	//get book chapter id (if exist)
-	bookChapterId := c.Query("bookChapterId")
-	var chapterId *int32
-	var chapterIdValue int32
-	if len(bookChapterId) > 0 {
-		//maybe have some more advance string checking in the future
-		bookChapterId64, err := strconv.ParseInt(bookChapterId, 10, 32)
+	if len(bookGroupIdString) == 0 && len(bookChapterIdString) == 0 {
+		ReportError(c, errors.New("need book group or book chapter id"), "missing propertied", http.StatusBadRequest)
+		return
+	}
+
+	extract := jwt.ExtractClaims(c)
+
+	switch {
+	case len(bookChapterIdString) != 0:
+		// parse book chapter id
+		bookChapterId64, err := strconv.ParseInt(bookChapterIdString, 10, 32)
 		if err != nil {
 			ReportError(c, err, "error parsing book chapter id", 500)
+			return
+		}
+		bookChapterId := int32(bookChapterId64)
+
+		// fetch a row using the id to check if the chapter exist
+		peekChapterRow, err := queries.BookChapterById(ctx, bookChapterId)
+		if err != nil {
+			ReportError(c, err, "internal error", 500)
+			return
+		}
+
+		//if it doesn't exist
+		if peekChapterRow.ID == 0 {
+			//if the book group id string is not empty
+			if len(bookGroupIdString) > 0 {
+				bookGroupId64, err := strconv.ParseInt(bookGroupIdString, 10, 32)
+				if err != nil {
+					ReportError(c, err, "error parsing book group id", 500)
+					return
+				}
+				bookId := int32(bookGroupId64)
+
+				peekBookRow, err := queries.BookGroupById(ctx, bookId)
+				if peekBookRow.ID == 0 {
+					ReportError(c, errors.New("invalid prerequisites"), "error", http.StatusBadRequest)
+					return
+				} else {
+					err = queries.AddComment(ctx, db.AddCommentParams{
+						UserID:      int32(extract[UserIdClaimKey].(float64)),
+						BookGroupID: bookId,
+						BookChapterID: sql.NullInt32{
+							Valid: false,
+						},
+						Content: comment,
+					})
+					if err != nil {
+						ReportError(c, err, "error creating comment", 500)
+						return
+					}
+				}
+			} else {
+				ReportError(c, errors.New("invalid prerequisites"), "error", http.StatusBadRequest)
+				return
+			}
+		} else { // if it exists
+			err = queries.AddComment(ctx, db.AddCommentParams{
+				UserID:      int32(extract[UserIdClaimKey].(float64)),
+				BookGroupID: peekChapterRow.BookGroupID,
+				BookChapterID: sql.NullInt32{
+					Int32: bookChapterId,
+					Valid: true,
+				},
+				Content: comment,
+			})
+			if err != nil {
+				ReportError(c, err, "error inserting comment", 500)
+				return
+			}
+		}
+
+	case len(bookGroupIdString) != 0:
+		bookGroupId64, err := strconv.ParseInt(bookGroupIdString, 10, 32)
+		if err != nil {
+			ReportError(c, err, "error parsing book group id", 500)
+			return
+		}
+		bookId := int32(bookGroupId64)
+
+		peekBookRow, err := queries.BookGroupById(ctx, bookId)
+		if peekBookRow.ID == 0 {
+			ReportError(c, errors.New("invalid prerequisites"), "error", http.StatusBadRequest)
+			return
 		} else {
-			chapterIdValue = int32(bookChapterId64)
-			chapterId = &chapterIdValue
+			err = queries.AddComment(ctx, db.AddCommentParams{
+				UserID:      int32(extract[UserIdClaimKey].(float64)),
+				BookGroupID: bookId,
+				BookChapterID: sql.NullInt32{
+					Valid: false,
+				},
+				Content: comment,
+			})
+			if err != nil {
+				ReportError(c, err, "error creating comment", 500)
+				return
+			}
 		}
 	}
 
-	//inserting comment
-	extract := jwt.ExtractClaims(c)
-
-	err = InsertComment(CommentParams{
-		UserId:    int32(extract[UserIdClaimKey].(float64)),
-		BookId:    &bookId,
-		ChapterId: chapterId,
-		Content:   comment,
-	})
-	if err != nil {
-		ReportError(c, err, "error inserting comment", 500)
-		return
-	}
 	c.JSON(200, gin.H{
 		"message": "insert comment successful",
 	})
@@ -218,6 +281,7 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(chapterComments) > 0 {
 			for _, comment := range chapterComments {
 				responseObj.Comments = append(responseObj.Comments, Comment{
+					Id:            comment.ID,
 					Comment:       comment.Content,
 					UserName:      comment.UserName.String,
 					UserId:        comment.Userid,
@@ -264,6 +328,7 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(bookComments) > 0 {
 			for _, comment := range bookComments {
 				responseObj.Comments = append(responseObj.Comments, Comment{
+					Id:            comment.ID,
 					Comment:       comment.Content,
 					UserName:      comment.UserName.String,
 					UserId:        comment.Userid,

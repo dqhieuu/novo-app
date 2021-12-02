@@ -67,7 +67,8 @@ func (q *Queries) DeleteComment(ctx context.Context, id int32) error {
 }
 
 const getBookChapterComments = `-- name: GetBookChapterComments :many
-SELECT book_comments.content,
+SELECT book_comments.id,
+       book_comments.content,
        book_comments.posted_time,
        u.id as userId,
        u.user_name,
@@ -89,6 +90,7 @@ type GetBookChapterCommentsParams struct {
 }
 
 type GetBookChapterCommentsRow struct {
+	ID            int32           `json:"id"`
 	Content       string          `json:"content"`
 	PostedTime    time.Time       `json:"postedTime"`
 	Userid        int32           `json:"userid"`
@@ -108,6 +110,7 @@ func (q *Queries) GetBookChapterComments(ctx context.Context, arg GetBookChapter
 	for rows.Next() {
 		var i GetBookChapterCommentsRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.Content,
 			&i.PostedTime,
 			&i.Userid,
@@ -127,7 +130,8 @@ func (q *Queries) GetBookChapterComments(ctx context.Context, arg GetBookChapter
 }
 
 const getBookGroupAndChapterComments = `-- name: GetBookGroupAndChapterComments :many
-SELECT book_comments.content,
+SELECT book_comments.id,
+       book_comments.content,
        book_comments.posted_time,
        u.id as userId,
        u.user_name,
@@ -151,6 +155,7 @@ type GetBookGroupAndChapterCommentsParams struct {
 }
 
 type GetBookGroupAndChapterCommentsRow struct {
+	ID            int32           `json:"id"`
 	Content       string          `json:"content"`
 	PostedTime    time.Time       `json:"postedTime"`
 	Userid        int32           `json:"userid"`
@@ -170,6 +175,7 @@ func (q *Queries) GetBookGroupAndChapterComments(ctx context.Context, arg GetBoo
 	for rows.Next() {
 		var i GetBookGroupAndChapterCommentsRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.Content,
 			&i.PostedTime,
 			&i.Userid,
@@ -189,7 +195,8 @@ func (q *Queries) GetBookGroupAndChapterComments(ctx context.Context, arg GetBoo
 }
 
 const getBookGroupComments = `-- name: GetBookGroupComments :many
-SELECT book_comments.content,
+SELECT book_comments.id,
+       book_comments.content,
        book_comments.posted_time,
        u.id as userId,
        u.user_name,
@@ -211,6 +218,7 @@ type GetBookGroupCommentsParams struct {
 }
 
 type GetBookGroupCommentsRow struct {
+	ID            int32           `json:"id"`
 	Content       string          `json:"content"`
 	PostedTime    time.Time       `json:"postedTime"`
 	Userid        int32           `json:"userid"`
@@ -230,6 +238,7 @@ func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupComm
 	for rows.Next() {
 		var i GetBookGroupCommentsRow
 		if err := rows.Scan(
+			&i.ID,
 			&i.Content,
 			&i.PostedTime,
 			&i.Userid,

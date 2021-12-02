@@ -194,11 +194,15 @@ func GetBookGroupContentHandler(c *gin.Context) {
 	var responseObject BookGroup
 	bookGroup, err := BookGroupById(int32(bookGroupId64))
 
-	switch {
-	case err == sql.ErrNoRows || len(bookGroup.Title) == 0 || bookGroup.ID == 0:
+	if err != nil {
+		ReportError(c, err, "error getting book group", 500)
+		return
+	}
+
+	if bookGroup.ID == 0 {
 		ReportError(c, err, "book group does not exist", http.StatusBadRequest)
 		return
-	case err == nil:
+	} else {
 		//get name and description
 		responseObject.Name = bookGroup.Title
 		responseObject.Description = bookGroup.Description.String
@@ -225,7 +229,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 			ReportError(c, err, "error getting dislikes", 500)
 			return
 		}
-		responseObject.DislikeCount = totalDislikes.(int64)
+		responseObject.DislikeCount = - totalDislikes.(int64)
 
 		//get authors
 		authors, err := queries.GetBookGroupAuthors(ctx, bookGroup.ID)
@@ -312,9 +316,6 @@ func GetBookGroupContentHandler(c *gin.Context) {
 			}
 			responseObject.PrimaryCoverArt = primaryCoverArt.Path
 		}
-	default:
-		ReportError(c, err, "error getting book group", 500)
-		return
 	}
 
 	c.JSON(200, responseObject)
