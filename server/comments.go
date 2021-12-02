@@ -20,12 +20,12 @@ type CommentParams struct {
 }
 
 type Comment struct {
-	Comment string `json:"comment" binding:"required"`
-	UserName string `json:"userName" binding:"required"`
-	UserId int32 `json:"userId" binding:"required"`
-	UserAvatar string `json:"userAvatar" binding:"required"`
-	TimePosted int64 `json:"timePosted" binding:"required"`
-	ChapterId int32 `json:"chapterId"`
+	Comment       string  `json:"comment" binding:"required"`
+	UserName      string  `json:"userName" binding:"required"`
+	UserId        int32   `json:"userId" binding:"required"`
+	UserAvatar    string  `json:"userAvatar" binding:"required"`
+	TimePosted    int64   `json:"timePosted" binding:"required"`
+	ChapterId     int32   `json:"chapterId"`
 	ChapterNumber float64 `json:"chapterNumber"`
 }
 
@@ -48,8 +48,8 @@ func InsertComment(params CommentParams) error {
 	}
 
 	err := db.New(db.Pool()).AddComment(context.Background(), db.AddCommentParams{
-		UserID: params.UserId,
-		BookGroupID: *params.BookId,
+		UserID:        params.UserId,
+		BookGroupID:   *params.BookId,
 		BookChapterID: chapterId,
 		Content:       params.Content,
 	})
@@ -99,8 +99,8 @@ func CreateCommentHandler(c *gin.Context) {
 		return
 	}
 	comment = reg.ReplaceAllString(comment, "\n\n")
-	if len(comment) < 10 || len(comment) > 500 {
-		ReportError(c, errors.New("invalid comment length"), "error", http.StatusBadRequest)
+	if len(comment) < 10 || len(comment) > 500 || HasControlCharacters(comment) || CheckEmptyString(comment) {
+		ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
 		return
 	}
 
@@ -211,34 +211,24 @@ func GetCommentsHandler(c *gin.Context) {
 			},
 			Offset: 20 * (page - 1),
 		})
-		switch {
-		case len(chapterComments) == 0:
-			responseObj.Comments = make([]Comment, 0)
-		case len(chapterComments) > 0:
-			for _, comment := range chapterComments {
-				userPosted, err := queries.GetCommenter(ctx, comment.ID)
-				if err != nil {
-					ReportError(c, err, "error getting commenter", 500)
-					return
-				}
-				chapter, err := queries.GetCommentChapterInfo(ctx, comment.ID)
-				if err != nil {
-					ReportError(c, err, "error getting chapter", 500)
-					return
-				}
-				responseObj.Comments = append(responseObj.Comments, Comment{
-					Comment:       comment.Content,
-					UserName:      userPosted.UserName.String,
-					UserId:        userPosted.ID,
-					UserAvatar:    userPosted.Path.String,
-					TimePosted:    comment.PostedTime.UnixMicro(),
-					ChapterId:     chapterId,
-					ChapterNumber: chapter.ChapterNumber,
-				})
-			}
-		default:
+		if err != nil {
 			ReportError(c, err, "error getting comment", 500)
 			return
+		}
+		if len(chapterComments) > 0 {
+			for _, comment := range chapterComments {
+				responseObj.Comments = append(responseObj.Comments, Comment{
+					Comment:       comment.Content,
+					UserName:      comment.UserName.String,
+					UserId:        comment.Userid,
+					UserAvatar:    comment.Avatarpath.String,
+					TimePosted:    comment.PostedTime.UnixMicro(),
+					ChapterId:     chapterId,
+					ChapterNumber: comment.ChapterNumber.Float64,
+				})
+			}
+		} else {
+			responseObj.Comments = make([]Comment, 0)
 		}
 
 	case len(bookGroupIdString) != 0:
@@ -265,42 +255,32 @@ func GetCommentsHandler(c *gin.Context) {
 		//get comments
 		bookComments, err := queries.GetBookGroupComments(ctx, db.GetBookGroupCommentsParams{
 			BookGroupID: bookId,
-			Offset:        20 * (page - 1),
+			Offset:      20 * (page - 1),
 		})
-		switch {
-		case len(bookComments) == 0:
-			responseObj.Comments = make([]Comment, 0)
-		case len(bookComments) > 0 && err == nil:
-			for _, comment := range bookComments {
-				userPosted, err := queries.GetCommenter(ctx, comment.ID)
-				if err != nil {
-					ReportError(c, err, "error getting commenter", 500)
-					return
-				}
-				chapter, err := queries.GetCommentChapterInfo(ctx, comment.ID)
-				if chapter.ID == 0 || err == nil {
-					responseObj.Comments = append(responseObj.Comments, Comment{
-						Comment:       comment.Content,
-						UserName:      userPosted.UserName.String,
-						UserId:        userPosted.ID,
-						UserAvatar:    userPosted.Path.String,
-						TimePosted:    comment.PostedTime.UnixMicro(),
-						ChapterId:     chapter.ID,
-						ChapterNumber: chapter.ChapterNumber,
-					})
-				} else if err != nil {
-					ReportError(c, err, "error getting chapter", 500)
-					return
-				}
-			}
-		default:
+		if err != nil {
 			ReportError(c, err, "error getting comment", 500)
 			return
+		}
+		if len(bookComments) > 0 {
+			for _, comment := range bookComments {
+				responseObj.Comments = append(responseObj.Comments, Comment{
+					Comment:       comment.Content,
+					UserName:      comment.UserName.String,
+					UserId:        comment.Userid,
+					UserAvatar:    comment.Avatarpath.String,
+					TimePosted:    comment.PostedTime.UnixMicro(),
+					ChapterId:     comment.Chapterid.Int32,
+					ChapterNumber: comment.ChapterNumber.Float64,
+				})
+			}
+		} else {
+			responseObj.Comments = make([]Comment, 0)
 		}
 	}
 	c.JSON(200, responseObj)
 }
 
+<<<<<<< Updated upstream
 func CountCommentInBookGroup(bookGroupId int32) (int32, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -312,4 +292,86 @@ func CountCommentInBookGroup(bookGroupId int32) (int32, error) {
 		return 0, err
 	}
 	return int32(cnt), nil
+=======
+func EditCommentHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	commentIdString := c.Param("commentId")
+	commentId64, err := strconv.ParseInt(commentIdString, 10, 32)
+	if err != nil {
+		ReportError(c, err, "error parsing comment id", 500)
+		return
+	}
+
+	check, err := queries.CheckIfCommentExist(ctx, int32(commentId64))
+	if err != nil {
+		ReportError(c, err, "internal error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("comment does not exist"), "error", http.StatusBadRequest)
+		return
+	}
+
+	var content string
+	err = c.ShouldBindJSON(content)
+	if err != nil {
+		ReportError(c, err, "error parsing json", http.StatusBadRequest)
+		return
+	}
+
+	reg := regexp.MustCompile(`(\r\n|\n){3,}`)
+	content = reg.ReplaceAllString(content, "\n\n")
+	if len(content) < 10 || len(content) > 500 || HasControlCharacters(content) || CheckEmptyString(content) {
+		ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
+		return
+	}
+
+	err = queries.UpdateComment(ctx, db.UpdateCommentParams{
+		ID:      int32(commentId64),
+		Content: content,
+	})
+
+	if err != nil {
+		ReportError(c, err, "error updating comment", 500)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "success",
+	})
+}
+
+func DeleteCommentHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	commentIdString := c.Param("commentId")
+	commentId64, err := strconv.ParseInt(commentIdString, 10, 32)
+	if err != nil {
+		ReportError(c, err, "error parsing comment id", 500)
+		return
+	}
+
+	check, err := queries.CheckIfCommentExist(ctx, int32(commentId64))
+	if err != nil {
+		ReportError(c, err, "internal error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("comment does not exist"), "error", http.StatusBadRequest)
+		return
+	}
+
+	err = queries.DeleteComment(ctx, int32(commentId64))
+	if err != nil {
+		ReportError(c, err, "error deleting comment", 500)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "success",
+	})
+>>>>>>> Stashed changes
 }
