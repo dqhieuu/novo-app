@@ -275,13 +275,8 @@ func GetBookGroupContentHandler(c *gin.Context) {
 					Id:            chapter.Chapterid,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
 					UserPosted: Author{
-<<<<<<< Updated upstream
-						Id:   userPosted.ID,
-						Name: userPosted.UserName.String,
-=======
 						Id:   chapter.Userid,
 						Name: chapter.UserName.String,
->>>>>>> Stashed changes
 					},
 				})
 			}
