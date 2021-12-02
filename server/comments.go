@@ -280,19 +280,16 @@ func GetCommentsHandler(c *gin.Context) {
 	c.JSON(200, responseObj)
 }
 
-<<<<<<< Updated upstream
 func CountCommentInBookGroup(bookGroupId int32) (int32, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	cnt, err := queries.CountCommentInBookGroup(ctx, sql.NullInt32{
-		Int32: bookGroupId,
-		Valid: bookGroupId > 0,
-	})
+	cnt, err := queries.CountCommentInBookGroup(ctx, bookGroupId)
 	if err != nil {
 		return 0, err
 	}
 	return int32(cnt), nil
-=======
+}
+
 func EditCommentHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -373,5 +370,4 @@ func DeleteCommentHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "success",
 	})
->>>>>>> Stashed changes
 }
