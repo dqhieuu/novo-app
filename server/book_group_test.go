@@ -84,6 +84,77 @@ func TestCreateBookGroup(t *testing.T) {
 }
 
 func TestUpdateBookGroup(t *testing.T) {
+	//db.Init()
+	//defer db.Close()
+	//createData()
+	//defer removeData()
+	//
+	//ctx := context.Background()
+	//queries := db.New(db.Pool())
+	//
+	//intRand := r.Intn(len(bookGroups))
+	//bookGroup1 := bookGroups[intRand]
+	//
+	//newTitle := "titleUpdate"
+	//newDesc := "descUpdate"
+	//newOwnerId := users[r.Int31n(cntUser)].ID
+	//
+	//lenAuthors := r.Intn(len(bookAuthors))
+	//var authorIds []int32
+	//for i := 0; i < lenAuthors && len(authorIds) <= limitGenres; i++ {
+	//	if r.Intn(1) == 1 {
+	//		authorIds = append(authorIds, bookAuthors[i].ID)
+	//	}
+	//}
+	//
+	//lenGenres := r.Intn(len(genres))
+	//var genreIds []int32
+	//for i := 0; i < lenGenres && len(genreIds) <= limitGenres; i++ {
+	//	if r.Intn(1) == 1 {
+	//		genreIds = append(genreIds, genres[i].ID)
+	//	}
+	//}
+	//
+	//fmt.Println("new data: ")
+	//fmt.Println("id", bookGroup1.ID)
+	//fmt.Println("title ", newTitle)
+	//fmt.Println("desc", newDesc)
+	//fmt.Println("new ownerId", newOwnerId)
+	//fmt.Println("genreIds", genreIds)
+	//fmt.Println("authorIds", authorIds)
+	//
+	//err := UpdateBookGroup(bookGroup1.ID, newTitle, newDesc, newOwnerId, genreIds, authorIds)
+	//bookGroup2, err := queries.BookGroupById(ctx, bookGroup1.ID)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//
+	//fmt.Println("old data: ")
+	//fmt.Println("id", bookGroup2.ID)
+	//fmt.Println("title ", bookGroup2.Title)
+	//fmt.Println("desc", bookGroup2.Description)
+	//fmt.Println("new ownerId", bookGroup2.OwnerID)
+	////fmt.Println("genreIds",)
+	////fmt.Println("authorIds",authorIds)
+	//
+	//assert.Equal(t, bookGroup2.Title, newTitle, "Compare title")
+	//var tmp sql.NullString
+	//err = tmp.Scan(newDesc)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//assert.Equal(t, bookGroup2.Description, tmp, "Compare description")
+	//assert.Equal(t, bookGroup2.OwnerID, newOwnerId, "Compare ownerID")
+	//
+	//genreIds2, err := GenresByBookGroup(bookGroup1.ID, 1)
+	//if err != nil {
+	//	t.Fatal(err)
+	//}
+	//assert.Equal(t, len(genreIds), len(genreIds2))
+	//for i := 0; i < len(genreIds); i++ {
+	//	assert.Equal(t, genreIds[i], genreIds2[i])
+	//}
+
 	db.Init()
 	defer db.Close()
 	createData()

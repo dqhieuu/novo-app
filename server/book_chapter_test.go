@@ -1,10 +1,10 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
-	"github.com/jackc/pgtype"
 	"github.com/stretchr/testify/assert"
 	"sort"
 	"testing"
@@ -48,36 +48,15 @@ func TestUpdateBookChapter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var tmp pgtype.Numeric
-	_ = tmp.Scan(chapterNumber)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, bookChapter2.ChapterNumber, tmp)
+
+	assert.Equal(t, bookChapter2.ChapterNumber, chapterNumber)
 	assert.Equal(t, bookChapter2.Name.String, description)
 	assert.Equal(t, bookChapter2.TextContext.String, textContext)
 	assert.Equal(t, bookChapter2.Type, chapterType)
 	assert.Equal(t, bookChapter2.BookGroupID, bookGroupID)
 	assert.Equal(t, bookChapter2.OwnerID, ownerID)
 }
-func TestDeleteBookChapter(t *testing.T) {
-	db.Init()
-	defer db.Close()
-	createData()
-	defer removeData()
 
-	intRandom := r.Intn(len(bookChapters))
-	bookChapter1 := bookChapters[intRandom]
-	err := DeleteBookChapterById(bookChapter1.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bookChapter2, err := BookChapterById(bookChapter1.ID)
-	if bookChapter2 != nil {
-		stringErr := fmt.Sprintf("Book chapters have not been deleted")
-		t.Fatal(errors.New(stringErr))
-	}
-}
 func TestCreateBookChapter(t *testing.T) {
 	db.Init()
 	defer db.Close()
@@ -99,18 +78,16 @@ func TestCreateBookChapter(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	var tmp pgtype.Numeric
-	_ = tmp.Scan(chapterNumber)
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, bookChapter2.ChapterNumber, tmp)
+
+	assert.Equal(t, bookChapter2.ChapterNumber, chapterNumber)
 	assert.Equal(t, bookChapter2.Name.String, description)
 	assert.Equal(t, bookChapter2.TextContext.String, textContext)
 	assert.Equal(t, bookChapter2.Type, chapterType)
 	assert.Equal(t, bookChapter2.BookGroupID, bookGroupID)
 	assert.Equal(t, bookChapter2.OwnerID, ownerID)
-	err = DeleteBookChapterById(bookChapter2.ID)
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	err = queries.DeleteBookChapterById(ctx, bookChapter2.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
