@@ -96,6 +96,24 @@ func (q *Queries) DeleteBookChapterById(ctx context.Context, id int32) error {
 	return err
 }
 
+const getBookChapterOwner = `-- name: GetBookChapterOwner :one
+SELECT users.id, users.user_name
+FROM users JOIN book_chapters bc on users.id = bc.owner_id
+WHERE bc.id = $1
+`
+
+type GetBookChapterOwnerRow struct {
+	ID       int32          `json:"id"`
+	UserName sql.NullString `json:"userName"`
+}
+
+func (q *Queries) GetBookChapterOwner(ctx context.Context, id int32) (GetBookChapterOwnerRow, error) {
+	row := q.db.QueryRow(ctx, getBookChapterOwner, id)
+	var i GetBookChapterOwnerRow
+	err := row.Scan(&i.ID, &i.UserName)
+	return i, err
+}
+
 const getBookGroupChapters = `-- name: GetBookGroupChapters :many
 SELECT
        book_chapters.chapter_number,
@@ -105,7 +123,7 @@ SELECT
        u.id as userId,
        u.user_name
 FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
-                    JOIN users u on book_chapters.owner_id = u.id
+                   JOIN users u on book_chapters.owner_id = u.id
 WHERE bg.id = $1
 `
 
