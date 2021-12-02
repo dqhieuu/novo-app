@@ -9,7 +9,6 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"unicode"
@@ -351,42 +350,19 @@ func GetBookByGenreHandler(c *gin.Context) {
 		page = 1
 	}
 
-	bookIds, err := BookGroupsByGenre(genreId, page)
-	books := []BookByGenreHandler{} //non-nil-slice
-	var book *BookByGenreHandler
-	for i := 0; i < len(bookIds); i++ {
-		book, err = GetInfoBook(bookIds[i])
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		books = append(books, *book)
+	books, err := BookGroupsByGenre(genreId, page)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error get books": err.Error()})
+		return
 	}
-
-	sort.Slice(books, func(i, j int) bool {
-		if books[i].LatestChapter == nil {
-			return false
-		}
-		if books[j].LatestChapter == nil {
-			return true
-		}
-		tmpI := books[i].LatestChapter.(*db.LastChapterInBookGroupRow)
-		tmpJ := books[j].LatestChapter.(*db.LastChapterInBookGroupRow)
-		fmt.Println(tmpI, tmpJ)
-		return tmpI.DateCreated.After(tmpJ.DateCreated)
-	})
-	for i := 0; i < len(books); i++ {
-		if books[i].LatestChapter == nil {
-			continue
-		}
-		tmp := books[i].LatestChapter.(*db.LastChapterInBookGroupRow)
-		books[i].LatestChapter = tmp.ChapterNumber // loại bỏ trường date_create
+	if *books == nil {
+		books = &[]db.BookGroupsByGenreRow{}
 	}
 
 	var latestPage interface{}
 	tmp, err := NumberBookGroupInGenre(genreId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error get latestPage": err.Error()})
 		return
 	}
 	if tmp > 0 {
@@ -397,43 +373,8 @@ func GetBookByGenreHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"latestPage": latestPage,
-		"books":      books,
+		"books":      *books,
 	})
-}
-
-func GetInfoBook(id int32) (*BookByGenreHandler, error) {
-	var book BookByGenreHandler
-	tmp, err := BookGroupById(id)
-	if err != nil {
-		return nil, err
-	}
-	book.Id = id
-	book.Title = tmp.Title
-
-	book.Comments, err = CountCommentInBookGroup(id)
-	if err != nil {
-		return nil, errors.New("error comment:" + err.Error())
-	}
-
-	book.Likes, err = CountLikesInBookGroup(id)
-	if err != nil {
-		return nil, errors.New("error like:" + err.Error())
-	}
-
-	book.Views, err = GetViewInBookGroup(id)
-	if err != nil {
-		return nil, errors.New("error view:" + err.Error())
-	}
-
-	book.LatestChapter, err = LatestCreatedInBookGroup(id)
-	if err != nil {
-		if err.Error() != "no rows in result set" {
-			return nil, errors.New("error latestChapter:" + err.Error())
-		} else {
-			book.LatestChapter = nil
-		}
-	}
-	return &book, nil
 }
 
 type CreateBookGroupParams struct {
