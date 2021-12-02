@@ -8,13 +8,15 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strings"
+	"unicode"
 )
 
 const limitBookAuthors = 50
 
 type Author struct {
 	Name string `json:"name" binding:"required"`
-	Id int32 `json:"id" binding:"required"`
+	Id   int32  `json:"id" binding:"required"`
 }
 
 func BookAuthorById(id int32) (*db.BookAuthor, error) {
@@ -123,16 +125,6 @@ func DeleteBookAuthor(id int32) error {
 	return nil
 }
 
-func CheckAuthorExistByName(name string) (bool, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	result, err := queries.CheckAuthorExistByName(ctx, name)
-	if err != nil {
-		return false, err
-	}
-	return result, nil
-}
-
 func CheckAuthorExistById(id int32) (bool, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -155,21 +147,50 @@ func CreateAuthorHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	a.Name = strings.TrimSpace(a.Name)
+	if strings.Contains(a.Name, "  ") == true {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Name cannot contain two consecutive spaces",
+		})
+		return
+	}
 	if len(a.Name) > 30 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "name must be less than or equal to 30 characters",
 		})
 		return
 	}
+	for i := 0; i < len(a.Name); i++ {
+		if unicode.IsControl(rune(a.Name[i])) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Name cannot contain control characters or newline characters",
+			})
+			return
+		}
+	}
 
-	if len(a.Description) > 50 {
+	if len(a.Description) > 500 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "description must be less than or equal to 50 characters",
 		})
 		return
 	}
+	for i := 0; i < len(a.Description); i++ {
+		ch := a.Description[i]
+		if ch == '\r' || ch == '\n' {
+			continue
+		}
+		if unicode.IsControl(rune(ch)) {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "Description cannot contain control characters",
+			})
+			return
+		}
+	}
 
-	exist, err := CheckAuthorExistByName(a.Name)
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -232,13 +253,16 @@ func UpdateAuthorHandler(c *gin.Context) {
 		})
 		return
 	}
-	if len(a.Description) > 50 {
+	if len(a.Description) > 500 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "description must be less than or equal to 50 characters",
 		})
 		return
 	}
-	exist, err := CheckAuthorExistByName(a.Name)
+
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

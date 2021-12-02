@@ -52,43 +52,6 @@ func (q *Queries) GenreById(ctx context.Context, id int32) (Genre, error) {
 	return i, err
 }
 
-const genres = `-- name: Genres :many
-SELECT id, name, description, image_id
-FROM genres
-ORDER BY id ASC
-OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
-`
-
-type GenresParams struct {
-	Offset int32 `json:"offset"`
-	Limit  int32 `json:"limit"`
-}
-
-func (q *Queries) Genres(ctx context.Context, arg GenresParams) ([]Genre, error) {
-	rows, err := q.db.Query(ctx, genres, arg.Offset, arg.Limit)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Genre
-	for rows.Next() {
-		var i Genre
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.ImageID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getAllGenre = `-- name: GetAllGenre :many
 SELECT name, id
 FROM genres

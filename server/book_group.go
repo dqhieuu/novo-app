@@ -72,6 +72,7 @@ func UpdateBookGroup(id int32, title string, description string, ownerId int32, 
 			String: description,
 			Valid:  description != "",
 		},
+		OwnerID: ownerId,
 	})
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book group failed: %s", err)
