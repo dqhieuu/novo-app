@@ -73,7 +73,8 @@ func Run() {
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
-		auth.GET("/refresh_token", authMiddleware.RefreshHandler)
+		auth.POST("/refresh-token", authMiddleware.RefreshHandler)
+		auth.POST("/logout", authMiddleware.LogoutHandler)
 		auth.GET("/role", GetRoleHandler)
 		auth.POST("/author", CreateAuthorHandler)
 		auth.PATCH("/author/:authorId", UpdateAuthorHandler)
