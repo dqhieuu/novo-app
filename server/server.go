@@ -1,11 +1,8 @@
 package server
 
 import (
-	"context"
-	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"log"
 )
 
 func Run() {
@@ -39,23 +36,29 @@ func Run() {
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
 
-	r.GET("/test", func(c *gin.Context){
-		ctx := context.Background()
-		queries := db.New(db.Pool())
-
-		commenter, err := queries.GetCommenter(ctx, 1)
-		if err != nil {
-			c.JSON(500, gin.H{
-				"error": err,
-			})
-		}
-		log.Printf("%+v\n", commenter)
-
-		var testObj BookGroup
-		testObj.Authors = make([]Author, 0)
-		testObj.Chapters = make([]Chapter, 0)
-		c.JSON(200, testObj)
-	})
+	//r.GET("/test/:id", func(c *gin.Context){
+	//	ctx := context.Background()
+	//	queries := db.New(db.Pool())
+	//
+	//	idString := c.Param("id")
+	//	id64, err := strconv.ParseInt(idString, 10, 32)
+	//	if err != nil {
+	//		ReportError(c, err, "error parsing id", 500)
+	//		return
+	//	}
+	//
+	//	check, err := queries.CheckIfCommentExist(ctx, int32(id64))
+	//	if err != nil {
+	//		c.JSON(500, gin.H{
+	//			"error": err,
+	//		})
+	//	}
+	//	log.Printf("%+v\n", check)
+	//
+	//	c.JSON(200, gin.H{
+	//		"message": "success",
+	//	})
+	//})
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 

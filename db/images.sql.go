@@ -10,10 +10,10 @@ import (
 
 const checkImageExistById = `-- name: CheckImageExistById :one
 SELECT EXISTS(
-   SELECT 1
-   FROM images
-   WHERE id = $1
-)
+               SELECT 1
+               FROM images
+               WHERE id = $1
+           )
 `
 
 func (q *Queries) CheckImageExistById(ctx context.Context, id int32) (bool, error) {
@@ -23,8 +23,31 @@ func (q *Queries) CheckImageExistById(ctx context.Context, id int32) (bool, erro
 	return exists, err
 }
 
+const checkImageExistsByHash = `-- name: CheckImageExistsByHash :one
+SELECT exists(
+               select 1
+               from images
+               where md5 = $1
+                 and sha1 = $2
+           )
+`
+
+type CheckImageExistsByHashParams struct {
+	Md5  string `json:"md5"`
+	Sha1 string `json:"sha1"`
+}
+
+func (q *Queries) CheckImageExistsByHash(ctx context.Context, arg CheckImageExistsByHashParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkImageExistsByHash, arg.Md5, arg.Sha1)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const clearTempImages = `-- name: ClearTempImages :many
-DELETE FROM temp_images RETURNING image_id
+DELETE
+FROM temp_images
+RETURNING image_id
 `
 
 func (q *Queries) ClearTempImages(ctx context.Context) ([]int32, error) {
@@ -48,7 +71,9 @@ func (q *Queries) ClearTempImages(ctx context.Context) ([]int32, error) {
 }
 
 const deleteImage = `-- name: DeleteImage :exec
-DELETE FROM images WHERE id = $1
+DELETE
+FROM images
+WHERE id = $1
 `
 
 func (q *Queries) DeleteImage(ctx context.Context, id int32) error {
@@ -57,7 +82,9 @@ func (q *Queries) DeleteImage(ctx context.Context, id int32) error {
 }
 
 const deleteTempImage = `-- name: DeleteTempImage :exec
-DELETE FROM temp_images WHERE image_id = $1
+DELETE
+FROM temp_images
+WHERE image_id = $1
 `
 
 func (q *Queries) DeleteTempImage(ctx context.Context, imageID int32) error {
@@ -66,8 +93,11 @@ func (q *Queries) DeleteTempImage(ctx context.Context, imageID int32) error {
 }
 
 const getImageBasedOnHash = `-- name: GetImageBasedOnHash :one
-SELECT id, md5, sha1, path, name, description FROM images WHERE md5 = $1 AND sha1 = $2
-FETCH FIRST ROW ONLY
+SELECT id, md5, sha1, path, name, description
+FROM images
+WHERE md5 = $1
+  AND sha1 = $2
+    FETCH FIRST ROW ONLY
 `
 
 type GetImageBasedOnHashParams struct {
@@ -90,7 +120,9 @@ func (q *Queries) GetImageBasedOnHash(ctx context.Context, arg GetImageBasedOnHa
 }
 
 const getImageBasedOnId = `-- name: GetImageBasedOnId :one
-SELECT id, md5, sha1, path, name, description FROM images where id = $1
+SELECT id, md5, sha1, path, name, description
+FROM images
+where id = $1
 `
 
 func (q *Queries) GetImageBasedOnId(ctx context.Context, id int32) (Image, error) {
@@ -108,7 +140,8 @@ func (q *Queries) GetImageBasedOnId(ctx context.Context, id int32) (Image, error
 }
 
 const insertImage = `-- name: InsertImage :one
-INSERT INTO images(md5, sha1, path, name, description) VALUES ($1, $2, $3, $4, $5)
+INSERT INTO images(md5, sha1, path, name, description)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING id
 `
 

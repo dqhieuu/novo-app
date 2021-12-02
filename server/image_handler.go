@@ -29,6 +29,9 @@ func UploadImageHandler(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		log.Printf("error getting request body: %s\n", err)
+		c.JSON(400, gin.H{
+			"error": "error getting file stream",
+		})
 		return
 	}
 	if checkFileSize(file.Size) {

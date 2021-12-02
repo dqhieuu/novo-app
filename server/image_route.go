@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"github.com/dqhieuu/novo-app/db"
 	"image"
-	"image/color"
 	"image/gif"
 	"image/jpeg"
 	"image/png"
@@ -189,22 +188,6 @@ func checkFileSize(size int64) bool {
 	return false
 }
 
-func GetImageById(imageId int32) (string, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	requestImg, err := queries.GetImageBasedOnId(ctx, imageId)
-	switch {
-	case err == sql.ErrNoRows || requestImg.Md5 == "" || requestImg.Sha1 == "":
-		//c.JSON(404, gin.H{
-		//	"message": "Image not found",
-		//})
-		return "", errors.New("image does not exist")
-	default:
-		//c.File(requestImg.Path)
-		return requestImg.Path, nil
-	}
-}
-
 func GenerateThumbnail(path string, size int, filetype *string) (string, error) {
 	fullPath, dirPath, err := checkFileDir(path, RootFolder)
 	if err != nil {
@@ -316,13 +299,23 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 	}
 
 	//check if the file exist in the database
-	peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+	check, err := queries.CheckImageExistsByHash(ctx, db.CheckImageExistsByHashParams{
 		Md5:  md5Hash,
 		Sha1: sha1Hash,
 	})
-
-	switch {
-	case (len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0) && err == sql.ErrNoRows:
+	if err != nil {
+		return -1, "", errors.New("internal error: " + err.Error())
+	}
+	if check {
+		peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+			Md5:  md5Hash,
+			Sha1: sha1Hash,
+		})
+		if err != nil {
+			return -1, "", errors.New("internal error: " + err.Error())
+		}
+		return peekRow.ID, peekRow.Path, nil
+	} else {
 		//saving file to the server
 		extension := ""
 		switch fileType {
@@ -368,10 +361,6 @@ func SaveImageFromStream(filestream multipart.File, location string, fileNameNoE
 		}
 
 		return imageId, dst, nil
-	case (len(peekRow.Md5) > 0 || len(peekRow.Sha1) > 0) && err == nil:
-		return peekRow.ID, peekRow.Path, nil
-	default:
-		return -1, "", errors.New("error inserting image to database")
 	}
 }
 
@@ -397,13 +386,23 @@ func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, des
 		return -1, errors.New("error generating hash")
 	}
 
-	peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+	check, err := queries.CheckImageExistsByHash(ctx, db.CheckImageExistsByHashParams{
 		Md5:  md5Hash,
 		Sha1: sha1Hash,
 	})
-
-	switch {
-	case (len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0) && err == sql.ErrNoRows:
+	if err != nil {
+		return -1, errors.New("internal error: " + err.Error())
+	}
+	if check {
+		peekRow, err := queries.GetImageBasedOnHash(ctx, db.GetImageBasedOnHashParams{
+			Md5:  md5Hash,
+			Sha1: sha1Hash,
+		})
+		if err != nil {
+			return -1, errors.New("internal error: " + err.Error())
+		}
+		return peekRow.ID, nil
+	} else {
 		imageType := http.DetectContentType(bodyData)
 		extension := ""
 		switch imageType {
@@ -453,58 +452,10 @@ func SaveImageFromUrl(fileUrl string, location string, fileNameNoExt string, des
 		}
 
 		return imageId, nil
-	case (len(peekRow.Md5) > 0 || len(peekRow.Sha1) > 0) && err == nil:
-		return peekRow.ID, nil
-	default:
-		return -1, errors.New("error inserting image to database")
 	}
 }
 
 // Đừng để ý bên dưới này, 2 hàm này chỉ để test
-
-func CreateImage(width int, height int) (*os.File, int64, string, string, error) {
-	upLeft := image.Point{}
-	lowRight := image.Point{X: width, Y: height}
-
-	img := image.NewRGBA(image.Rectangle{Min: upLeft, Max: lowRight})
-
-	// Colors are defined by Red, Green, Blue, Alpha uint8 values.
-	cyan := color.RGBA{R: 100, G: 200, B: 200, A: 0xff}
-
-	// Set color for each pixel.
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
-			switch {
-			case x < width/2 && y < height/2: // upper left quadrant
-				img.Set(x, y, cyan)
-			case x >= width/2 && y >= height/2: // lower right quadrant
-				img.Set(x, y, color.White)
-			default:
-				// Use zero value.
-			}
-		}
-	}
-	dst := "test/" + "test-" + uuid.NewString() + ".png"
-	fullPath, _, err := checkFileDir(dst, RootFolder)
-	if err != nil {
-		return nil, -1, "", "", err
-	}
-
-	fileStream, setupErr := os.Create(fullPath)
-	setupErr = png.Encode(fileStream, img)
-	if setupErr != nil {
-		return nil, -1, "", "", err
-	}
-	_, err = fileStream.Seek(0, 0)
-	if err != nil {
-		return nil, -1, "", "", err
-	}
-	imageStatus, setupErr := fileStream.Stat()
-	if err != nil {
-		return nil, -1, "", "", err
-	}
-	return fileStream, imageStatus.Size(), dst, fullPath, nil
-}
 
 func TryOutsideTest() {
 	_, _, dst, absPath, err := CreateImage(400, 600)

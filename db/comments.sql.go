@@ -6,10 +6,12 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const addComment = `-- name: AddComment :exec
-INSERT INTO book_comments(user_id, book_group_id, book_chapter_id, content) VALUES ($1, $2, $3, $4)
+INSERT INTO book_comments(user_id, book_group_id, book_chapter_id, content)
+VALUES ($1, $2, $3, $4)
 `
 
 type AddCommentParams struct {
@@ -29,6 +31,7 @@ func (q *Queries) AddComment(ctx context.Context, arg AddCommentParams) error {
 	return err
 }
 
+<<<<<<< Updated upstream
 const countCommentInBookGroup = `-- name: CountCommentInBookGroup :one
 SELECT COUNT(id )
 FROM book_comments
@@ -40,10 +43,23 @@ func (q *Queries) CountCommentInBookGroup(ctx context.Context, bookGroupID sql.N
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+=======
+const checkIfCommentExist = `-- name: CheckIfCommentExist :one
+SELECT EXISTS(select 1 from book_comments where id = $1)
+`
+
+func (q *Queries) CheckIfCommentExist(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, checkIfCommentExist, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+>>>>>>> Stashed changes
 }
 
 const deleteComment = `-- name: DeleteComment :exec
-DELETE FROM book_comments WHERE id = $1
+DELETE
+FROM book_comments
+WHERE id = $1
 `
 
 func (q *Queries) DeleteComment(ctx context.Context, id int32) error {
@@ -52,8 +68,17 @@ func (q *Queries) DeleteComment(ctx context.Context, id int32) error {
 }
 
 const getBookChapterComments = `-- name: GetBookChapterComments :many
-SELECT id, content, user_id, book_group_id, book_chapter_id, posted_time
+SELECT book_comments.content,
+       book_comments.posted_time,
+       u.id as userId,
+       u.user_name,
+       i.path as avatarPath,
+       bc.id as chapterId,
+       bc.chapter_number
 FROM book_comments
+         JOIN users u on u.id = book_comments.user_id
+         LEFT JOIN images i on u.avatar_image_id = i.id
+         LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
 WHERE book_chapter_id = $1
 ORDER BY posted_time
 LIMIT 20 OFFSET $2
@@ -64,22 +89,33 @@ type GetBookChapterCommentsParams struct {
 	Offset        int32         `json:"offset"`
 }
 
-func (q *Queries) GetBookChapterComments(ctx context.Context, arg GetBookChapterCommentsParams) ([]BookComment, error) {
+type GetBookChapterCommentsRow struct {
+	Content       string          `json:"content"`
+	PostedTime    time.Time       `json:"postedTime"`
+	Userid        int32           `json:"userid"`
+	UserName      sql.NullString  `json:"userName"`
+	Avatarpath    sql.NullString  `json:"avatarpath"`
+	Chapterid     sql.NullInt32   `json:"chapterid"`
+	ChapterNumber sql.NullFloat64 `json:"chapterNumber"`
+}
+
+func (q *Queries) GetBookChapterComments(ctx context.Context, arg GetBookChapterCommentsParams) ([]GetBookChapterCommentsRow, error) {
 	rows, err := q.db.Query(ctx, getBookChapterComments, arg.BookChapterID, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BookComment
+	var items []GetBookChapterCommentsRow
 	for rows.Next() {
-		var i BookComment
+		var i GetBookChapterCommentsRow
 		if err := rows.Scan(
-			&i.ID,
 			&i.Content,
-			&i.UserID,
-			&i.BookGroupID,
-			&i.BookChapterID,
 			&i.PostedTime,
+			&i.Userid,
+			&i.UserName,
+			&i.Avatarpath,
+			&i.Chapterid,
+			&i.ChapterNumber,
 		); err != nil {
 			return nil, err
 		}
@@ -92,9 +128,19 @@ func (q *Queries) GetBookChapterComments(ctx context.Context, arg GetBookChapter
 }
 
 const getBookGroupAndChapterComments = `-- name: GetBookGroupAndChapterComments :many
-SELECT id, content, user_id, book_group_id, book_chapter_id, posted_time
+SELECT book_comments.content,
+       book_comments.posted_time,
+       u.id as userId,
+       u.user_name,
+       i.path as avatarPath,
+       bc.id as chapterId,
+       bc.chapter_number
 FROM book_comments
-WHERE book_group_id = $1 AND book_chapter_id = $2
+         JOIN users u on u.id = book_comments.user_id
+         LEFT JOIN images i on u.avatar_image_id = i.id
+         LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
+WHERE book_comments.book_group_id = $1
+  AND book_chapter_id = $2
 ORDER BY posted_time
 LIMIT 20 OFFSET $3
 `
@@ -105,22 +151,33 @@ type GetBookGroupAndChapterCommentsParams struct {
 	Offset        int32         `json:"offset"`
 }
 
-func (q *Queries) GetBookGroupAndChapterComments(ctx context.Context, arg GetBookGroupAndChapterCommentsParams) ([]BookComment, error) {
+type GetBookGroupAndChapterCommentsRow struct {
+	Content       string          `json:"content"`
+	PostedTime    time.Time       `json:"postedTime"`
+	Userid        int32           `json:"userid"`
+	UserName      sql.NullString  `json:"userName"`
+	Avatarpath    sql.NullString  `json:"avatarpath"`
+	Chapterid     sql.NullInt32   `json:"chapterid"`
+	ChapterNumber sql.NullFloat64 `json:"chapterNumber"`
+}
+
+func (q *Queries) GetBookGroupAndChapterComments(ctx context.Context, arg GetBookGroupAndChapterCommentsParams) ([]GetBookGroupAndChapterCommentsRow, error) {
 	rows, err := q.db.Query(ctx, getBookGroupAndChapterComments, arg.BookGroupID, arg.BookChapterID, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BookComment
+	var items []GetBookGroupAndChapterCommentsRow
 	for rows.Next() {
-		var i BookComment
+		var i GetBookGroupAndChapterCommentsRow
 		if err := rows.Scan(
-			&i.ID,
 			&i.Content,
-			&i.UserID,
-			&i.BookGroupID,
-			&i.BookChapterID,
 			&i.PostedTime,
+			&i.Userid,
+			&i.UserName,
+			&i.Avatarpath,
+			&i.Chapterid,
+			&i.ChapterNumber,
 		); err != nil {
 			return nil, err
 		}
@@ -133,9 +190,18 @@ func (q *Queries) GetBookGroupAndChapterComments(ctx context.Context, arg GetBoo
 }
 
 const getBookGroupComments = `-- name: GetBookGroupComments :many
-SELECT id, content, user_id, book_group_id, book_chapter_id, posted_time
+SELECT book_comments.content,
+       book_comments.posted_time,
+       u.id as userId,
+       u.user_name,
+       i.path as avatarPath,
+       bc.id as chapterId,
+       bc.chapter_number
 FROM book_comments
-WHERE book_group_id = $1
+         JOIN users u on u.id = book_comments.user_id
+         LEFT JOIN images i on u.avatar_image_id = i.id
+         LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
+WHERE book_comments.book_group_id = $1
 ORDER BY posted_time
 LIMIT 20 OFFSET $2
 `
@@ -145,22 +211,33 @@ type GetBookGroupCommentsParams struct {
 	Offset      int32 `json:"offset"`
 }
 
-func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupCommentsParams) ([]BookComment, error) {
+type GetBookGroupCommentsRow struct {
+	Content       string          `json:"content"`
+	PostedTime    time.Time       `json:"postedTime"`
+	Userid        int32           `json:"userid"`
+	UserName      sql.NullString  `json:"userName"`
+	Avatarpath    sql.NullString  `json:"avatarpath"`
+	Chapterid     sql.NullInt32   `json:"chapterid"`
+	ChapterNumber sql.NullFloat64 `json:"chapterNumber"`
+}
+
+func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupCommentsParams) ([]GetBookGroupCommentsRow, error) {
 	rows, err := q.db.Query(ctx, getBookGroupComments, arg.BookGroupID, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BookComment
+	var items []GetBookGroupCommentsRow
 	for rows.Next() {
-		var i BookComment
+		var i GetBookGroupCommentsRow
 		if err := rows.Scan(
-			&i.ID,
 			&i.Content,
-			&i.UserID,
-			&i.BookGroupID,
-			&i.BookChapterID,
 			&i.PostedTime,
+			&i.Userid,
+			&i.UserName,
+			&i.Avatarpath,
+			&i.Chapterid,
+			&i.ChapterNumber,
 		); err != nil {
 			return nil, err
 		}
@@ -172,46 +249,10 @@ func (q *Queries) GetBookGroupComments(ctx context.Context, arg GetBookGroupComm
 	return items, nil
 }
 
-const getCommentChapterInfo = `-- name: GetCommentChapterInfo :one
-SELECT book_chapters.id, book_chapters.chapter_number
-FROM book_chapters JOIN book_comments bc on book_chapters.id = bc.book_chapter_id
-WHERE bc.id = $1
-`
-
-type GetCommentChapterInfoRow struct {
-	ID            int32   `json:"id"`
-	ChapterNumber float64 `json:"chapterNumber"`
-}
-
-func (q *Queries) GetCommentChapterInfo(ctx context.Context, id int32) (GetCommentChapterInfoRow, error) {
-	row := q.db.QueryRow(ctx, getCommentChapterInfo, id)
-	var i GetCommentChapterInfoRow
-	err := row.Scan(&i.ID, &i.ChapterNumber)
-	return i, err
-}
-
-const getCommenter = `-- name: GetCommenter :one
-SELECT users.id, users.user_name, i.path
-FROM users JOIN book_comments bc on users.id = bc.user_id
-            LEFT JOIN images i on users.avatar_image_id = i.id
-WHERE bc.id = $1
-`
-
-type GetCommenterRow struct {
-	ID       int32          `json:"id"`
-	UserName sql.NullString `json:"userName"`
-	Path     sql.NullString `json:"path"`
-}
-
-func (q *Queries) GetCommenter(ctx context.Context, id int32) (GetCommenterRow, error) {
-	row := q.db.QueryRow(ctx, getCommenter, id)
-	var i GetCommenterRow
-	err := row.Scan(&i.ID, &i.UserName, &i.Path)
-	return i, err
-}
-
 const getTotalBookChapterComments = `-- name: GetTotalBookChapterComments :one
-SELECT count(*) FROM book_comments WHERE book_chapter_id = $1
+SELECT count(*)
+FROM book_comments
+WHERE book_chapter_id = $1
 `
 
 func (q *Queries) GetTotalBookChapterComments(ctx context.Context, bookChapterID sql.NullInt32) (int64, error) {
@@ -222,7 +263,10 @@ func (q *Queries) GetTotalBookChapterComments(ctx context.Context, bookChapterID
 }
 
 const getTotalBookGroupAndChapterComments = `-- name: GetTotalBookGroupAndChapterComments :one
-SELECT count(*) FROM book_comments WHERE book_group_id = $1 AND book_chapter_id = $2
+SELECT count(*)
+FROM book_comments
+WHERE book_group_id = $1
+  AND book_chapter_id = $2
 `
 
 type GetTotalBookGroupAndChapterCommentsParams struct {
@@ -238,7 +282,9 @@ func (q *Queries) GetTotalBookGroupAndChapterComments(ctx context.Context, arg G
 }
 
 const getTotalBookGroupComments = `-- name: GetTotalBookGroupComments :one
-SELECT count(*) FROM book_comments WHERE book_group_id = $1
+SELECT count(*)
+FROM book_comments
+WHERE book_group_id = $1
 `
 
 func (q *Queries) GetTotalBookGroupComments(ctx context.Context, bookGroupID int32) (int64, error) {
@@ -249,7 +295,9 @@ func (q *Queries) GetTotalBookGroupComments(ctx context.Context, bookGroupID int
 }
 
 const updateComment = `-- name: UpdateComment :exec
-UPDATE book_comments SET content = $2 WHERE id = $1
+UPDATE book_comments
+SET content = $2
+WHERE id = $1
 `
 
 type UpdateCommentParams struct {

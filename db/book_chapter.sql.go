@@ -96,45 +96,26 @@ func (q *Queries) DeleteBookChapterById(ctx context.Context, id int32) error {
 	return err
 }
 
-const getBookChapterOwner = `-- name: GetBookChapterOwner :one
-SELECT users.id, users.user_name
-FROM users JOIN book_chapters bc on users.id = bc.owner_id
-WHERE bc.id = $1
-`
-
-type GetBookChapterOwnerRow struct {
-	ID       int32          `json:"id"`
-	UserName sql.NullString `json:"userName"`
-}
-
-func (q *Queries) GetBookChapterOwner(ctx context.Context, id int32) (GetBookChapterOwnerRow, error) {
-	row := q.db.QueryRow(ctx, getBookChapterOwner, id)
-	var i GetBookChapterOwnerRow
-	err := row.Scan(&i.ID, &i.UserName)
-	return i, err
-}
-
 const getBookGroupChapters = `-- name: GetBookGroupChapters :many
-SELECT book_chapters.id, book_chapters.date_created, chapter_number, name, text_context, type, book_group_id, book_chapters.owner_id, bg.id, title, description, bg.date_created, bg.owner_id, primary_cover_art_id
+SELECT
+       book_chapters.chapter_number,
+       book_chapters.name,
+       book_chapters.id as chapterId,
+       book_chapters.date_created,
+       u.id as userId,
+       u.user_name
 FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
+                    JOIN users u on book_chapters.owner_id = u.id
 WHERE bg.id = $1
 `
 
 type GetBookGroupChaptersRow struct {
-	ID                int32          `json:"id"`
-	DateCreated       time.Time      `json:"dateCreated"`
-	ChapterNumber     float64        `json:"chapterNumber"`
-	Name              sql.NullString `json:"name"`
-	TextContext       sql.NullString `json:"textContext"`
-	Type              string         `json:"type"`
-	BookGroupID       int32          `json:"bookGroupID"`
-	OwnerID           int32          `json:"ownerID"`
-	ID_2              int32          `json:"id2"`
-	Title             string         `json:"title"`
-	Description       sql.NullString `json:"description"`
-	DateCreated_2     sql.NullTime   `json:"dateCreated2"`
-	OwnerID_2         int32          `json:"ownerID2"`
-	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+	ChapterNumber float64        `json:"chapterNumber"`
+	Name          sql.NullString `json:"name"`
+	Chapterid     int32          `json:"chapterid"`
+	DateCreated   time.Time      `json:"dateCreated"`
+	Userid        int32          `json:"userid"`
+	UserName      sql.NullString `json:"userName"`
 }
 
 func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBookGroupChaptersRow, error) {
@@ -147,20 +128,12 @@ func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBook
 	for rows.Next() {
 		var i GetBookGroupChaptersRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.DateCreated,
 			&i.ChapterNumber,
 			&i.Name,
-			&i.TextContext,
-			&i.Type,
-			&i.BookGroupID,
-			&i.OwnerID,
-			&i.ID_2,
-			&i.Title,
-			&i.Description,
-			&i.DateCreated_2,
-			&i.OwnerID_2,
-			&i.PrimaryCoverArtID,
+			&i.Chapterid,
+			&i.DateCreated,
+			&i.Userid,
+			&i.UserName,
 		); err != nil {
 			return nil, err
 		}

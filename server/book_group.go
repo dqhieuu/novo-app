@@ -269,19 +269,19 @@ func GetBookGroupContentHandler(c *gin.Context) {
 		}
 		if len(chapters) > 0 {
 			for _, chapter := range chapters {
-				userPosted, err := queries.GetBookChapterOwner(ctx, chapter.ID)
-				if err != nil {
-					ReportError(c, err, "error getting book chapter owner", 500)
-					return
-				}
 				responseObject.Chapters = append(responseObject.Chapters, Chapter{
 					ChapterNumber: chapter.ChapterNumber,
 					Name:          chapter.Name.String,
-					Id:            chapter.ID,
+					Id:            chapter.Chapterid,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
 					UserPosted: Author{
+<<<<<<< Updated upstream
 						Id:   userPosted.ID,
 						Name: userPosted.UserName.String,
+=======
+						Id:   chapter.Userid,
+						Name: chapter.UserName.String,
+>>>>>>> Stashed changes
 					},
 				})
 			}
@@ -304,14 +304,18 @@ func GetBookGroupContentHandler(c *gin.Context) {
 		}
 
 		//get primary cover art
-		primaryCoverArt, err := queries.GetImageBasedOnId(ctx, bookGroup.PrimaryCoverArtID.Int32)
-		switch {
-		case err == sql.ErrNoRows || len(primaryCoverArt.Md5) == 0:
-		case len(primaryCoverArt.Md5) > 0:
-			responseObject.PrimaryCoverArt = primaryCoverArt.Path
-		default:
-			ReportError(c, err, "error getting primary art", 500)
+		check, err := queries.CheckImageExistById(ctx, bookGroup.PrimaryCoverArtID.Int32)
+		if err != nil {
+			ReportError(c, err, "internal error", 500)
 			return
+		}
+		if check {
+			primaryCoverArt, err := queries.GetImageBasedOnId(ctx, bookGroup.PrimaryCoverArtID.Int32)
+			if err != nil {
+				ReportError(c, err, "error getting primary art", 500)
+				return
+			}
+			responseObject.PrimaryCoverArt = primaryCoverArt.Path
 		}
 	default:
 		ReportError(c, err, "error getting book group", 500)

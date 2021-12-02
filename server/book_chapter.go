@@ -246,11 +246,12 @@ func CreateImagesChapterHandler(c *gin.Context) {
 
 	//adding images
 	for index, imageId := range newImageChapter.Images {
-		peekRow, err := queries.GetImageBasedOnId(ctx, imageId)
-		switch {
-		case len(peekRow.Md5) == 0 || len(peekRow.Sha1) == 0:
-			ReportError(c, errors.New("image does not exist"), "error", http.StatusBadRequest)
-		case err == nil:
+		check, err := queries.CheckImageExistById(ctx, imageId)
+		if err != nil {
+			ReportError(c, err, "internal error", 500)
+			return
+		}
+		if check {
 			err = queries.InsertBookChapterImage(ctx, db.InsertBookChapterImageParams{
 				BookChapterID: newChapter.ID,
 				ImageID:       imageId,
@@ -260,9 +261,8 @@ func CreateImagesChapterHandler(c *gin.Context) {
 				ReportError(c, err, "error adding image chapter", 500)
 				return
 			}
-		default:
-			ReportError(c, err, "error getting image", 500)
-			return
+		} else {
+			ReportError(c, errors.New("image does not exist"), "error", http.StatusBadRequest)
 		}
 	}
 
