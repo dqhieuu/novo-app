@@ -10,19 +10,6 @@ import (
 	"testing"
 )
 
-func TestGenres(t *testing.T) {
-	db.Init()
-	defer db.Close()
-	createData()
-	defer removeData()
-	genresTest, err := Genres(1)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for i := 0; i < len(genresTest); i++ {
-		assert.Equal(t, genresTest[i], genres[i])
-	}
-}
 func TestGenreById(t *testing.T) {
 	db.Init()
 	defer db.Close()
@@ -86,7 +73,7 @@ func TestDeleteGenre(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(tmp2) > 0 {
+	if len(*tmp2) > 0 {
 		stringErr := fmt.Sprintf("BookGroupGener have not been deleted")
 		t.Fatal(errors.New(stringErr))
 	}

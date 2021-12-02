@@ -52,7 +52,7 @@ func DeleteBookGroupGenre(bookGroupId, genreId int32) error {
 	return nil
 }
 
-func BookGroupsByGenre(genreId, page int32) ([]int32, error) {
+func BookGroupsByGenre(genreId, page int32) (*[]db.BookGroupsByGenreRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	bookGroups, err := queries.BookGroupsByGenre(ctx, db.BookGroupsByGenreParams{
@@ -64,7 +64,7 @@ func BookGroupsByGenre(genreId, page int32) ([]int32, error) {
 		stringErr := fmt.Sprintf("Get bookGroups by genre failed: %s", err)
 		return nil, errors.New(stringErr)
 	}
-	return bookGroups, err
+	return &bookGroups, err
 }
 
 func GenresByBookGroup(bookGroupId, page int32) ([]int32, error) {

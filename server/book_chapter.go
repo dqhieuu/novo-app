@@ -154,17 +154,6 @@ func CreateBookChapter(chapterNumber float64, description, textContext, chapterT
 	return &bookChapter, nil
 }
 
-func DeleteBookChapterById(id int32) error {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	err := queries.DeleteBookChapterById(ctx, id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Delete book chapter by Id failed: %s", err)
-		return errors.New(stringErr)
-	}
-	return nil
-}
-
 func DeleteBookChapterByBookGroupId(bookGroupId int32) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -221,7 +210,7 @@ func CreateImagesChapterHandler(c *gin.Context) {
 
 	var newImageChapter ImageChapter
 	if err := c.ShouldBindJSON(&newImageChapter); err != nil {
-		ReportError(c, err,"error parsing json", http.StatusBadRequest)
+		ReportError(c, err, "error parsing json", http.StatusBadRequest)
 		return
 	}
 
@@ -330,7 +319,10 @@ func DeleteBookChapterHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = DeleteBookChapterById(chapterId)
+
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	err = queries.DeleteBookChapterById(ctx, chapterId)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -340,14 +332,4 @@ func DeleteBookChapterHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Delete Chapter successfully",
 	})
-}
-
-func LatestCreatedInBookGroup(bookGroupId int32) (*db.LastChapterInBookGroupRow, error) {
-	ctx := context.Background()
-	queries := db.New(db.Pool())
-	chapterNumber, err := queries.LastChapterInBookGroup(ctx, bookGroupId)
-	if err != nil {
-		return nil, err
-	}
-	return &chapterNumber, nil
 }

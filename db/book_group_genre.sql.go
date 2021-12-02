@@ -55,10 +55,39 @@ func (q *Queries) BookGroupGenre(ctx context.Context, arg BookGroupGenreParams) 
 }
 
 const bookGroupsByGenre = `-- name: BookGroupsByGenre :many
-SELECT bgg.book_group_id
+SELECT bgg.book_group_id id,
+       (array_agg(i.path))[1] AS image,
+       (array_agg(bg.title))[1] title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
 FROM book_group_genres AS bgg
+         LEFT JOIN book_groups AS bg ON bgg.book_group_id = bg.id
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bgg.book_group_id
+    ) bcm ON TRUE
+         LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bgg.book_group_id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+    WHERE bct.book_group_id = bgg.book_group_id
+    ) bct ON TRUE
+         LEFT JOIN images i ON bg.primary_cover_art_id = i.id
 WHERE bgg.genre_id = $1
-ORDER BY bgg.book_group_id
+GROUP BY bgg.book_group_id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY lastUpdated DESC  NULLS LAST
 OFFSET $2 ROWS FETCH FIRST $3 ROWS ONLY
 `
 
@@ -68,19 +97,39 @@ type BookGroupsByGenreParams struct {
 	Limit   int32 `json:"limit"`
 }
 
-func (q *Queries) BookGroupsByGenre(ctx context.Context, arg BookGroupsByGenreParams) ([]int32, error) {
+type BookGroupsByGenreRow struct {
+	ID            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Title         interface{} `json:"title"`
+	Latestchapter interface{} `json:"latestchapter"`
+	Lastupdated   interface{} `json:"lastupdated"`
+	Views         interface{} `json:"views"`
+	Comments      int64       `json:"comments"`
+	Likes         interface{} `json:"likes"`
+}
+
+func (q *Queries) BookGroupsByGenre(ctx context.Context, arg BookGroupsByGenreParams) ([]BookGroupsByGenreRow, error) {
 	rows, err := q.db.Query(ctx, bookGroupsByGenre, arg.GenreID, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []int32
+	var items []BookGroupsByGenreRow
 	for rows.Next() {
-		var book_group_id int32
-		if err := rows.Scan(&book_group_id); err != nil {
+		var i BookGroupsByGenreRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Image,
+			&i.Title,
+			&i.Latestchapter,
+			&i.Lastupdated,
+			&i.Views,
+			&i.Comments,
+			&i.Likes,
+		); err != nil {
 			return nil, err
 		}
-		items = append(items, book_group_id)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

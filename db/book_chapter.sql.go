@@ -202,6 +202,7 @@ func (q *Queries) InsertBookChapter(ctx context.Context, arg InsertBookChapterPa
 	return i, err
 }
 
+
 const lastChapterInBookGroup = `-- name: LastChapterInBookGroup :one
 SELECT chapter_number, date_created
 FROM book_chapters AS bc
@@ -222,6 +223,7 @@ func (q *Queries) LastChapterInBookGroup(ctx context.Context, bookGroupID int32)
 	err := row.Scan(&i.ChapterNumber, &i.DateCreated)
 	return i, err
 }
+
 
 const updateBookChapter = `-- name: UpdateBookChapter :exec
 UPDATE book_chapters
