@@ -44,7 +44,7 @@ SELECT
        u.id as userId,
        u.user_name
 FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
-<<<<<<< Updated upstream
+                   JOIN users u on book_chapters.owner_id = u.id
 WHERE bg.id = $1;
 
 -- name: GetBookChapterOwner :one
@@ -59,7 +59,3 @@ WHERE bc.book_group_id = $1
   AND date_created IN ( SELECT MAX(date_created) as max_date_created
                         FROM book_chapters AS bc
                         WHERE bc.book_group_id = $1 );
-=======
-                    JOIN users u on book_chapters.owner_id = u.id
-WHERE bg.id = $1;
->>>>>>> Stashed changes
