@@ -32,7 +32,8 @@ WHERE book_group_id = $1
   AND book_chapter_id = $2;
 
 -- name: GetBookGroupComments :many
-SELECT book_comments.content,
+SELECT book_comments.id,
+       book_comments.content,
        book_comments.posted_time,
        u.id as userId,
        u.user_name,
@@ -48,7 +49,8 @@ ORDER BY posted_time
 LIMIT 20 OFFSET $2;
 
 -- name: GetBookChapterComments :many
-SELECT book_comments.content,
+SELECT book_comments.id,
+       book_comments.content,
        book_comments.posted_time,
        u.id as userId,
        u.user_name,
@@ -65,7 +67,8 @@ LIMIT 20 OFFSET $2;
 
 
 -- name: GetBookGroupAndChapterComments :many
-SELECT book_comments.content,
+SELECT book_comments.id,
+       book_comments.content,
        book_comments.posted_time,
        u.id as userId,
        u.user_name,

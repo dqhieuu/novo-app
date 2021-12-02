@@ -10,13 +10,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 const limitChapter = 50
 const limitNameCharacter = 50
 
 type Chapter struct {
-	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber"`
 	Name          string  `json:"name"`
 	Id            int32   `json:"id" binding:"required"`
 	TimePosted    int64   `json:"timePosted" binding:"required"`
@@ -24,14 +25,14 @@ type Chapter struct {
 }
 
 type HypertextChapter struct {
-	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber"`
 	Name          string  `json:"name"`
 	TextContent   string  `json:"textContent" binding:"required"`
 	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
 }
 
 type ImageChapter struct {
-	ChapterNumber float64 `json:"chapterNumber" binding:"required"`
+	ChapterNumber float64 `json:"chapterNumber"` //check if = 0
 	Name          string  `json:"name"`
 	Images        []int32 `json:"images" binding:"required"`
 	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
@@ -183,13 +184,14 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	}
 
 	//check chapter name
-	if !checkChapterName(newHypertextChapter.Name) {
+	newHypertextChapter.Name = strings.TrimSpace(newHypertextChapter.Name)
+	if !checkChapterName(newHypertextChapter.Name) || CheckEmptyString(newHypertextChapter.Name) {
 		ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
 		return
 	}
 
 	//check content
-	if HasControlCharacters(newHypertextChapter.TextContent) && CheckEmptyString(newHypertextChapter.TextContent) {
+	if HasControlCharacters(newHypertextChapter.TextContent) || CheckEmptyString(newHypertextChapter.TextContent) {
 		ReportError(c, errors.New("invalid content"), "error", http.StatusBadRequest)
 		return
 	}
@@ -224,7 +226,8 @@ func CreateImagesChapterHandler(c *gin.Context) {
 	}
 
 	//check chapter name
-	if !checkChapterName(newImageChapter.Name) {
+	newImageChapter.Name = strings.TrimSpace(newImageChapter.Name)
+	if !checkChapterName(newImageChapter.Name) || CheckEmptyString(newImageChapter.Name) {
 		ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
 		return
 	}
@@ -261,8 +264,6 @@ func CreateImagesChapterHandler(c *gin.Context) {
 				ReportError(c, err, "error adding image chapter", 500)
 				return
 			}
-		} else {
-			ReportError(c, errors.New("image does not exist"), "error", http.StatusBadRequest)
 		}
 	}
 

@@ -98,7 +98,8 @@ func (q *Queries) DeleteBookChapterById(ctx context.Context, id int32) error {
 
 const getBookChapterOwner = `-- name: GetBookChapterOwner :one
 SELECT users.id, users.user_name
-FROM users JOIN book_chapters bc on users.id = bc.owner_id
+FROM users
+         JOIN book_chapters bc on users.id = bc.owner_id
 WHERE bc.id = $1
 `
 
@@ -115,15 +116,15 @@ func (q *Queries) GetBookChapterOwner(ctx context.Context, id int32) (GetBookCha
 }
 
 const getBookGroupChapters = `-- name: GetBookGroupChapters :many
-SELECT
-       book_chapters.chapter_number,
+SELECT book_chapters.chapter_number,
        book_chapters.name,
        book_chapters.id as chapterId,
        book_chapters.date_created,
-       u.id as userId,
+       u.id             as userId,
        u.user_name
-FROM book_chapters JOIN book_groups bg on book_chapters.book_group_id = bg.id
-                   JOIN users u on book_chapters.owner_id = u.id
+FROM book_chapters
+         JOIN book_groups bg on book_chapters.book_group_id = bg.id
+         JOIN users u on book_chapters.owner_id = u.id
 WHERE bg.id = $1
 `
 
@@ -164,8 +165,8 @@ func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBook
 }
 
 const insertBookChapter = `-- name: InsertBookChapter :one
-INSERT INTO book_chapters(chapter_number,name,text_context,type,book_group_id,owner_id)
-VALUES ($1,$2,$3,$4,$5,$6)
+INSERT INTO book_chapters(chapter_number, name, text_context, type, book_group_id, owner_id)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING id, date_created, chapter_number, name, text_context, type, book_group_id, owner_id
 `
 
@@ -202,12 +203,12 @@ func (q *Queries) InsertBookChapter(ctx context.Context, arg InsertBookChapterPa
 }
 
 const lastChapterInBookGroup = `-- name: LastChapterInBookGroup :one
-SELECT chapter_number,date_created
+SELECT chapter_number, date_created
 FROM book_chapters AS bc
 WHERE bc.book_group_id = $1
-  AND date_created IN ( SELECT MAX(date_created) as max_date_created
-                        FROM book_chapters AS bc
-                        WHERE bc.book_group_id = $1 )
+  AND date_created IN (SELECT MAX(date_created) as max_date_created
+                       FROM book_chapters AS bc
+                       WHERE bc.book_group_id = $1)
 `
 
 type LastChapterInBookGroupRow struct {

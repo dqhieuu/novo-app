@@ -21,8 +21,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
-
 	//"encoding/json"
 	//"github.com/dqhieuu/novo-app/db"
 	"github.com/disintegration/imaging"
@@ -221,8 +219,7 @@ func GenerateThumbnail(path string, size int, filetype *string) (string, error) 
 	}
 
 	extension := filepath.Ext(path)
-	orgFileName := strings.TrimSuffix(filepath.Base(path), extension)
-	thumbFileName := fmt.Sprintf("%s-%d%s", orgFileName, size, extension)
+	thumbFileName := fmt.Sprintf("%s.%d%s", filepath.Base(path), size, extension)
 	outDst := fmt.Sprintf("%s/%s", dirPath, thumbFileName)
 
 	err = ResizeImage(filestream, ResizeImageParams{
