@@ -191,3 +191,7 @@ func GetRoleHandler(c *gin.Context) {
 		"permissions": claims[RolePermsClaimKey],
 	})
 }
+
+func GetUserInfoByIdHandler(c *gin.Context) {
+
+}
