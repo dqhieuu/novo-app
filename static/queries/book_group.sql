@@ -150,6 +150,7 @@ FROM book_groups AS bg
 GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
 ORDER BY RANDOM() LIMIT $1;
 
+
 -- name: BookGroupsTopViewWeek :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
@@ -288,3 +289,7 @@ FROM book_groups AS bg
 GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1;
+
+-- name: CheckBookGroupById :one
+SELECT EXISTS(SElECT 1 FROM book_groups WHERE id = $1);
+

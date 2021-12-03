@@ -729,6 +729,7 @@ func GetRandomBookGroups(c *gin.Context) {
 	})
 }
 
+
 func Clamp(input, min, max int32) int32 {
 	if input < min {
 		return min
@@ -823,4 +824,38 @@ func GetBookGroupsByViewHandler(c *gin.Context) {
 		})
 		return
 	}
+
+func DeleteBookGroupHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	bookGroupIdString := c.Param("bookGroupId")
+	bookGroupId64, err := strconv.ParseInt(bookGroupIdString, 10, 32)
+	if err != nil {
+		ReportError(c, err, "error parsing book group id", http.StatusBadRequest)
+		return
+	}
+
+	bookId := int32(bookGroupId64)
+
+	check, err := queries.CheckBookGroupById(ctx, bookId)
+	if err != nil {
+		ReportError(c, err, "error getting book group", 500)
+		return
+	}
+
+	if !check {
+		ReportError(c, errors.New("book group does not exist"), "error", http.StatusBadRequest)
+		return
+	} else {
+		err := queries.DeleteBookGroup(ctx, bookId)
+		if err != nil {
+			ReportError(c, err, "error deleting book group", 500)
+			return
+		}
+	}
+
+	c.JSON(200, gin.H{
+		"message": "delete successful",
+	})
 }
