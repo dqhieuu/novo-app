@@ -72,6 +72,8 @@ func Run() {
 
 	r.GET("/search/:query", GetSearchResultHandler)
 
+	r.GET("/book/latest", GetLatestBookGroupsHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
