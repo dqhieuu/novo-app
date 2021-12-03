@@ -61,22 +61,15 @@ func Run() {
 	})
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
-
 	r.GET("/genre/all", ListAllGenresHandler)
-
 	r.GET("/comment", GetCommentsHandler)
-
 	r.GET("/genre/:genreId", GetBookByGenreHandler)
-
 	r.GET("/search-suggest/:query", GetSearchSuggestionHandler)
-
 	r.GET("/search/:query", GetSearchResultHandler)
-
 	r.GET("/book/latest", GetLatestBookGroupsHandler)
-
 	r.GET("/book/random", GetRandomBookGroups)
-
 	r.GET("/user/:userId", GetUserInfoByIdHandler)
+	r.GET("/book/top/:type", GetBookGroupsByViewHandler)
 
 	auth := r.Group("/auth")
 	{

@@ -150,5 +150,146 @@ FROM book_groups AS bg
 GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
 ORDER BY RANDOM() LIMIT $1;
 
+
+-- name: BookGroupsTopViewWeek :many
+SELECT bg.id id,
+       (array_agg(i.path))[1] AS image,
+       bg.title AS title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups AS bg
+LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+        LEFT JOIN book_chapter_views bcv
+        ON bct.id = bcv.book_chapter_id
+        AND bcv.view_date>= (now()-Interval '1 week')
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+LEFT JOIN images i ON bg.primary_cover_art_id = i.id
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY bct.views DESC
+LIMIT $1;
+
+-- name: BookGroupsTopViewMonth :many
+SELECT bg.id id,
+       (array_agg(i.path))[1] AS image,
+       bg.title AS title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups AS bg
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+         LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+                           AND bcv.view_date>= (now()-Interval '1 month')
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+         LEFT JOIN images i ON bg.primary_cover_art_id = i.id
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY bct.views DESC
+LIMIT $1;
+
+-- name: BookGroupsTopViewYear :many
+SELECT bg.id id,
+       (array_agg(i.path))[1] AS image,
+       bg.title AS title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups AS bg
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+         LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+                           AND bcv.view_date>= (now()-Interval '1 year')
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+         LEFT JOIN images i ON bg.primary_cover_art_id = i.id
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY bct.views DESC
+LIMIT $1;
+
+-- name: BookGroupsTopViewAll :many
+SELECT bg.id id,
+       (array_agg(i.path))[1] AS image,
+       bg.title AS title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups AS bg
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+         LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+         LEFT JOIN images i ON bg.primary_cover_art_id = i.id
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY bct.views DESC
+LIMIT $1;
+
 -- name: CheckBookGroupById :one
 SELECT EXISTS(SElECT 1 FROM book_groups WHERE id = $1);
+
