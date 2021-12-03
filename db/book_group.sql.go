@@ -70,6 +70,17 @@ func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitlePa
 	return items, nil
 }
 
+const checkBookGroupById = `-- name: CheckBookGroupById :one
+SELECT EXISTS(SElECT 1 FROM book_groups WHERE id = $1)
+`
+
+func (q *Queries) CheckBookGroupById(ctx context.Context, id int32) (bool, error) {
+	row := q.db.QueryRow(ctx, checkBookGroupById, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const deleteBookGroup = `-- name: DeleteBookGroup :exec
 DELETE FROM book_groups
 WHERE id = $1

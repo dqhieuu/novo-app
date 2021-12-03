@@ -184,7 +184,7 @@ CREATE TABLE IF NOT EXISTS book_chapters
     PRIMARY KEY (id),
     CONSTRAINT fk_book_chapters_book_groups
         FOREIGN KEY (book_group_id)
-            REFERENCES book_groups (id),
+            REFERENCES book_groups (id) ON DELETE CASCADE,
 --     CONSTRAINT fk_book_chapters_types
 --         FOREIGN KEY (type_id)
 --             REFERENCES book_chapter_types (id),
