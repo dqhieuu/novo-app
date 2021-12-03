@@ -18,22 +18,22 @@ const limitNameCharacter = 50
 
 type Chapter struct {
 	ChapterNumber float64 `json:"chapterNumber"`
-	Name          string  `json:"name"`
+	Name          interface{}  `json:"name"`
 	Id            int32   `json:"id" binding:"required"`
 	TimePosted    int64   `json:"timePosted" binding:"required"`
 	UserPosted    Author  `json:"userPosted" binding:"required"`
 }
 
 type HypertextChapter struct {
-	ChapterNumber float64 `json:"chapterNumber"`
-	Name          string  `json:"name"`
+	ChapterNumber interface{} `json:"chapterNumber"`
+	Name          interface{}  `json:"name"`
 	TextContent   string  `json:"textContent" binding:"required"`
 	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
 }
 
 type ImageChapter struct {
-	ChapterNumber float64 `json:"chapterNumber"` //check if = 0
-	Name          string  `json:"name"`
+	ChapterNumber interface{} `json:"chapterNumber"`
+	Name          interface{}  `json:"name"`
 	Images        []int32 `json:"images" binding:"required"`
 	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
 }
@@ -172,11 +172,20 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 		return
 	}
 
-	//check chapter name
-	newHypertextChapter.Name = strings.TrimSpace(newHypertextChapter.Name)
-	if !checkChapterName(newHypertextChapter.Name) || CheckEmptyString(newHypertextChapter.Name) {
-		ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
+	if newHypertextChapter.ChapterNumber == nil {
+		ReportError(c, errors.New("missing chapter number"), "error", http.StatusBadRequest)
 		return
+	}
+
+	//check chapter name
+	var chapterName string
+	if newHypertextChapter.Name != nil {
+		chapterName = newHypertextChapter.Name.(string)
+		chapterName = strings.TrimSpace(chapterName)
+		if !checkChapterName(chapterName) || CheckEmptyString(chapterName) {
+			ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
+			return
+		}
 	}
 
 	//check content
@@ -188,8 +197,8 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	extract := jwt.ExtractClaims(c)
 
 	newChapter, err := CreateBookChapter(
-		newHypertextChapter.ChapterNumber,
-		newHypertextChapter.Name,
+		newHypertextChapter.ChapterNumber.(float64),
+		chapterName,
 		newHypertextChapter.TextContent,
 		"hypertext",
 		newHypertextChapter.BookGroupId,
@@ -214,18 +223,27 @@ func CreateImagesChapterHandler(c *gin.Context) {
 		return
 	}
 
-	//check chapter name
-	newImageChapter.Name = strings.TrimSpace(newImageChapter.Name)
-	if !checkChapterName(newImageChapter.Name) || CheckEmptyString(newImageChapter.Name) {
-		ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
+	if newImageChapter.ChapterNumber == nil {
+		ReportError(c, errors.New("missing chapter number"), "error", http.StatusBadRequest)
 		return
+	}
+
+	//check chapter name
+	var chapterName string
+	if newImageChapter.Name != nil {
+		chapterName = newImageChapter.Name.(string)
+		chapterName = strings.TrimSpace(chapterName)
+		if !checkChapterName(chapterName) || CheckEmptyString(chapterName) {
+			ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
+			return
+		}
 	}
 
 	extract := jwt.ExtractClaims(c)
 
 	newChapter, err := CreateBookChapter(
-		newImageChapter.ChapterNumber,
-		newImageChapter.Name,
+		newImageChapter.ChapterNumber.(float64),
+		chapterName,
 		"",
 		"images",
 		newImageChapter.BookGroupId,

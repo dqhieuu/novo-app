@@ -8,11 +8,87 @@ import (
 	"database/sql"
 )
 
+const bookGroupsByUser = `-- name: BookGroupsByUser :many
+SELECT bg.id,
+       (array_agg(i.path))[1]   AS image,
+       (array_agg(bg.title))[1] as title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups as bg
+         JOIN users u on u.id = bg.owner_id
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created)                                             AS lastUpdated,
+           coalesce(sum(bcv.count), 0)                                       AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+         LEFT JOIN images i on bg.primary_cover_art_id = i.id
+WHERE u.id = $1
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY lastUpdated DESC NULLS LAST
+`
+
+type BookGroupsByUserRow struct {
+	ID            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Title         interface{} `json:"title"`
+	Latestchapter interface{} `json:"latestchapter"`
+	Lastupdated   interface{} `json:"lastupdated"`
+	Views         interface{} `json:"views"`
+	Comments      int64       `json:"comments"`
+	Likes         interface{} `json:"likes"`
+}
+
+func (q *Queries) BookGroupsByUser(ctx context.Context, id int32) ([]BookGroupsByUserRow, error) {
+	rows, err := q.db.Query(ctx, bookGroupsByUser, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookGroupsByUserRow
+	for rows.Next() {
+		var i BookGroupsByUserRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Image,
+			&i.Title,
+			&i.Latestchapter,
+			&i.Lastupdated,
+			&i.Views,
+			&i.Comments,
+			&i.Likes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const completeOauthAccount = `-- name: CompleteOauthAccount :exec
 UPDATE users
-SET user_name = $2,
+SET user_name       = $2,
     avatar_image_id = $3,
-    role_id = $4
+    role_id         = $4
 WHERE id = $1
 `
 
@@ -42,6 +118,36 @@ WHERE user_name = $1
 func (q *Queries) DeleteUser(ctx context.Context, userName sql.NullString) error {
 	_, err := q.db.Exec(ctx, deleteUser, userName)
 	return err
+}
+
+const getUserInfo = `-- name: GetUserInfo :one
+SELECT users.user_name,
+       r.name as role,
+       users.summary,
+       i.path as avatarPath
+FROM users
+         JOIN roles r on users.role_id = r.id
+         LEFT JOIN images i on users.avatar_image_id = i.id
+WHERE users.id = $1
+`
+
+type GetUserInfoRow struct {
+	UserName   sql.NullString `json:"userName"`
+	Role       string         `json:"role"`
+	Summary    sql.NullString `json:"summary"`
+	Avatarpath sql.NullString `json:"avatarpath"`
+}
+
+func (q *Queries) GetUserInfo(ctx context.Context, id int32) (GetUserInfoRow, error) {
+	row := q.db.QueryRow(ctx, getUserInfo, id)
+	var i GetUserInfoRow
+	err := row.Scan(
+		&i.UserName,
+		&i.Role,
+		&i.Summary,
+		&i.Avatarpath,
+	)
+	return i, err
 }
 
 const insertUser = `-- name: InsertUser :one
