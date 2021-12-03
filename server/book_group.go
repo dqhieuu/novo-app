@@ -581,6 +581,9 @@ func GetSearchResultHandler(c *gin.Context) {
 	} else {
 		page = 1
 	}
+	if page < 1 {
+		page = 1
+	}
 
 	books, err := queries.SearchResult(ctx, db.SearchResultParams{
 		Query: sql.NullString{
@@ -632,6 +635,9 @@ func GetLatestBookGroupsHandler(c *gin.Context) {
 			return
 		}
 	} else {
+		page = 1
+	}
+	if page < 1 {
 		page = 1
 	}
 
