@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS book_group_alt_titles
     book_id int  NOT NULL,
     CONSTRAINT fk_alt_titles_book_groups
         FOREIGN KEY (book_id)
-            REFERENCES book_groups (id)
+            REFERENCES book_groups (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS book_group_arts
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS book_group_arts
             REFERENCES images (id),
     CONSTRAINT fk_arts_book_groups
         FOREIGN KEY (book_group_id)
-            REFERENCES book_groups (id)
+            REFERENCES book_groups (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS book_group_likes
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS book_group_likes
     PRIMARY KEY (user_id, book_group_id),
     CONSTRAINT fk_likes_book_groups
         FOREIGN KEY (book_group_id)
-            REFERENCES book_groups (id),
+            REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_likes_users
         FOREIGN KEY (user_id)
             REFERENCES users (id)
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS book_group_genres
     PRIMARY KEY (book_group_id, genre_id),
     CONSTRAINT fk_book_group_genres_book_groups
         FOREIGN KEY (book_group_id)
-            REFERENCES book_groups (id),
+            REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_group_genres_genres
         FOREIGN KEY (genre_id)
             REFERENCES genres (id)
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS book_group_authors
     book_author_id int NOT NULL,
     CONSTRAINT fk_book_group_authors_book_groups
         FOREIGN KEY (book_group_id)
-            REFERENCES book_groups (id),
+            REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_group_authors_book_authors
         FOREIGN KEY (book_author_id)
             REFERENCES book_authors (id)
@@ -230,7 +230,7 @@ CREATE TABLE IF NOT EXISTS book_comments
             REFERENCES users (id),
     CONSTRAINT fk_book_comments_book_groups
         FOREIGN KEY (book_group_id)
-            REFERENCES book_groups (id),
+            REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_comments_book_chapters
         FOREIGN KEY (book_chapter_id)
             REFERENCES book_chapters (id)
