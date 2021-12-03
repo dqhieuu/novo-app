@@ -690,3 +690,41 @@ func GetLatestBookGroupsHandler(c *gin.Context) {
 		"books":      books,
 	})
 }
+
+func GetRandomBookGroups(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	var limit int32
+	stringTmp := c.Query("limit")
+	if len(stringTmp) > 0 {
+		_, err := fmt.Sscan(stringTmp, &limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		limit = 20
+	}
+
+	if limit < 10 || limit > 100 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "limit must be between 10 and 100",
+		})
+		return
+	}
+
+	books, err := queries.RandomBookGroups(ctx, limit)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if books == nil {
+		books = []db.RandomBookGroupsRow{}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"books": books,
+	})
+}
