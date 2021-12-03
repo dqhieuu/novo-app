@@ -217,6 +217,80 @@ func (q *Queries) NumberBookGroupSearchResult(ctx context.Context, query sql.Nul
 	return count, err
 }
 
+const randomBookGroups = `-- name: RandomBookGroups :many
+SELECT bg.id id,
+       (array_agg(i.path))[1] AS image,
+       bg.title AS title,
+       bct.latestChapter,
+       bct.lastUpdated,
+       bct.views,
+       bcm.comments,
+       bgl.likes
+FROM book_groups AS bg
+         LEFT JOIN Lateral (
+    SELECT count(bcm.id) AS comments
+    FROM book_comments bcm
+    WHERE bcm.book_group_id = bg.id
+    ) bcm ON TRUE
+         LEFT JOIN Lateral (
+    SELECT coalesce(sum(bgl.point), 0) AS likes
+    FROM book_group_likes bgl
+    WHERE bgl.book_group_id = bg.id
+    ) bgl ON TRUE
+         LEFT JOIN LATERAL (
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
+           MAX(bct.date_created) AS lastUpdated,
+           coalesce(sum(bcv.count),0) AS views
+    FROM book_chapters bct
+             LEFT JOIN book_chapter_views bcv
+                       ON bct.id = bcv.book_chapter_id
+    WHERE bct.book_group_id = bg.id
+    ) bct ON TRUE
+         LEFT JOIN images i ON bg.primary_cover_art_id = i.id
+GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+ORDER BY RANDOM() LIMIT $1
+`
+
+type RandomBookGroupsRow struct {
+	ID            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Title         string      `json:"title"`
+	Latestchapter interface{} `json:"latestchapter"`
+	Lastupdated   interface{} `json:"lastupdated"`
+	Views         interface{} `json:"views"`
+	Comments      int64       `json:"comments"`
+	Likes         interface{} `json:"likes"`
+}
+
+func (q *Queries) RandomBookGroups(ctx context.Context, limit int32) ([]RandomBookGroupsRow, error) {
+	rows, err := q.db.Query(ctx, randomBookGroups, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RandomBookGroupsRow
+	for rows.Next() {
+		var i RandomBookGroupsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Image,
+			&i.Title,
+			&i.Latestchapter,
+			&i.Lastupdated,
+			&i.Views,
+			&i.Comments,
+			&i.Likes,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchResult = `-- name: SearchResult :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
