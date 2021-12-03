@@ -76,6 +76,8 @@ func Run() {
 
 	r.GET("/book/random", GetRandomBookGroups)
 
+	r.GET("/book/top/:type", GetBookGroupsByViewHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
