@@ -728,3 +728,99 @@ func GetRandomBookGroups(c *gin.Context) {
 		"books": books,
 	})
 }
+
+func Clamp(input, min, max int32) int32 {
+	if input < min {
+		return min
+	}
+	if input > max {
+		return max
+	}
+	return input
+}
+
+const (
+	WeekView  = "week"
+	MonthView = "month"
+	YearView  = "year"
+	AllView   = "all"
+)
+
+func GetBookGroupsByViewHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	var limit int32
+	stringTmp := c.Query("limit")
+	if len(stringTmp) > 0 {
+		_, err := fmt.Sscan(stringTmp, &limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		limit = 20
+	}
+	limit = Clamp(limit, 10, 100)
+
+	typeView := c.Param("type")
+	switch typeView {
+	case WeekView:
+		books, err := queries.BookGroupsTopViewWeek(ctx, limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
+		if books == nil {
+			books = []db.BookGroupsTopViewWeekRow{}
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"books": books,
+		})
+	case MonthView:
+		books, err := queries.BookGroupsTopViewMonth(ctx, limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
+		if books == nil {
+			books = []db.BookGroupsTopViewMonthRow{}
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"books": books,
+		})
+	case YearView:
+		books, err := queries.BookGroupsTopViewYear(ctx, limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
+		if books == nil {
+			books = []db.BookGroupsTopViewYearRow{}
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"books": books,
+		})
+	case AllView:
+		books, err := queries.BookGroupsTopViewAll(ctx, limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		}
+		if books == nil {
+			books = []db.BookGroupsTopViewAllRow{}
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"books": books,
+		})
+	default:
+		c.JSON(http.StatusNotAcceptable, gin.H{
+			"error": "invalid type view",
+		})
+		return
+	}
+}
