@@ -24,15 +24,19 @@ type Comment struct {
 	Comment       string  `json:"comment" binding:"required"`
 	UserName      string  `json:"userName" binding:"required"`
 	UserId        int32   `json:"userId" binding:"required"`
-	UserAvatar    string  `json:"userAvatar" binding:"required"`
+	UserAvatar    interface{}  `json:"userAvatar" binding:"required"`
 	TimePosted    int64   `json:"timePosted" binding:"required"`
-	ChapterId     int32   `json:"chapterId"`
-	ChapterNumber float64 `json:"chapterNumber"`
+	ChapterId     interface{}   `json:"chapterId"`
+	ChapterNumber interface{} `json:"chapterNumber"`
 }
 
 type CommentPage struct {
 	LastPage int32     `json:"lastPage"`
 	Comments []Comment `json:"comments"`
+}
+
+type PostComment struct {
+	Comment string `json:"comment" binding:"required"`
 }
 
 func InsertComment(params CommentParams) error {
@@ -90,14 +94,16 @@ func CreateCommentHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	var comment string
+	var postComment PostComment
 	reg := regexp.MustCompile(`(\r\n|\n){3,}`)
 
-	err := c.ShouldBindJSON(comment)
+	err := c.ShouldBindJSON(&postComment)
 	if err != nil {
 		ReportError(c, err, "error parsing json", http.StatusBadRequest)
 		return
 	}
+	comment := postComment.Comment
+
 	comment = reg.ReplaceAllString(comment, "\n\n")
 	if len(comment) < 10 || len(comment) > 500 || HasControlCharacters(comment) || CheckEmptyString(comment) {
 		ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
@@ -280,16 +286,19 @@ func GetCommentsHandler(c *gin.Context) {
 		}
 		if len(chapterComments) > 0 {
 			for _, comment := range chapterComments {
-				responseObj.Comments = append(responseObj.Comments, Comment{
+				resComment := Comment{
 					Id:            comment.ID,
 					Comment:       comment.Content,
 					UserName:      comment.UserName.String,
 					UserId:        comment.Userid,
-					UserAvatar:    comment.Avatarpath.String,
 					TimePosted:    comment.PostedTime.UnixMicro(),
 					ChapterId:     chapterId,
 					ChapterNumber: comment.ChapterNumber.Float64,
-				})
+				}
+				if comment.Avatarpath.Valid {
+					resComment.UserAvatar = comment.Avatarpath.String
+				}
+				responseObj.Comments = append(responseObj.Comments, resComment)
 			}
 		} else {
 			responseObj.Comments = make([]Comment, 0)
@@ -327,16 +336,23 @@ func GetCommentsHandler(c *gin.Context) {
 		}
 		if len(bookComments) > 0 {
 			for _, comment := range bookComments {
-				responseObj.Comments = append(responseObj.Comments, Comment{
+				resComment := Comment{
 					Id:            comment.ID,
 					Comment:       comment.Content,
 					UserName:      comment.UserName.String,
 					UserId:        comment.Userid,
-					UserAvatar:    comment.Avatarpath.String,
 					TimePosted:    comment.PostedTime.UnixMicro(),
-					ChapterId:     comment.Chapterid.Int32,
-					ChapterNumber: comment.ChapterNumber.Float64,
-				})
+				}
+				if comment.Avatarpath.Valid {
+					resComment.UserAvatar = comment.Avatarpath.String
+				}
+				if comment.Chapterid.Valid {
+					resComment.ChapterId = comment.Chapterid.Int32
+				}
+				if comment.ChapterNumber.Valid {
+					resComment.ChapterNumber = comment.ChapterNumber.Float64
+				}
+				responseObj.Comments = append(responseObj.Comments, resComment)
 			}
 		} else {
 			responseObj.Comments = make([]Comment, 0)

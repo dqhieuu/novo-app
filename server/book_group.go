@@ -17,16 +17,16 @@ import (
 const limitBookGroup = 40
 
 type BookGroup struct {
-	Name            string    `json:"name" binding:"required"`
-	Description     string    `json:"description"`
-	Views           int64     `json:"views"`
-	LikeCount       int64     `json:"likeCount"`
-	DislikeCount    int64     `json:"dislikeCount"`
-	Authors         []Author  `json:"authors"`
-	Genres          []Genre   `json:"genres"`
-	Chapters        []Chapter `json:"chapters"`
-	CoverArts       []string  `json:"coverArts"`
-	PrimaryCoverArt string    `json:"primaryCoverArt"`
+	Name            string      `json:"name"`
+	Description     interface{} `json:"description"`
+	Views           int64       `json:"views"`
+	LikeCount       int64       `json:"likeCount"`
+	DislikeCount    int64       `json:"dislikeCount"`
+	Authors         []Author    `json:"authors"`
+	Genres          []Genre     `json:"genres"`
+	Chapters        []Chapter   `json:"chapters"`
+	CoverArts       []string    `json:"coverArts"`
+	PrimaryCoverArt interface{} `json:"primaryCoverArt"`
 }
 
 func BookGroupById(id int32) (*db.BookGroup, error) {
@@ -205,7 +205,9 @@ func GetBookGroupContentHandler(c *gin.Context) {
 	} else {
 		//get name and description
 		responseObject.Name = bookGroup.Title
-		responseObject.Description = bookGroup.Description.String
+		if bookGroup.Description.Valid {
+			responseObject.Description = bookGroup.Description.String
+		}
 
 		//get views
 		totalViews, err := queries.GetBookGroupView(ctx, bookGroup.ID)
@@ -273,16 +275,19 @@ func GetBookGroupContentHandler(c *gin.Context) {
 		}
 		if len(chapters) > 0 {
 			for _, chapter := range chapters {
-				responseObject.Chapters = append(responseObject.Chapters, Chapter{
+				resChapter := Chapter{
 					ChapterNumber: chapter.ChapterNumber,
-					Name:          chapter.Name.String,
 					Id:            chapter.Chapterid,
 					TimePosted:    chapter.DateCreated.UnixMicro(),
 					UserPosted: Author{
 						Id:   chapter.Userid,
 						Name: chapter.UserName.String,
 					},
-				})
+				}
+				if chapter.Name.Valid {
+					resChapter.Name = chapter.Name.String
+				}
+				responseObject.Chapters = append(responseObject.Chapters, resChapter)
 			}
 		} else {
 			responseObject.Chapters = make([]Chapter, 0)

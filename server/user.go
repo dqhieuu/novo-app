@@ -13,8 +13,39 @@ import (
 	"net/http"
 	"net/mail"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 )
+
+const LimitUserBookGroups = 20
+
+type UserInfo struct {
+	Role       string        `json:"role" binding:"required"`
+	Permission []interface{} `json:"permission" binding:"required"`
+	Id         int32         `json:"id" binding:"required"`
+	Name       interface{}   `json:"name"`
+	Avatar     interface{}   `json:"avatar"`
+}
+
+type UserProfile struct {
+	Name        string       `json:"name"`
+	Role        string       `json:"role"`
+	Avatar      interface{}  `json:"avatar"`
+	Description interface{}  `json:"description"`
+	BookPosted  []BookByUser `json:"bookPosted"`
+}
+
+type BookByUser struct {
+	Id            int32       `json:"id"`
+	Image         interface{} `json:"image"`
+	Title         string      `json:"title"`
+	LatestChapter interface{} `json:"latestChapter"`
+	Comments      int64       `json:"comments"`
+	Views         int64       `json:"views"`
+	Likes         int64       `json:"likes"`
+	LastUpdated   interface{} `json:"lastUpdated"`
+}
 
 func EqualPasswords(hashedPassword, password []byte) bool {
 	return bcrypt.CompareHashAndPassword(hashedPassword, password) == nil
@@ -185,13 +216,97 @@ func RegisterPasswordHandler(c *gin.Context) {
 	})
 }
 func GetRoleHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
 	claims := jwt.ExtractClaims(c)
-	c.JSON(200, gin.H{
-		"role":        claims[RoleNameClaimKey],
-		"permissions": claims[RolePermsClaimKey],
-	})
+	var userInfo UserInfo
+	userId := int32(claims[UserIdClaimKey].(float64))
+
+	user, err := queries.GetUserInfo(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error getting user info", 500)
+		return
+	}
+
+	userInfo.Role = claims[RoleNameClaimKey].(string)
+	userInfo.Permission = claims[RolePermsClaimKey].([]interface{})
+	userInfo.Id = userId
+	if user.Avatarpath.Valid {
+		userInfo.Avatar = user.Avatarpath.String
+	}
+	if user.UserName.Valid {
+		userInfo.Name = user.UserName.String
+	}
+
+	c.JSON(200, userInfo)
 }
 
 func GetUserInfoByIdHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
 
+	userIdString := c.Param("userId")
+	userId64, err := strconv.ParseInt(userIdString, 10, 32)
+	if err != nil {
+		ReportError(c, err, "error parsing user id", http.StatusBadRequest)
+		return
+	}
+	userId := int32(userId64)
+
+	var userProfile UserProfile
+
+	userInfo, err := queries.GetUserInfo(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error getting user info", 500)
+		return
+	}
+
+	if userInfo.UserName.Valid {
+		userProfile.Name = userInfo.UserName.String
+	}
+	userProfile.Role = userInfo.Role
+	if userInfo.Summary.Valid {
+		userProfile.Description = userInfo.Summary.String
+	}
+	if userInfo.Avatarpath.Valid {
+		userProfile.Avatar = userInfo.Avatarpath.String
+	}
+
+	bookGroups, err := queries.BookGroupsByUser(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error getting user book groups", 500)
+		return
+	}
+	if len(bookGroups) == 0 {
+		userProfile.BookPosted = make([]BookByUser, 0)
+	} else {
+		for _, book := range bookGroups {
+			newBook := BookByUser{
+				Id:       book.ID,
+				Title:    book.Title.(string),
+				Comments: book.Comments,
+				Views:    book.Views.(int64),
+				Likes:    book.Likes.(int64),
+			}
+			if book.Image != nil {
+				newBook.Image = book.Image
+			}
+			if book.Latestchapter != nil {
+				newBook.LatestChapter = book.Latestchapter
+			}
+			if book.Lastupdated != nil {
+				newBook.LastUpdated = book.Lastupdated.(time.Time).UnixMicro()
+			} else {
+				bookRowForDateCreated, err := queries.BookGroupById(ctx, book.ID)
+				if err != nil {
+					ReportError(c, err, "error getting book group", 500)
+					return
+				}
+				newBook.LastUpdated = bookRowForDateCreated.DateCreated.Time.UnixMicro()
+			}
+			userProfile.BookPosted = append(userProfile.BookPosted, newBook)
+		}
+	}
+	c.JSON(200, userProfile)
 }

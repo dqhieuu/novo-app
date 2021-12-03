@@ -21,7 +21,7 @@ var googleConfig *oauth2.Config
 
 type CompleteOauth struct{
 	Username string `json:"username" binding:"required" form:"username"`
-	Avatar int32 `json:"avatar" form:"avatar"`
+	Avatar interface{} `json:"avatar" form:"avatar"`
 }
 
 func InitOauth() {
@@ -184,14 +184,17 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 
 	extract := jwt.ExtractClaims(c)
 	var avatarIdPointer *int32
-	if user.Avatar != 0 {
-		avatarIdPointer = &user.Avatar
+	var avatarId int32
+	if user.Avatar != nil {
+		avatarId = int32(user.Avatar.(float64))
+		avatarIdPointer = &avatarId
 	}
 
 	err = CompleteOauthRegistration(int32(extract[UserIdClaimKey].(float64)), user.Username, avatarIdPointer, memberId)
 	if err != nil {
+		log.Printf("error completing oauth: %s\n", err)
 		c.JSON(500, gin.H{
-			"error": err,
+			"error": err.Error(),
 		})
 		return
 	}
