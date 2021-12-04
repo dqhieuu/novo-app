@@ -734,7 +734,6 @@ func GetRandomBookGroups(c *gin.Context) {
 	})
 }
 
-
 func Clamp(input, min, max int32) int32 {
 	if input < min {
 		return min
@@ -829,6 +828,7 @@ func GetBookGroupsByViewHandler(c *gin.Context) {
 		})
 		return
 	}
+}
 
 func DeleteBookGroupHandler(c *gin.Context) {
 	ctx := context.Background()

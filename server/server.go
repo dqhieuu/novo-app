@@ -71,6 +71,8 @@ func Run() {
 	r.GET("/user/:userId", GetUserInfoByIdHandler)
 	r.GET("/book/top/:type", GetBookGroupsByViewHandler)
 
+	r.GET("/author/:authorId", GetAuthorInfoHandler)
+
 	auth := r.Group("/auth")
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
