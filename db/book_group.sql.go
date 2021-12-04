@@ -736,15 +736,15 @@ const updateBookGroup = `-- name: UpdateBookGroup :exec
 UPDATE book_groups
 SET title = $2,
     description=$3,
-    owner_id=$4
+    primary_cover_art_id=$4
 WHERE id = $1
 `
 
 type UpdateBookGroupParams struct {
-	ID          int32          `json:"id"`
-	Title       string         `json:"title"`
-	Description sql.NullString `json:"description"`
-	OwnerID     int32          `json:"ownerID"`
+	ID                int32          `json:"id"`
+	Title             string         `json:"title"`
+	Description       sql.NullString `json:"description"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
 }
 
 func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams) error {
@@ -752,7 +752,7 @@ func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams
 		arg.ID,
 		arg.Title,
 		arg.Description,
-		arg.OwnerID,
+		arg.PrimaryCoverArtID,
 	)
 	return err
 }

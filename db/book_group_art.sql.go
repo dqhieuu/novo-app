@@ -7,21 +7,41 @@ import (
 	"context"
 )
 
-const deleteBookGroupArt = `-- name: DeleteBookGroupArt :exec
+const deleteCoverOfBookGroup = `-- name: DeleteCoverOfBookGroup :exec
 DELETE
 FROM book_group_arts
 WHERE book_group_id = $1
-  AND image_id = $2
 `
 
-type DeleteBookGroupArtParams struct {
-	BookGroupID int32 `json:"bookGroupID"`
-	ImageID     int32 `json:"imageID"`
+func (q *Queries) DeleteCoverOfBookGroup(ctx context.Context, bookGroupID int32) error {
+	_, err := q.db.Exec(ctx, deleteCoverOfBookGroup, bookGroupID)
+	return err
 }
 
-func (q *Queries) DeleteBookGroupArt(ctx context.Context, arg DeleteBookGroupArtParams) error {
-	_, err := q.db.Exec(ctx, deleteBookGroupArt, arg.BookGroupID, arg.ImageID)
-	return err
+const getCoverIdsOfBookGroup = `-- name: GetCoverIdsOfBookGroup :many
+SELECT image_id
+FROM book_group_arts
+WHERE book_group_id = $1
+`
+
+func (q *Queries) GetCoverIdsOfBookGroup(ctx context.Context, bookGroupID int32) ([]int32, error) {
+	rows, err := q.db.Query(ctx, getCoverIdsOfBookGroup, bookGroupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []int32
+	for rows.Next() {
+		var image_id int32
+		if err := rows.Scan(&image_id); err != nil {
+			return nil, err
+		}
+		items = append(items, image_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertBookGroupArt = `-- name: InsertBookGroupArt :one

@@ -15,7 +15,7 @@ OFFSET $2 ROWS
 UPDATE book_groups
 SET title = $2,
     description=$3,
-    owner_id=$4
+    primary_cover_art_id=$4
 WHERE id = $1;
 
 -- name: InsertBookGroup :one
