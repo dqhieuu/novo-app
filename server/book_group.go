@@ -62,53 +62,74 @@ func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
 	return outData, err
 }
 
-func UpdateBookGroup(id int32, title string, description string, ownerId int32, genreIds []int32, authorIds []int32) error {
+func UpdateBookGroup(id int32, input *InputBookGroup) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	err := queries.UpdateBookGroup(ctx, db.UpdateBookGroupParams{
 		ID:    id,
-		Title: title,
+		Title: input.Title,
 		Description: sql.NullString{
-			String: description,
-			Valid:  description != "",
+			String: input.Description,
+			Valid:  input.Description != "",
 		},
-		OwnerID: ownerId,
+		PrimaryCoverArtID: sql.NullInt32{
+			Int32: input.PrimaryCoverArtId,
+			Valid: input.PrimaryCoverArtId != 0,
+		},
 	})
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book group failed: %s", err)
 		return errors.New(stringErr)
 	}
 
-	err = DeleteGenresByBookGroup(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Update book group failed: %s", err)
-		return errors.New(stringErr)
-	}
-	for i := 0; i < len(genreIds); i++ {
-		_, err = CreateBookGroupGenre(id, genreIds[i])
+	if input.GenreIds != nil {
+		err = DeleteGenresByBookGroup(id)
 		if err != nil {
 			stringErr := fmt.Sprintf("Update book group failed: %s", err)
 			return errors.New(stringErr)
 		}
+		for i := 0; i < len(input.GenreIds); i++ {
+			_, err = CreateBookGroupGenre(id, input.GenreIds[i])
+			if err != nil {
+				stringErr := fmt.Sprintf("Update book group failed: %s", err)
+				return errors.New(stringErr)
+			}
+		}
 	}
 
-	err = DeleteAuthorsByBookGroup(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Update book group failed: %s", err)
-		return errors.New(stringErr)
-	}
-	for i := 0; i < len(authorIds); i++ {
-		_, err = CreateBookGroupAuthor(id, authorIds[i])
+	if input.AuthorIds != nil {
+		err = DeleteAuthorsByBookGroup(id)
 		if err != nil {
 			stringErr := fmt.Sprintf("Update book group failed: %s", err)
 			return errors.New(stringErr)
 		}
+		for i := 0; i < len(input.AuthorIds); i++ {
+			_, err = CreateBookGroupAuthor(id, input.AuthorIds[i])
+			if err != nil {
+				stringErr := fmt.Sprintf("Update book group failed: %s", err)
+				return errors.New(stringErr)
+			}
+		}
 	}
 
+	if input.CoverArtIds != nil {
+		err = DeleteCoverOfBookGroup(id)
+		if err != nil {
+			stringErr := fmt.Sprintf("Update book group failed: %s", err)
+			return errors.New(stringErr)
+		}
+		for i := 0; i < len(input.CoverArtIds); i++ {
+			_, err = CreateBookGroupArt(id, input.CoverArtIds[i])
+			if err != nil {
+				stringErr := fmt.Sprintf("Update book group failed: %s", err)
+				return errors.New(stringErr)
+			}
+		}
+	}
 	return nil
 }
 
-func CreateBookGroup(input *CreateBookGroupParams) (*db.BookGroup, error) {
+func CreateBookGroup(input *InputBookGroup) (*db.BookGroup, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	bookGroup, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
@@ -384,7 +405,7 @@ func GetBookByGenreHandler(c *gin.Context) {
 	})
 }
 
-type CreateBookGroupParams struct {
+type InputBookGroup struct {
 	Title             string  `json:"name" form:"name"`
 	Description       string  `json:"description" form:"description"`
 	AuthorIds         []int32 `json:"authors" form:"authors"`
@@ -396,7 +417,7 @@ type CreateBookGroupParams struct {
 
 func CreateBookGroupHandler(c *gin.Context) {
 	claims := jwt.ExtractClaims(c)
-	var bookGroup CreateBookGroupParams
+	var bookGroup InputBookGroup
 	bookGroup.OwnerId = int32(claims[UserIdClaimKey].(float64))
 
 	if err := c.ShouldBindJSON(&bookGroup); err != nil {
@@ -862,5 +883,67 @@ func DeleteBookGroupHandler(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"message": "delete successful",
+	})
+}
+
+func UpdateBookGroupHandler(c *gin.Context) {
+	var bookGroupId int32
+	_, err := fmt.Sscan(c.Param("bookGroupId"), &bookGroupId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	oldBookGroup, err := queries.BookGroupById(ctx, bookGroupId)
+	if oldBookGroup == (db.BookGroup{}) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Book group does exist",
+		})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	var newBookGroup InputBookGroup
+	if err = c.ShouldBindJSON(&newBookGroup); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if newBookGroup.Title == "" {
+		newBookGroup.Title = oldBookGroup.Title
+	}
+	if newBookGroup.Description == "" {
+		newBookGroup.Description = oldBookGroup.Description.String
+	}
+
+	if err = ValidTitle(&newBookGroup.Title); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err = ValidDescription(&newBookGroup.Description); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	ValidAuthors(&newBookGroup.AuthorIds)
+	ValidGenres(&newBookGroup.GenreIds)
+	if newBookGroup.CoverArtIds != nil {
+		ValidCoverArt(&newBookGroup.CoverArtIds)
+		ValidPrimaryCoverArtId(&newBookGroup.PrimaryCoverArtId, &newBookGroup.CoverArtIds)
+	} else {
+		oldCoverIds, err := queries.GetCoverIdsOfBookGroup(ctx, bookGroupId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		ValidPrimaryCoverArtId(&newBookGroup.PrimaryCoverArtId, &oldCoverIds)
+	}
+
+	if err = UpdateBookGroup(bookGroupId, &newBookGroup); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Update book group successfully",
 	})
 }

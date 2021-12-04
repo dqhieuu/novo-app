@@ -21,3 +21,14 @@ func CreateBookGroupArt(bookGroupId, imageId int32) (*db.BookGroupArt, error) {
 	}
 	return &bookGroupArt, nil
 }
+
+func DeleteCoverOfBookGroup(bookGroupId int32) error {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	err := queries.DeleteCoverOfBookGroup(ctx, bookGroupId)
+	if err != nil {
+		stringErr := fmt.Sprintf("Delete cover art book group failed: %s", err)
+		return errors.New(stringErr)
+	}
+	return nil
+}
