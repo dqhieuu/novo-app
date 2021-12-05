@@ -173,27 +173,9 @@ func CreateBookGroup(input *InputBookGroup) (*db.BookGroup, error) {
 }
 
 func DeleteBookGroup(id int32) error {
-	err := DeleteGenresByBookGroup(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
-		return errors.New(stringErr)
-	}
-
-	err = DeleteAuthorsByBookGroup(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
-		return errors.New(stringErr)
-	}
-
-	err = DeleteBookChapterByBookGroupId(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
-		return errors.New(stringErr)
-	}
-
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err = queries.DeleteBookGroup(ctx, id)
+	err := queries.DeleteBookGroup(ctx, id)
 	if err != nil {
 		stringErr := fmt.Sprintf("Delete book group failed: %s", err)
 		return errors.New(stringErr)

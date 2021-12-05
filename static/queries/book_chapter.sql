@@ -50,11 +50,3 @@ FROM users
          JOIN book_chapters bc on users.id = bc.owner_id
 WHERE bc.id = $1;
 
-
--- name: LastChapterInBookGroup :one
-SELECT chapter_number, date_created
-FROM book_chapters AS bc
-WHERE bc.book_group_id = $1
-  AND date_created IN (SELECT MAX(date_created) as max_date_created
-                       FROM book_chapters AS bc
-                       WHERE bc.book_group_id = $1);

@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS book_group_genres
             REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_group_genres_genres
         FOREIGN KEY (genre_id)
-            REFERENCES genres (id)
+            REFERENCES genres (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS book_group_authors
@@ -168,7 +168,7 @@ CREATE TABLE IF NOT EXISTS book_group_authors
             REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_group_authors_book_authors
         FOREIGN KEY (book_author_id)
-            REFERENCES book_authors (id)
+            REFERENCES book_authors (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS book_chapters
@@ -200,7 +200,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
     rank int NOT NULL DEFAULT 1,
     CONSTRAINT fk_book_chapter_images_book_chapters
         FOREIGN KEY (book_chapter_id)
-            REFERENCES book_chapters (id),
+            REFERENCES book_chapters (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_chapter_images_images
         FOREIGN KEY (image_id)
             REFERENCES images (id)
