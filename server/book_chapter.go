@@ -397,16 +397,17 @@ func UpdateHypertextChapter(c *gin.Context) {
 	if newChapter.TextContent == "" {
 		newChapter.TextContent = oldChapter.TextContext.String
 	}
-	newChapter.Name = strings.TrimSpace(newChapter.Name)
-	if checkChapterName(newChapter.Name) == false {
+	err = ValidTitle(&newChapter.Name)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Name cannot contain control characters or newline characters",
+			"error": err.Error(),
 		})
 		return
 	}
-	if HasControlCharacters(newChapter.TextContent) == true {
+	err = ValidDescription(&newChapter.TextContent)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "TextContent cannot contain control characters",
+			"error": err.Error(),
 		})
 		return
 	}
