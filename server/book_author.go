@@ -110,11 +110,6 @@ func CreateBookAuthor(name, description string, imageID int32) (*db.BookAuthor, 
 
 func DeleteBookAuthor(id int32) error {
 	var err error
-	err = DeleteBookGroupsByBookAuthor(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Delete bookAuthor failed: %s", err)
-		return errors.New(stringErr)
-	}
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	err = queries.DeleteBookAuthor(ctx, id)

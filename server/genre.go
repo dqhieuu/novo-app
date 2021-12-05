@@ -95,11 +95,6 @@ func CreateGenre(name, description string, imageID int32) (*db.Genre, error) {
 
 func DeleteGenre(id int32) error {
 	var err error
-	err = DeleteBookGroupsByGenre(id)
-	if err != nil {
-		stringErr := fmt.Sprintf("Delete genre failed: %s", err)
-		return errors.New(stringErr)
-	}
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	err = queries.DeleteGenre(ctx, id)

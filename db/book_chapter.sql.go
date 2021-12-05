@@ -202,27 +202,6 @@ func (q *Queries) InsertBookChapter(ctx context.Context, arg InsertBookChapterPa
 	return i, err
 }
 
-const lastChapterInBookGroup = `-- name: LastChapterInBookGroup :one
-SELECT chapter_number, date_created
-FROM book_chapters AS bc
-WHERE bc.book_group_id = $1
-  AND date_created IN (SELECT MAX(date_created) as max_date_created
-                       FROM book_chapters AS bc
-                       WHERE bc.book_group_id = $1)
-`
-
-type LastChapterInBookGroupRow struct {
-	ChapterNumber float64   `json:"chapterNumber"`
-	DateCreated   time.Time `json:"dateCreated"`
-}
-
-func (q *Queries) LastChapterInBookGroup(ctx context.Context, bookGroupID int32) (LastChapterInBookGroupRow, error) {
-	row := q.db.QueryRow(ctx, lastChapterInBookGroup, bookGroupID)
-	var i LastChapterInBookGroupRow
-	err := row.Scan(&i.ChapterNumber, &i.DateCreated)
-	return i, err
-}
-
 const updateBookChapter = `-- name: UpdateBookChapter :exec
 UPDATE book_chapters
 SET chapter_number=$2,
