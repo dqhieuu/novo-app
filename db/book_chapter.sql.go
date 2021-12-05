@@ -227,10 +227,7 @@ const updateBookChapter = `-- name: UpdateBookChapter :exec
 UPDATE book_chapters
 SET chapter_number=$2,
     name=$3,
-    text_context=$4,
-    type=$5,
-    book_group_id=$6,
-    owner_id=$7
+    text_context=$4
 WHERE id = $1
 `
 
@@ -239,9 +236,6 @@ type UpdateBookChapterParams struct {
 	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
 	TextContext   sql.NullString `json:"textContext"`
-	Type          string         `json:"type"`
-	BookGroupID   int32          `json:"bookGroupID"`
-	OwnerID       int32          `json:"ownerID"`
 }
 
 func (q *Queries) UpdateBookChapter(ctx context.Context, arg UpdateBookChapterParams) error {
@@ -250,9 +244,6 @@ func (q *Queries) UpdateBookChapter(ctx context.Context, arg UpdateBookChapterPa
 		arg.ChapterNumber,
 		arg.Name,
 		arg.TextContext,
-		arg.Type,
-		arg.BookGroupID,
-		arg.OwnerID,
 	)
 	return err
 }

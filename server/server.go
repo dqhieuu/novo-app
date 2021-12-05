@@ -94,6 +94,7 @@ func Run() {
 		auth.POST("/like/:bookGroupId/:operation", LikeOperationHandler)
 		auth.DELETE("/book/:bookGroupId", DeleteBookGroupHandler)
 		auth.PATCH("/book/:bookGroupId", UpdateBookGroupHandler)
+		auth.PATCH("/chapter/hypertext/:chapterId", UpdateHypertextChapter)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

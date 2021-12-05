@@ -14,10 +14,7 @@ OFFSET $2 ROWS FETCH FIRST $3 ROWS ONLY;
 UPDATE book_chapters
 SET chapter_number=$2,
     name=$3,
-    text_context=$4,
-    type=$5,
-    book_group_id=$6,
-    owner_id=$7
+    text_context=$4
 WHERE id = $1;
 
 -- name: InsertBookChapter :one
