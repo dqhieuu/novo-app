@@ -17,25 +17,32 @@ const limitChapter = 50
 const limitNameCharacter = 50
 
 type Chapter struct {
-	ChapterNumber float64 `json:"chapterNumber"`
-	Name          interface{}  `json:"name"`
-	Id            int32   `json:"id" binding:"required"`
-	TimePosted    int64   `json:"timePosted" binding:"required"`
-	UserPosted    Author  `json:"userPosted" binding:"required"`
+	ChapterNumber float64     `json:"chapterNumber"`
+	Name          interface{} `json:"name"`
+	Id            int32       `json:"id" binding:"required"`
+	TimePosted    int64       `json:"timePosted" binding:"required"`
+	UserPosted    Author      `json:"userPosted" binding:"required"`
 }
 
 type HypertextChapter struct {
 	ChapterNumber interface{} `json:"chapterNumber"`
-	Name          interface{}  `json:"name"`
-	TextContent   string  `json:"textContent" binding:"required"`
-	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
+	Name          interface{} `json:"name"`
+	TextContent   string      `json:"textContent" binding:"required"`
+	BookGroupId   int32       `json:"bookGroupId" binding:"required"`
 }
 
 type ImageChapter struct {
 	ChapterNumber interface{} `json:"chapterNumber"`
-	Name          interface{}  `json:"name"`
-	Images        []int32 `json:"images" binding:"required"`
-	BookGroupId   int32   `json:"bookGroupId" binding:"required"`
+	Name          interface{} `json:"name"`
+	Images        []int32     `json:"images" binding:"required"`
+	BookGroupId   int32       `json:"bookGroupId" binding:"required"`
+}
+
+type UpdateHypertextChapterParams struct {
+	Id            int32   `json:"id"`
+	ChapterNumber float64 `json:"chapterNumber"`
+	Name          string  `json:"name"`
+	TextContent   string  `json:"textContent"`
 }
 
 func checkChapterName(name string) bool {
@@ -83,34 +90,30 @@ func BookChaptersByBookGroupId(bookGroupID, page int32) ([]*db.BookChapter, erro
 	return outData, err
 }
 
-func UpdateBookChapter(id int32, chapterNumber float64, description, textContext, chapterType string,
-	bookGroupID, ownerID int32) error {
+func UpdateBookChapter(chapter UpdateHypertextChapterParams) error {
 
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	descriptionSql := sql.NullString{}
-	err := descriptionSql.Scan(description)
+	nameSql := sql.NullString{}
+	err := nameSql.Scan(chapter.Name)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
 		return errors.New(stringErr)
 	}
 
 	textContextSql := sql.NullString{}
-	err = textContextSql.Scan(textContext)
+	err = textContextSql.Scan(chapter.TextContent)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
 		return errors.New(stringErr)
 	}
 
 	err = queries.UpdateBookChapter(ctx, db.UpdateBookChapterParams{
-		ID:            id,
-		ChapterNumber: chapterNumber,
-		Name:          descriptionSql,
+		ID:            chapter.Id,
+		ChapterNumber: chapter.ChapterNumber,
+		Name:          nameSql,
 		TextContext:   textContextSql,
-		Type:          chapterType,
-		BookGroupID:   bookGroupID,
-		OwnerID:       ownerID,
 	})
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
@@ -349,5 +352,69 @@ func DeleteBookChapterHandler(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Delete Chapter successfully",
+	})
+}
+
+func UpdateHypertextChapter(c *gin.Context) {
+	var newChapter UpdateHypertextChapterParams
+	_, err := fmt.Sscan(c.Param("chapterId"), &newChapter.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error chapterId": err.Error()})
+		return
+	}
+	oldChapter, err := BookChapterById(newChapter.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if oldChapter == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Chapter not exist",
+		})
+		return
+	}
+	if oldChapter.Type != "hypertext" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Type of chapter is not hypertext",
+		})
+		return
+	}
+
+	if err = c.ShouldBindJSON(&newChapter); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error json": err.Error()})
+		return
+	}
+	if newChapter.ChapterNumber == 0 {
+		newChapter.ChapterNumber = oldChapter.ChapterNumber
+	}
+	if newChapter.Name == "" {
+		newChapter.Name = oldChapter.Name.String
+	}
+	if newChapter.TextContent == "" {
+		newChapter.TextContent = oldChapter.TextContext.String
+	}
+	newChapter.Name = strings.TrimSpace(newChapter.Name)
+	if checkChapterName(newChapter.Name) == false {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Name cannot contain control characters or newline characters",
+		})
+		return
+	}
+	if HasControlCharacters(newChapter.TextContent) == true {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "TextContent cannot contain control characters",
+		})
+		return
+	}
+	err = UpdateBookChapter(newChapter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Update chapter successfully",
 	})
 }
