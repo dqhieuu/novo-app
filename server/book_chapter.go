@@ -384,6 +384,10 @@ func UpdateHypertextChapter(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error json": err.Error()})
 		return
 	}
+	if newChapter.ChapterNumber < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error json": "chapter id cannot be less than 0"})
+		return
+	}
 	if newChapter.ChapterNumber == 0 {
 		newChapter.ChapterNumber = oldChapter.ChapterNumber
 	}
