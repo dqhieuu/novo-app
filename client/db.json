@@ -1,6 +1,7 @@
 {
   "manga": [
     {
+      "id": 1,
       "title": "One punch Man",
       "chapter": 120,
       "author": "Fujko F. Fujio",
@@ -10,6 +11,7 @@
       "views": 150000
     },
     {
+      "id": 2,
       "title": "ÔNG CHỒNG NỘI TRỢ",
       "chapter": 68,
       "author": "Fujko F. Fujio",
@@ -19,6 +21,7 @@
       "views": 102496
     },
     {
+      "id": 3,
       "title": "ONE PIECE",
       "chapter": 1031,
       "author": "Fujko F. Fujio",
@@ -28,6 +31,7 @@
       "views": 8742685
     },
     {
+      "id": 4,
       "title": "Kimetsu No Yaiba",
       "chapter": 205,
       "author": "Fujko F. Fujio",
@@ -37,6 +41,7 @@
       "views": 7064424
     },
     {
+      "id": 5,
       "title": "BORUTO",
       "chapter": 63,
       "author": "Fujko F. Fujio",
@@ -46,6 +51,7 @@
       "views": 60000
     },
     {
+      "id": 6,
       "title": "Liar Satsuki can see the death",
       "chapter": 3,
       "author": "Fujko F. Fujio",
@@ -55,6 +61,7 @@
       "views": 759
     },
     {
+      "id": 7,
       "title": "ATTACK ON TITAN",
       "chapter": 141,
       "author": "Fujko F. Fujio",
@@ -64,6 +71,7 @@
       "views": 14924
     },
     {
+      "id": 8,
       "title": "THÁM TỬ LỪNG DANH CONAN",
       "chapter": 1081,
       "author": "Fujko F. Fujio",
@@ -73,6 +81,7 @@
       "views": 134923
     },
     {
+      "id": 9,
       "title": "NARUTO",
       "chapter": 700,
       "author": "Fujko F. Fujio",
@@ -82,6 +91,7 @@
       "views": 139483
     },
     {
+      "id": 10,
       "title": "YUGI-OH! FULL MÀU",
       "chapter": 342,
       "author": "Fujko F. Fujio",
@@ -91,6 +101,7 @@
       "views": 419384
     },
     {
+      "id": 11,
       "title": "TOKYO卍REVENGERS",
       "chapter": 230,
       "author": "Fujko F. Fujio",
@@ -100,6 +111,7 @@
       "views": 123981
     },
     {
+      "id": 12,
       "title": "BLACK CLOVER",
       "chapter": 313,
       "author": "Fujko F. Fujio",
@@ -109,6 +121,7 @@
       "views": 139998
     },
     {
+      "id": 13,
       "title": "BLEACH",
       "chapter": 686,
       "author": "Fujko F. Fujio",
@@ -118,6 +131,7 @@
       "views": 123912
     },
     {
+      "id": 14,
       "title": "Kingdom",
       "chapter": 697,
       "author": "Fujko F. Fujio",
@@ -127,6 +141,7 @@
       "views": 113900
     },
     {
+      "id": 15,
       "title": "New Town",
       "chapter": 11,
       "author": "Fujko F. Fujio",
@@ -136,6 +151,7 @@
       "views": 13024
     },
     {
+      "id": 16,
       "title": "Secret Class",
       "chapter": 106,
       "author": "Fujko F. Fujio",
@@ -145,6 +161,7 @@
       "views": 13391
     },
     {
+      "id": 17,
       "title": "Stepmother Friends",
       "chapter": 91,
       "author": "Fujko F. Fujio",
@@ -154,6 +171,7 @@
       "views": 150001
     },
     {
+      "id": 18,
       "title": "Is there an Empty Room?",
       "chapter": 47,
       "author": "Fujko F. Fujio",
@@ -163,6 +181,7 @@
       "views": 15000
     },
     {
+      "id": 19,
       "title": "Boarding Diary",
       "chapter": 65,
       "author": "Fujko F. Fujio",
@@ -172,6 +191,7 @@
       "views": 150000
     },
     {
+      "id": 20,
       "title": "Fitness",
       "chapter": 110,
       "author": "Fujko F. Fujio",
@@ -181,6 +201,7 @@
       "views": 150000
     },
     {
+      "id": 21,
       "title": "My Kingdom (Silent War)",
       "chapter": 151,
       "author": "Fujko F. Fujio",
@@ -190,6 +211,7 @@
       "views": 19133
     },
     {
+      "id": 22,
       "title": "JUJUTSU KAISEN - CHÚ THUẬT HỒI CHIẾN",
       "chapter": 163,
       "author": "Fujko F. Fujio",
@@ -199,6 +221,7 @@
       "views": 183831
     },
     {
+      "id": 23,
       "title": "SHUUMATSU NO VALKYRIE",
       "chapter": 55,
       "author": "Fujko F. Fujio",
@@ -208,6 +231,7 @@
       "views": 335305
     },
     {
+      "id": 24,
       "title": "EDEN'S ZERO",
       "chapter": 166,
       "author": "Fujko F. Fujio",
@@ -217,6 +241,7 @@
       "views": 150000
     },
     {
+      "id": 25,
       "title": "CHÚA TỂ HỌC ĐƯỜNG",
       "chapter": 503,
       "author": "Fujko F. Fujio",
@@ -226,6 +251,7 @@
       "views": 139134
     },
     {
+      "id": 26,
       "title": "ISEKAI MAHOU WA OKURETERU!",
       "chapter": 43,
       "author": "Gamei Hitsuji",
@@ -235,6 +261,7 @@
       "views": 122933
     },
     {
+      "id": 27,
       "title": "NHỚ NHÀ",
       "chapter": 3,
       "author": "Ms. Freaky",
