@@ -12,15 +12,15 @@ export default function SearchBar() {
     setFilterData([]);
   }
   const handleFilter = (event) => {
-    setSearchWord(event.target.value);
-    console.log(searchWord);
+    const inputSearch = event.target.value;
 
     const newFilter = listObjects.filter((book) => {
-      return book.title.toLowerCase().includes(searchWord.toLowerCase());
+      return book.title.toLowerCase().includes(inputSearch.toLowerCase());
     });
-    if (searchWord === "") {
+    if (inputSearch === "") {
       setFilterData([]);
     } else setFilterData(newFilter);
+    setSearchWord(inputSearch);
   };
   return (
     <form>

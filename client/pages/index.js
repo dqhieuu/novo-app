@@ -10,6 +10,7 @@ import { FaBeer } from "react-icons/fa";
 
 export default function Home() {
   const { listObjects } = useContext(MangaContext);
+
   function sortObjectByKey(key) {
     let arrSorted = [];
     if (key == listObjects.lastUpdate) {
@@ -48,25 +49,26 @@ export default function Home() {
           </Link>
         ))}
       </div>
-      {/* <div className="row mt-5">
-        <div className="col-12 col-lg-6 mt-1">
-          <ImgOverlay
-            view={`${listObjects[4].views} lượt đọc`}
-            srcImg={listObjects[4].imgSrc}
-            description={listObjects[4].description}
-            title={listObjects[4].title}
-          ></ImgOverlay>
-        </div>
-        <div className="col-12 col-lg-6 mt-1">
-          <ImgOverlay
-            view={`${listObjects[1].views} lượt đọc`}
-            srcImg={listObjects[1].imgSrc}
-            description={listObjects[1].description}
-            title={listObjects[1].title}
-          ></ImgOverlay>
-        </div>
-      </div> */}
-
+        { listObjects.length ?
+            <div className="row mt-5">
+            <div className="col-12 col-lg-6 mt-1">
+                <ImgOverlay
+                    view={`${listObjects[4].views} lượt đọc`}
+                    srcImg={listObjects[4].imgSrc}
+                    description={listObjects[4].description}
+                    title={listObjects[4].title}
+                ></ImgOverlay>
+            </div>
+            <div className="col-12 col-lg-6 mt-1">
+                <ImgOverlay
+                    view={`${listObjects[1].views} lượt đọc`}
+                    srcImg={listObjects[1].imgSrc}
+                    description={listObjects[1].description}
+                    title={listObjects[1].title}
+                ></ImgOverlay>
+            </div>
+        </div> : ''}
+        {console.log()}
       <div className="row">
         <div className="col-sm-8">
           <h5
