@@ -38,11 +38,12 @@ type ImageChapter struct {
 	BookGroupId   int32       `json:"bookGroupId" binding:"required"`
 }
 
-type UpdateHypertextChapterParams struct {
+type UpdateChapterParams struct {
 	Id            int32   `json:"id"`
 	ChapterNumber float64 `json:"chapterNumber"`
 	Name          string  `json:"name"`
 	TextContent   string  `json:"textContent"`
+	Images        []int32 `json:"images"`
 }
 
 func checkChapterName(name string) bool {
@@ -90,7 +91,7 @@ func BookChaptersByBookGroupId(bookGroupID, page int32) ([]*db.BookChapter, erro
 	return outData, err
 }
 
-func UpdateBookChapter(chapter UpdateHypertextChapterParams) error {
+func UpdateBookChapter(chapter UpdateChapterParams) error {
 
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -119,6 +120,26 @@ func UpdateBookChapter(chapter UpdateHypertextChapterParams) error {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
 		return errors.New(stringErr)
 	}
+
+	if chapter.Images != nil {
+		err = queries.DeleteImageOfBookChapter(ctx, chapter.Id)
+		if err != nil {
+			stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
+			return errors.New(stringErr)
+		}
+		for i := 0; i < len(chapter.Images); i++ {
+			err = queries.InsertBookChapterImage(ctx, db.InsertBookChapterImageParams{
+				BookChapterID: chapter.Id,
+				ImageID:       chapter.Images[i],
+				Rank:          int32(i + 1),
+			})
+			if err != nil {
+				stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
+				return errors.New(stringErr)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -356,7 +377,7 @@ func DeleteBookChapterHandler(c *gin.Context) {
 }
 
 func UpdateHypertextChapter(c *gin.Context) {
-	var newChapter UpdateHypertextChapterParams
+	var newChapter UpdateChapterParams
 	_, err := fmt.Sscan(c.Param("chapterId"), &newChapter.Id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error chapterId": err.Error()})
@@ -385,7 +406,7 @@ func UpdateHypertextChapter(c *gin.Context) {
 		return
 	}
 	if newChapter.ChapterNumber < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error json": "chapter id cannot be less than 0"})
+		c.JSON(http.StatusBadRequest, gin.H{"error json": "chapter number cannot be less than 0"})
 		return
 	}
 	if newChapter.ChapterNumber == 0 {
@@ -397,6 +418,8 @@ func UpdateHypertextChapter(c *gin.Context) {
 	if newChapter.TextContent == "" {
 		newChapter.TextContent = oldChapter.TextContext.String
 	}
+	newChapter.Images = nil
+
 	err = ValidTitle(&newChapter.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -411,6 +434,76 @@ func UpdateHypertextChapter(c *gin.Context) {
 		})
 		return
 	}
+	err = UpdateBookChapter(newChapter)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Update chapter successfully",
+	})
+}
+
+func UpdateImagesChapterHandler(c *gin.Context) {
+	var newChapter UpdateChapterParams
+	_, err := fmt.Sscan(c.Param("chapterId"), &newChapter.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error chapterId": err.Error()})
+		return
+	}
+	oldChapter, err := BookChapterById(newChapter.Id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if oldChapter == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Chapter not exist",
+		})
+		return
+	}
+	if oldChapter.Type != "images" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Type of chapter is not images",
+		})
+		return
+	}
+
+	if err = c.ShouldBindJSON(&newChapter); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error json": err.Error()})
+		return
+	}
+	if newChapter.ChapterNumber < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error json": "chapter number cannot be less than 0"})
+		return
+	}
+	if newChapter.ChapterNumber == 0 {
+		newChapter.ChapterNumber = oldChapter.ChapterNumber
+	}
+	if newChapter.Name == "" {
+		newChapter.Name = oldChapter.Name.String
+	}
+	newChapter.TextContent = oldChapter.TextContext.String
+
+	err = ValidTitle(&newChapter.Name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	err = ValidDescription(&newChapter.TextContent)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+	ValidCoverArt(&newChapter.Images)
+
 	err = UpdateBookChapter(newChapter)
 
 	if err != nil {

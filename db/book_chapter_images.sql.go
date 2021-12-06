@@ -7,6 +7,17 @@ import (
 	"context"
 )
 
+const deleteImageOfBookChapter = `-- name: DeleteImageOfBookChapter :exec
+DELETE
+FROM book_chapter_images
+WHERE book_chapter_id = $1
+`
+
+func (q *Queries) DeleteImageOfBookChapter(ctx context.Context, bookChapterID int32) error {
+	_, err := q.db.Exec(ctx, deleteImageOfBookChapter, bookChapterID)
+	return err
+}
+
 const imagesByBookChapter = `-- name: ImagesByBookChapter :many
 SELECT i.path
 FROM book_chapter_images AS bci

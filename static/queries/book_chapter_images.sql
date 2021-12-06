@@ -7,3 +7,8 @@ FROM book_chapter_images AS bci
 JOIN images AS i ON i.id=bci.image_id
 WHERE bci.book_chapter_id = $1
 ORDER BY bci.rank ASC;
+
+-- name: DeleteImageOfBookChapter :exec
+DELETE
+FROM book_chapter_images
+WHERE book_chapter_id = $1;
