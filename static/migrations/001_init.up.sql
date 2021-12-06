@@ -72,6 +72,17 @@ CREATE TABLE IF NOT EXISTS genres
             REFERENCES images (id)
 );
 
+INSERT INTO genres(name, description)
+VALUES('Hành động', 'Truyện hành động'),
+      ('Lãng mạn', 'Truyện lãng mạn'),
+      ('Drama', 'Truyện drama'),
+      ('Giả tưởng', 'Truyện giả tưởng'),
+      ('Chuyển sinh', 'Truyện chuyển sinh'),
+      ('Hài hước', 'Truyện hài hước'),
+      ('Học đường', 'Truyện học đường'),
+      ('Kinh dị', 'Truyện kinh dị'),
+      ('Phiêu lưu', 'Truyện phiêu lưu');
+
 -- CREATE TABLE IF NOT EXISTS book_chapter_types
 -- (
 --     id          int GENERATED ALWAYS AS IDENTITY,
