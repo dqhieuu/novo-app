@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS role_permissions
     module text NOT NULL,
     action text NOT NULL,
     role_id int NOT NULL,
-    PRIMARY KEY (module, action),
+    PRIMARY KEY (module, action, role_id),
     CONSTRAINT fk_role_id_roles
         FOREIGN KEY (role_id)
             REFERENCES roles(id)
