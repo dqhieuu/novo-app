@@ -1,14 +1,10 @@
 import { useState } from "react";
-import ReactPaginate from "react-paginate";
+import { useContext } from "react";
+import { MangaContext } from "../Context/MangaContext";
 import DisplayImg from "../components/displayImg";
 
-export const getStaticProps = async () => {
-  const res = await fetch("http://localhost:3300/manga");
-  const data = await res.json();
-  return { props: { listObjects: data } };
-};
-
-export default function HotManga({ listObjects }) {
+export default function HotManga() {
+  const { listObjects } = useContext(MangaContext);
   const [number, setNumber] = useState(12);
   const sliceArr = sortObjectByKey().slice(0, number);
   const loadMore = () => {
@@ -53,26 +49,6 @@ export default function HotManga({ listObjects }) {
             Load More
           </button>
         </div>
-
-        {/* <ReactPaginate
-          previousLabel={"trước"}
-          nextLabel={"sau"}
-          breakLabel={"..."}
-          pageCount={Object.entries(listObjects).length / 12}
-          marginPagesDisplayed={1}
-          pageRangeDisplayed={2}
-          onPageChange={handlePageClick}
-          containerClassName={"pagination justify-content-center"}
-          pageClassName={"page-item"}
-          pageLinkClassName={"page-link"}
-          previousClassName={"page-item"}
-          previousLinkClassName={"page-link"}
-          nextClassName={"page-item"}
-          nextLinkClassName={"page-link"}
-          breakClassName={"page-item"}
-          breakLinkClassName={"page-link"}
-          activeClassName={"active"}
-        ></ReactPaginate> */}
       </div>
     </div>
   );

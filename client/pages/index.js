@@ -1,17 +1,15 @@
 import Head from "next/head";
-import Image from "next/image";
+
 import Link from "next/link";
-import { Container, Row, Col } from "reactstrap";
+import { useContext } from "react";
+import { MangaContext } from "../Context/MangaContext";
 import DisplayImg from "../components/displayImg";
 import ImgOverlay from "../components/ImgOverlay";
 import "../styles/Home.module.css";
-export const getStaticProps = async () => {
-  const res = await fetch("http://localhost:3300/manga");
-  const data = await res.json();
-  return { props: { listObjects: data } };
-};
+import { FaBeer } from "react-icons/fa";
 
-export default function Home({ listObjects }) {
+export default function Home() {
+  const { listObjects } = useContext(MangaContext);
   function sortObjectByKey(key) {
     let arrSorted = [];
     if (key == listObjects.lastUpdate) {
@@ -35,20 +33,22 @@ export default function Home({ listObjects }) {
       </h5>
       <div className="row">
         {listObjects.slice(0, 12).map((listObject) => (
-          <div className="col-6 col-lg-2" key={listObject.title}>
-            {" "}
-            <DisplayImg
-              srcImg={listObject.imgSrc}
-              size={2}
-              text={"Chap " + listObject.chapter}
-              title={listObject.title}
-              height="282px"
-              bgColor="red"
-            ></DisplayImg>
-          </div>
+          <Link href={"/mangas/" + listObject.id} key={listObject.id}>
+            <div className="col-6 col-lg-2">
+              {" "}
+              <DisplayImg
+                srcImg={listObject.imgSrc}
+                size={2}
+                text={"Chap " + listObject.chapter}
+                title={listObject.title}
+                height="282px"
+                bgColor="red"
+              ></DisplayImg>
+            </div>
+          </Link>
         ))}
       </div>
-      <div className="row mt-5">
+      {/* <div className="row mt-5">
         <div className="col-12 col-lg-6 mt-1">
           <ImgOverlay
             view={`${listObjects[4].views} lượt đọc`}
@@ -65,7 +65,7 @@ export default function Home({ listObjects }) {
             title={listObjects[1].title}
           ></ImgOverlay>
         </div>
-      </div>
+      </div> */}
 
       <div className="row">
         <div className="col-sm-8">
@@ -81,7 +81,6 @@ export default function Home({ listObjects }) {
               .map((listObject) => (
                 <div className="col-sm-6">
                   <div className="row">
-                    {" "}
                     <div className="col-6">
                       <DisplayImg
                         srcImg={listObject[1].imgSrc}

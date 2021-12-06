@@ -14,40 +14,55 @@ a {
 * {
   box-sizing: border-box;
 }
-.container {
-  position: relative;
-  width: 50%;
+
+input:focus {
+  outline: none;
 }
 
-.image {
-  display: block;
-  width: 100%;
-  height: auto;
-}
+.dataResult {
+  border-radius: 5px;
 
-.overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background-color: #008cba;
+  width: 300px;
+  max-height: 200px;
+  background-color: white;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   overflow: hidden;
+  overflow-y: auto;
+}
+.list-chapter {
+  max-height: 200px;
+  overflow: hidden;
+  overflow-y: auto;
+}
+
+.dataResult::-webkit-scrollbar {
+  display: none;
+}
+
+.dataResult .dataItem {
   width: 100%;
-  height: 0;
-  transition: 0.5s ease;
+  height: 60px;
+
+  display: flex;
+  /* align-items: center; */
+  /* justify-content: space-between; */
+  color: black;
+  margin-top: 10px;
+}
+.dataResult .dataItem:first-child {
+  margin-top: 0;
 }
 
-.container:hover .overlay {
-  height: 100%;
-  opacity: 0.5;
+.dataItem p {
+  margin-left: 10px;
+  font-size: 12px;
+}
+.dataResult .dataItem :hover {
+  color: red;
+  background-color: lightgray;
+  cursor: pointer;
 }
 
-.text {
-  color: white;
-  font-size: 20px;
-  position: absolute;
-  top: 10%;
-  left: 20%;
-
-  transform: translate(-50%, -50%);
+a {
+  text-decoration: none;
 }
