@@ -175,10 +175,15 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 
 	extract := jwt.ExtractClaims(c)
 
-	role := extract[RoleNameClaimKey].(string)
+	userId := int32(extract[UserIdClaimKey].(float64))
 
-	if role != "oauth_incomplete" {
-		ReportError(c, errors.New("role is not oauth incomplete"), "error", http.StatusBadRequest)
+	peekUserRow, err := queries.GetUserInfo(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if peekUserRow.Role != "oauth_incomplete" {
+		ReportError(c, errors.New("role is not oauth complete"), "error", http.StatusBadRequest)
 		return
 	}
 
@@ -198,7 +203,7 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		return
 	}
 
-	err = CompleteOauthRegistration(int32(extract[UserIdClaimKey].(float64)), user.Username, avatarIdPointer, memberId)
+	err = CompleteOauthRegistration(userId, user.Username, avatarIdPointer, memberId)
 	if err != nil {
 		log.Printf("error completing oauth: %s\n", err)
 		c.JSON(500, gin.H{
