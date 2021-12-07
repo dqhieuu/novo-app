@@ -173,6 +173,22 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		return
 	}
 
+	extract := jwt.ExtractClaims(c)
+
+	role := extract[RoleNameClaimKey].(string)
+
+	if role != "oauth_incomplete" {
+		ReportError(c, errors.New("role is not oauth incomplete"), "error", http.StatusBadRequest)
+		return
+	}
+
+	var avatarIdPointer *int32
+	var avatarId int32
+	if user.Avatar != nil {
+		avatarId = int32(user.Avatar.(float64))
+		avatarIdPointer = &avatarId
+	}
+
 	memberId, err := queries.GetRoleId(ctx, "member")
 	if err != nil {
 		log.Printf("error getting member role id: %s\n", err)
@@ -180,14 +196,6 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 			"error": "error parsing json",
 		})
 		return
-	}
-
-	extract := jwt.ExtractClaims(c)
-	var avatarIdPointer *int32
-	var avatarId int32
-	if user.Avatar != nil {
-		avatarId = int32(user.Avatar.(float64))
-		avatarIdPointer = &avatarId
 	}
 
 	err = CompleteOauthRegistration(int32(extract[UserIdClaimKey].(float64)), user.Username, avatarIdPointer, memberId)

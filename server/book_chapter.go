@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
 )
 
 const limitChapter = 50
@@ -343,10 +342,7 @@ func GetBookChapterContentHandler(c *gin.Context) {
 		})
 	}
 
-	err = InsertView(InsertViewParams{
-		ChapterId: chapterId,
-		ViewDate:  time.Now(),
-	})
+	err = InsertView(chapterId)
 
 	if err != nil {
 		ReportError(c, err, "error", 500)

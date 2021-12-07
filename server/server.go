@@ -1,11 +1,8 @@
 package server
 
 import (
-	"context"
-	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 func Run() {
@@ -38,23 +35,6 @@ func Run() {
 
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
-
-	r.GET("/test", func(c *gin.Context) {
-
-		err := db.New(db.Pool()).UpsertViewByDate(context.Background(), db.UpsertViewByDateParams{
-			BookChapterID: 1,
-			ViewDate:      time.Now(),
-		})
-
-		if err != nil {
-			ReportError(c, err, "error", 500)
-			return
-		}
-
-		c.JSON(200, gin.H{
-			"message": "success",
-		})
-	})
 
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 	r.GET("/genre/all", ListAllGenresHandler)
