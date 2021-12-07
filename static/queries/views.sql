@@ -1,8 +1,8 @@
 -- name: UpsertViewByDate :exec
-INSERT INTO book_chapter_views(book_chapter_id, view_date)
-VALUES ($1, $2)
+INSERT INTO book_chapter_views(book_chapter_id)
+VALUES ($1)
 ON CONFLICT(book_chapter_id, view_date)
-DO UPDATE SET count = count + 1;
+DO UPDATE SET count = book_chapter_views.count + 1;
 
 -- name: GetViewByWeek :one
 SELECT COALESCE(sum(count), 0) as viewByWeek FROM book_chapter_views

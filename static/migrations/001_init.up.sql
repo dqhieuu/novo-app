@@ -222,6 +222,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_views
     count           int DEFAULT 1,
     view_date       date NOT NULL DEFAULT now(),
     book_chapter_id int  NOT NULL,
+    UNIQUE (book_chapter_id, view_date),
     CONSTRAINT fk_book_chapter_views_book_chapters
         FOREIGN KEY (book_chapter_id)
             REFERENCES book_chapters (id)

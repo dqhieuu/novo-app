@@ -36,30 +36,6 @@ func Run() {
 	r.POST("/auth/upload/:imageType", UploadImageHandler)
 	r.Static("/image", "static/images")
 
-	r.GET("/test/:id", func(c *gin.Context) {
-		//ctx := context.Background()
-		//queries := db.New(db.Pool())
-		//
-		//idString := c.Param("id")
-		//id64, err := strconv.ParseInt(idString, 10, 32)
-		//if err != nil {
-		//	ReportError(c, err, "error parsing id", 500)
-		//	return
-		//}
-		//
-		//check, err := queries.CheckIfCommentExist(ctx, int32(id64))
-		//if err != nil {
-		//	c.JSON(500, gin.H{
-		//		"error": err,
-		//	})
-		//}
-		//log.Printf("%+v\n", check)
-
-		var test BookGroup
-
-		c.JSON(200, test)
-	})
-
 	r.GET("/chapter/:chapterId", GetBookChapterContentHandler)
 	r.GET("/genre/all", ListAllGenresHandler)
 	r.GET("/comment", GetCommentsHandler)

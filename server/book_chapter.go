@@ -341,6 +341,12 @@ func GetBookChapterContentHandler(c *gin.Context) {
 			"textContent":   bookChapter.TextContext.String,
 		})
 	}
+
+	err = InsertView(chapterId)
+
+	if err != nil {
+		ReportError(c, err, "error", 500)
+	}
 }
 
 func DeleteBookChapterHandler(c *gin.Context) {

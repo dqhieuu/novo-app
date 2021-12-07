@@ -12,11 +12,8 @@ type InsertViewParams struct {
 	ViewDate  time.Time
 }
 
-func InsertView(params InsertViewParams) error {
-	err := db.New(db.Pool()).UpsertViewByDate(context.Background(), db.UpsertViewByDateParams{
-		BookChapterID: params.ChapterId,
-		ViewDate:      params.ViewDate,
-	})
+func InsertView(chapterId int32) error {
+	err := db.New(db.Pool()).UpsertViewByDate(context.Background(), chapterId)
 
 	if err != nil {
 		return errors.New("error inserting view: " + err.Error())

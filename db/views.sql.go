@@ -5,7 +5,6 @@ package db
 
 import (
 	"context"
-	"time"
 )
 
 const getBookGroupView = `-- name: GetBookGroupView :one
@@ -62,18 +61,13 @@ func (q *Queries) GetViewByYear(ctx context.Context, bookChapterID int32) (inter
 }
 
 const upsertViewByDate = `-- name: UpsertViewByDate :exec
-INSERT INTO book_chapter_views(book_chapter_id, view_date)
-VALUES ($1, $2)
+INSERT INTO book_chapter_views(book_chapter_id)
+VALUES ($1)
 ON CONFLICT(book_chapter_id, view_date)
-DO UPDATE SET count = count + 1
+DO UPDATE SET count = book_chapter_views.count + 1
 `
 
-type UpsertViewByDateParams struct {
-	BookChapterID int32     `json:"bookChapterID"`
-	ViewDate      time.Time `json:"viewDate"`
-}
-
-func (q *Queries) UpsertViewByDate(ctx context.Context, arg UpsertViewByDateParams) error {
-	_, err := q.db.Exec(ctx, upsertViewByDate, arg.BookChapterID, arg.ViewDate)
+func (q *Queries) UpsertViewByDate(ctx context.Context, bookChapterID int32) error {
+	_, err := q.db.Exec(ctx, upsertViewByDate, bookChapterID)
 	return err
 }

@@ -173,6 +173,27 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		return
 	}
 
+	extract := jwt.ExtractClaims(c)
+
+	userId := int32(extract[UserIdClaimKey].(float64))
+
+	peekUserRow, err := queries.GetUserInfo(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if peekUserRow.Role != "oauth_incomplete" {
+		ReportError(c, errors.New("role is not oauth complete"), "error", http.StatusBadRequest)
+		return
+	}
+
+	var avatarIdPointer *int32
+	var avatarId int32
+	if user.Avatar != nil {
+		avatarId = int32(user.Avatar.(float64))
+		avatarIdPointer = &avatarId
+	}
+
 	memberId, err := queries.GetRoleId(ctx, "member")
 	if err != nil {
 		log.Printf("error getting member role id: %s\n", err)
@@ -182,15 +203,7 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 		return
 	}
 
-	extract := jwt.ExtractClaims(c)
-	var avatarIdPointer *int32
-	var avatarId int32
-	if user.Avatar != nil {
-		avatarId = int32(user.Avatar.(float64))
-		avatarIdPointer = &avatarId
-	}
-
-	err = CompleteOauthRegistration(int32(extract[UserIdClaimKey].(float64)), user.Username, avatarIdPointer, memberId)
+	err = CompleteOauthRegistration(userId, user.Username, avatarIdPointer, memberId)
 	if err != nil {
 		log.Printf("error completing oauth: %s\n", err)
 		c.JSON(500, gin.H{
