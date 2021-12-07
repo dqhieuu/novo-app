@@ -50,9 +50,9 @@ func (q *Queries) InsertNewRole(ctx context.Context, arg InsertNewRoleParams) (R
 
 const role = `-- name: Role :one
 SELECT r.name                             role_name,
-       array_agg(module || '.' || action)::text[] role_permissions
+       array_remove(array_agg(module || '.' || action), null)::text[] role_permissions
 FROM roles r
-         LEFT JOIN role_permissions rp on r.id = rp.role_id
+         LEFT JOIN role_permissions rp ON r.id = rp.role_id
 WHERE r.id = $1
 GROUP BY r.name
 `

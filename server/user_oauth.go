@@ -19,9 +19,9 @@ import (
 
 var googleConfig *oauth2.Config
 
-type CompleteOauth struct{
-	Username string `json:"username" binding:"required" form:"username"`
-	Avatar interface{} `json:"avatar" form:"avatar"`
+type CompleteOauth struct {
+	Username string      `json:"username" binding:"required" form:"username"`
+	Avatar   interface{} `json:"avatar" form:"avatar"`
 }
 
 func InitOauth() {
@@ -163,7 +163,7 @@ func GoogleOauthRedirect(c *gin.Context) {
 func CompleteOauthAccountHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	
+
 	var user CompleteOauth
 	if err := c.ShouldBindJSON(&user); err != nil {
 		log.Printf("error parsing json: %s\n", err)
