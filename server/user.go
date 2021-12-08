@@ -292,11 +292,11 @@ func GetUserInfoByIdHandler(c *gin.Context) {
 			if book.Image != nil {
 				newBook.Image = book.Image
 			}
-			if book.Latestchapter != nil {
-				newBook.LatestChapter = book.Latestchapter
+			if book.LatestChapter != nil {
+				newBook.LatestChapter = book.LatestChapter
 			}
-			if book.Lastupdated != nil {
-				newBook.LastUpdated = book.Lastupdated.(time.Time).UnixMicro()
+			if book.LastUpdated != nil {
+				newBook.LastUpdated = book.LastUpdated.(time.Time).UnixMicro()
 			} else {
 				bookRowForDateCreated, err := queries.BookGroupById(ctx, book.ID)
 				if err != nil {

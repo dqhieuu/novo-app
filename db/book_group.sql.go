@@ -74,8 +74,8 @@ const bookGroupsTopViewAll = `-- name: BookGroupsTopViewAll :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -91,8 +91,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -100,7 +100,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1
 `
@@ -109,8 +109,8 @@ type BookGroupsTopViewAllRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -129,8 +129,8 @@ func (q *Queries) BookGroupsTopViewAll(ctx context.Context, limit int32) ([]Book
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -149,8 +149,8 @@ const bookGroupsTopViewMonth = `-- name: BookGroupsTopViewMonth :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -166,8 +166,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -176,7 +176,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1
 `
@@ -185,8 +185,8 @@ type BookGroupsTopViewMonthRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -205,8 +205,8 @@ func (q *Queries) BookGroupsTopViewMonth(ctx context.Context, limit int32) ([]Bo
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -225,8 +225,8 @@ const bookGroupsTopViewWeek = `-- name: BookGroupsTopViewWeek :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -242,8 +242,8 @@ LEFT JOIN Lateral (
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
 LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
         LEFT JOIN book_chapter_views bcv
@@ -252,7 +252,7 @@ LEFT JOIN LATERAL (
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
 LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1
 `
@@ -261,8 +261,8 @@ type BookGroupsTopViewWeekRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -281,8 +281,8 @@ func (q *Queries) BookGroupsTopViewWeek(ctx context.Context, limit int32) ([]Boo
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -301,8 +301,8 @@ const bookGroupsTopViewYear = `-- name: BookGroupsTopViewYear :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -318,8 +318,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -328,7 +328,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1
 `
@@ -337,8 +337,8 @@ type BookGroupsTopViewYearRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -357,8 +357,8 @@ func (q *Queries) BookGroupsTopViewYear(ctx context.Context, limit int32) ([]Boo
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -430,8 +430,8 @@ const latestBookGroups = `-- name: LatestBookGroups :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -447,8 +447,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -456,8 +456,8 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
-ORDER BY lastUpdated DESC  NULLS LAST
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
+ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
 `
 
@@ -470,8 +470,8 @@ type LatestBookGroupsRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -490,8 +490,8 @@ func (q *Queries) LatestBookGroups(ctx context.Context, arg LatestBookGroupsPara
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -535,8 +535,8 @@ const randomBookGroups = `-- name: RandomBookGroups :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -552,8 +552,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -561,7 +561,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY RANDOM() LIMIT $1
 `
 
@@ -569,8 +569,8 @@ type RandomBookGroupsRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -589,8 +589,8 @@ func (q *Queries) RandomBookGroups(ctx context.Context, limit int32) ([]RandomBo
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -609,8 +609,8 @@ const searchResult = `-- name: SearchResult :many
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -626,8 +626,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -636,8 +636,8 @@ FROM book_groups AS bg
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
 WHERE bg.title LIKE '%'||$3||'%'
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
-ORDER BY lastUpdated DESC  NULLS LAST
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
+ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
 `
 
@@ -651,8 +651,8 @@ type SearchResultRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         string      `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -671,8 +671,8 @@ func (q *Queries) SearchResult(ctx context.Context, arg SearchResultParams) ([]S
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
@@ -691,7 +691,7 @@ const searchSuggestion = `-- name: SearchSuggestion :many
 SELECT bg.title AS title,
        bg.id AS id,
        (array_agg(i.path))[1] AS image,
-       (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter
+       (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
@@ -704,7 +704,7 @@ type SearchSuggestionRow struct {
 	Title         string      `json:"title"`
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
-	Latestchapter interface{} `json:"latestchapter"`
+	LatestChapter interface{} `json:"latestChapter"`
 }
 
 func (q *Queries) SearchSuggestion(ctx context.Context, query sql.NullString) ([]SearchSuggestionRow, error) {
@@ -720,7 +720,7 @@ func (q *Queries) SearchSuggestion(ctx context.Context, query sql.NullString) ([
 			&i.Title,
 			&i.ID,
 			&i.Image,
-			&i.Latestchapter,
+			&i.LatestChapter,
 		); err != nil {
 			return nil, err
 		}

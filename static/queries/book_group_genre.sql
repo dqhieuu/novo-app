@@ -54,8 +54,8 @@ WHERE genre_id = $1;
 SELECT bgg.book_group_id id,
        (array_agg(i.path))[1] AS image,
        (array_agg(bg.title))[1] title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -72,8 +72,8 @@ FROM book_group_genres AS bgg
     WHERE bgl.book_group_id = bgg.book_group_id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -82,6 +82,6 @@ FROM book_group_genres AS bgg
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
 WHERE bgg.genre_id = $1
-GROUP BY bgg.book_group_id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
-ORDER BY lastUpdated DESC  NULLS LAST
+GROUP BY bgg.book_group_id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
+ORDER BY last_updated DESC  NULLS LAST
 OFFSET $2 ROWS FETCH FIRST $3 ROWS ONLY;

@@ -31,7 +31,7 @@ WHERE id = @id;
 SELECT bg.title AS title,
        bg.id AS id,
        (array_agg(i.path))[1] AS image,
-       (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter
+       (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
@@ -43,8 +43,8 @@ LIMIT 5;
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -60,8 +60,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -70,8 +70,8 @@ FROM book_groups AS bg
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
 WHERE bg.title LIKE '%'||sqlc.arg(query)||'%'
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
-ORDER BY lastUpdated DESC  NULLS LAST
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
+ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
 
 -- name: NumberBookGroupSearchResult :one
@@ -83,8 +83,8 @@ WHERE title LIKE '%' || sqlc.arg(query) || '%';
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -100,8 +100,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -109,8 +109,8 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
-ORDER BY lastUpdated DESC  NULLS LAST
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
+ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
 
 -- name: NumberBookGroup :one
@@ -121,8 +121,8 @@ FROM book_groups;
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -138,8 +138,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -147,7 +147,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY RANDOM() LIMIT $1;
 
 
@@ -155,8 +155,8 @@ ORDER BY RANDOM() LIMIT $1;
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -172,8 +172,8 @@ LEFT JOIN Lateral (
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
 LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
         LEFT JOIN book_chapter_views bcv
@@ -182,7 +182,7 @@ LEFT JOIN LATERAL (
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
 LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1;
 
@@ -190,8 +190,8 @@ LIMIT $1;
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -207,8 +207,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -217,7 +217,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1;
 
@@ -225,8 +225,8 @@ LIMIT $1;
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -242,8 +242,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -252,7 +252,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1;
 
@@ -260,8 +260,8 @@ LIMIT $1;
 SELECT bg.id id,
        (array_agg(i.path))[1] AS image,
        bg.title AS title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -277,8 +277,8 @@ FROM book_groups AS bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created) AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created) AS last_updated,
            coalesce(sum(bcv.count),0) AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -286,7 +286,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY bct.views DESC
 LIMIT $1;
 
