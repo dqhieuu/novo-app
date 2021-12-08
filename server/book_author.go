@@ -321,7 +321,11 @@ func DeleteAuthorHandler(c *gin.Context) {
 func SearchAuthorHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	searchString := c.Query("keyword")
+	searchString := c.Param("query")
+
+	if len(searchString) == 0 || len(searchString) > 100 {
+		return
+	}
 
 	var response []Author
 

@@ -48,4 +48,4 @@ FROM book_authors JOIN book_group_authors bga on book_authors.id = bga.book_auth
 WHERE bg.id = $1;
 
 -- name: SearchAuthors :many
-SELECT * FROM book_authors WHERE name ILIKE '%' || $1 || '%';
+SELECT * FROM book_authors WHERE name ILIKE '%' || $1 || '%' LIMIT 5;

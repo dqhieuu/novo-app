@@ -162,7 +162,7 @@ func (q *Queries) InsertBookAuthor(ctx context.Context, arg InsertBookAuthorPara
 }
 
 const searchAuthors = `-- name: SearchAuthors :many
-SELECT id, name, description, avatar_image_id FROM book_authors WHERE name ILIKE '%' || $1 || '%'
+SELECT id, name, description, avatar_image_id FROM book_authors WHERE name ILIKE '%' || $1 || '%' LIMIT 5
 `
 
 func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([]BookAuthor, error) {
