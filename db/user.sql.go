@@ -122,6 +122,7 @@ func (q *Queries) DeleteUser(ctx context.Context, userName sql.NullString) error
 
 const getUserInfo = `-- name: GetUserInfo :one
 SELECT users.user_name,
+       users.email,
        r.name as role,
        users.summary,
        i.path as avatarPath
@@ -133,6 +134,7 @@ WHERE users.id = $1
 
 type GetUserInfoRow struct {
 	UserName   sql.NullString `json:"userName"`
+	Email      string         `json:"email"`
 	Role       string         `json:"role"`
 	Summary    sql.NullString `json:"summary"`
 	Avatarpath sql.NullString `json:"avatarpath"`
@@ -143,6 +145,7 @@ func (q *Queries) GetUserInfo(ctx context.Context, id int32) (GetUserInfoRow, er
 	var i GetUserInfoRow
 	err := row.Scan(
 		&i.UserName,
+		&i.Email,
 		&i.Role,
 		&i.Summary,
 		&i.Avatarpath,

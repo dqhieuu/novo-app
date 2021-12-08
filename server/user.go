@@ -26,6 +26,7 @@ type UserInfo struct {
 	Id         int32         `json:"id" binding:"required"`
 	Name       interface{}   `json:"name"`
 	Avatar     interface{}   `json:"avatar"`
+	Email      string        `json:"email" binding:"required"`
 }
 
 type UserProfile struct {
@@ -238,6 +239,7 @@ func GetRoleHandler(c *gin.Context) {
 	if user.UserName.Valid {
 		userInfo.Name = user.UserName.String
 	}
+	userInfo.Email = user.Email
 
 	c.JSON(200, userInfo)
 }

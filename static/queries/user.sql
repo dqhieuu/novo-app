@@ -30,6 +30,7 @@ WHERE id = $1;
 
 -- name: GetUserInfo :one
 SELECT users.user_name,
+       users.email,
        r.name as role,
        users.summary,
        i.path as avatarPath
