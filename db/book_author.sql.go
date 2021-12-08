@@ -161,6 +161,35 @@ func (q *Queries) InsertBookAuthor(ctx context.Context, arg InsertBookAuthorPara
 	return i, err
 }
 
+const searchAuthors = `-- name: SearchAuthors :many
+SELECT id, name, description, avatar_image_id FROM book_authors WHERE name ILIKE '%' || $1 || '%'
+`
+
+func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([]BookAuthor, error) {
+	rows, err := q.db.Query(ctx, searchAuthors, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []BookAuthor
+	for rows.Next() {
+		var i BookAuthor
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.AvatarImageID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateBookAuthor = `-- name: UpdateBookAuthor :exec
 UPDATE book_authors
 SET name        = $2,

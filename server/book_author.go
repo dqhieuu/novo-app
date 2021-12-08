@@ -317,3 +317,29 @@ func DeleteAuthorHandler(c *gin.Context) {
 		"message": "Delete Author successfully",
 	})
 }
+
+func SearchAuthorHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	searchString := c.Query("keyword")
+
+	var response []Author
+
+	authors, err := queries.SearchAuthors(ctx, sql.NullString{
+		String: searchString,
+		Valid:  true,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	for _, author := range authors {
+		response = append(response, Author{
+			Name: author.Name,
+			Id:   author.ID,
+		})
+	}
+
+	c.JSON(200, response)
+}

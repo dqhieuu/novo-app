@@ -48,6 +48,7 @@ func Run() {
 	r.GET("/book/top/:type", GetBookGroupsByViewHandler)
 
 	r.GET("/author/:authorId", GetAuthorInfoHandler)
+	r.GET("/search/author", SearchAuthorHandler)
 
 	auth := r.Group("/auth")
 	{
