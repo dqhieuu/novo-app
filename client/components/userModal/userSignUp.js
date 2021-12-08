@@ -1,12 +1,73 @@
-import React, { useContext } from "react";
-import { UserContext } from "../../Context/UserContext";
+import React, {
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { UserContext } from '../../Context/UserContext';
 export default function UserSignUp() {
-  const { isAuthenication, toggleAuth } = useContext(UserContext);
+  const initialValues = {
+    username: '',
+    email: '',
+    password: '',
+  };
+  const [formData, setData] = useState(initialValues);
+  const [formErrors, setFormErrors] = useState({
+    username: 'Bạn cần nhập tên hiển thị',
+    email: 'Bạn cần nhập email',
+    password: 'Bạn cần nhập mật khẩu',
+  });
+  const [isSubmit, setIsSubmit] = useState(false);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setData({ ...formData, [name]: value });
+    console.log(formData);
+    setFormErrors(validate(formData));
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    setIsSubmit(true);
+  };
+  useEffect(() => {
+    console.log(formErrors);
+    console.log(formData);
+  }, [formErrors]);
+  const validate = (values) => {
+    const errors = {};
+    const regex =
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    if (
+      values.username[0] === ' ' ||
+      values.username.length < 6
+    ) {
+      errors.username =
+        'Tên hiển thị không hợp lệ. Tên hiển thị phải có ít nhất 6 ký tự và không được bắt đầu bằng dấu cách';
+    } else {
+      errors.username = '';
+    }
+    if (!values.email) {
+      errors.email = 'Bạn cần nhập email';
+    } else if (!regex.test(values.email)) {
+      errors.email = 'Email không hợp lệ!';
+    } else {
+      errors.email = '';
+    }
+    if (!values.password) {
+      errors.password = 'Bạn cần nhập mật khẩu';
+    } else if (values.password.length < 7) {
+      errors.password =
+        'Mật khẩu phải có tối thiểu 8 ký tự';
+    } else {
+      errors.password = '';
+    }
+
+    return errors;
+  };
   return (
     <div
       className="offcanvas offcanvas-end"
       id="demo"
-      style={{ width: "300px" }}
+      style={{ width: '300px' }}
     >
       <div className="offcanvas-header">
         <h5 className="offcanvas-title">Chào khách!</h5>
@@ -18,7 +79,11 @@ export default function UserSignUp() {
       </div>
       <div className="offcanvas-body">
         <nav>
-          <div className="nav nav-tabs" id="nav-tab" role="tablist">
+          <div
+            className="nav nav-tabs"
+            id="nav-tab"
+            role="tablist"
+          >
             <button
               className="nav-link active"
               id="nav-home-tab"
@@ -54,7 +119,10 @@ export default function UserSignUp() {
           >
             <form>
               <div className="mb-3 mt-3">
-                <label htmlFor="email" className="form-label">
+                <label
+                  htmlFor="email"
+                  className="form-label"
+                >
                   Email:
                 </label>
                 <input
@@ -78,7 +146,10 @@ export default function UserSignUp() {
                 />
               </div>
               <div className="form-check mb-3">
-                <label htmlFor="" className="form-check-label">
+                <label
+                  htmlFor=""
+                  className="form-check-label"
+                >
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -89,11 +160,9 @@ export default function UserSignUp() {
               </div>
               <i className="bi bi-meta"></i>
               <div className="d-grid">
-                {" "}
                 <button
                   type="submit"
                   className="btn btn-secondary"
-                  onClick={toggleAuth}
                 >
                   Đăng nhập
                 </button>
@@ -102,7 +171,7 @@ export default function UserSignUp() {
                   <button
                     type="submit"
                     className="btn btn-secondary"
-                    style={{ background: "#3b5998" }}
+                    style={{ background: '#3b5998' }}
                   >
                     Đăng nhập bằng Facebook
                   </button>
@@ -110,7 +179,7 @@ export default function UserSignUp() {
                 <button
                   type="submit"
                   className="btn btn-secondary mt-3"
-                  style={{ background: "#c23321" }}
+                  style={{ background: '#c23321' }}
                 >
                   Đăng nhập bằng Gmail
                 </button>
@@ -123,9 +192,12 @@ export default function UserSignUp() {
             role="tabpanel"
             aria-labelledby="nav-signup-tab"
           >
-            <form action="" className="was-validated">
+            <form onSubmit={handleSubmit}>
               <div className="mb-3 mt-3">
-                <label htmlFor="uname" className="form-label">
+                <label
+                  htmlFor="uname"
+                  className="form-label"
+                >
                   Tên người dùng:
                 </label>
                 <input
@@ -133,13 +205,31 @@ export default function UserSignUp() {
                   className="form-control"
                   id="uname"
                   placeholder="Nhập tên đăng nhập"
-                  name="uname"
-                  required
+                  name="username"
+                  value={formData.username}
+                  onChange={handleChange}
                 ></input>
-                <div className="valid-feedback">Hợp lệ</div>
+                {formErrors.username.length === 0 ? (
+                  <p
+                    className="form-label mt-3"
+                    style={{ color: 'green' }}
+                  >
+                    ✅Hợp lệ
+                  </p>
+                ) : (
+                  <p
+                    className="form-label mt-3"
+                    style={{ color: 'red' }}
+                  >
+                    ❌ {formErrors.username}
+                  </p>
+                )}
               </div>
               <div className="mb-3 mt-3">
-                <label htmlFor="password" className="form-label">
+                <label
+                  htmlFor="password"
+                  className="form-label"
+                >
                   Mật khẩu:
                 </label>
                 <input
@@ -148,27 +238,31 @@ export default function UserSignUp() {
                   id="password"
                   placeholder="Nhập mật khẩu"
                   name="password"
-                  required
+                  value={formData.password}
+                  onChange={handleChange}
                 ></input>
-                <div className="valid-feedback">Hợp lệ</div>
+                {formErrors.password.length === 0 ? (
+                  <p
+                    className="form-label mt-3"
+                    style={{ color: 'green' }}
+                  >
+                    ✅Hợp lệ
+                  </p>
+                ) : (
+                  <p
+                    className="form-label mt-3"
+                    style={{ color: 'red' }}
+                  >
+                    ❌ {formErrors.password}
+                  </p>
+                )}
               </div>
+
               <div className="mb-3 mt-3">
-                <label htmlFor="repassword" className="form-label">
-                  Nhập lại Mật khẩu:
-                </label>
-                <input
-                  type="password"
-                  className="form-control"
-                  id="repassword"
-                  placeholder="Nhập lại mật khẩu"
-                  name="repassword"
-                  required
-                ></input>
-              
-              </div>
-            
-              <div className="mb-3 mt-3">
-                <label htmlFor="email" className="form-label">
+                <label
+                  htmlFor="email"
+                  className="form-label"
+                >
                   Email:
                 </label>
                 <input
@@ -177,13 +271,30 @@ export default function UserSignUp() {
                   id="email"
                   placeholder="Nhập email"
                   name="email"
-                  required
+                  value={formData.email}
+                  onChange={handleChange}
                 ></input>
-                <div className="valid-feedback">Hợp lệ</div>
+                {formErrors.email.length === 0 ? (
+                  <p
+                    className="form-label mt-3"
+                    style={{ color: 'green' }}
+                  >
+                    ✅Hợp lệ
+                  </p>
+                ) : (
+                  <p
+                    className="form-label mt-3"
+                    style={{ color: 'red' }}
+                  >
+                    ❌ {formErrors.email}
+                  </p>
+                )}
               </div>
 
-              
-              <button type="submit" className="btn btn-primary">
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
                 Đăng ký
               </button>
             </form>
