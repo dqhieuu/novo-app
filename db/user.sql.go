@@ -12,8 +12,8 @@ const bookGroupsByUser = `-- name: BookGroupsByUser :many
 SELECT bg.id,
        (array_agg(i.path))[1]   AS image,
        (array_agg(bg.title))[1] as title,
-       bct.latestChapter,
-       bct.lastUpdated,
+       bct.latest_chapter,
+       bct.last_updated,
        bct.views,
        bcm.comments,
        bgl.likes
@@ -30,8 +30,8 @@ FROM book_groups as bg
     WHERE bgl.book_group_id = bg.id
     ) bgl ON TRUE
          LEFT JOIN LATERAL (
-    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latestChapter,
-           MAX(bct.date_created)                                             AS lastUpdated,
+    SELECT (array_agg(bct.chapter_number ORDER BY bct.date_created DESC))[1] AS latest_chapter,
+           MAX(bct.date_created)                                             AS last_updated,
            coalesce(sum(bcv.count), 0)                                       AS views
     FROM book_chapters bct
              LEFT JOIN book_chapter_views bcv
@@ -40,16 +40,16 @@ FROM book_groups as bg
     ) bct ON TRUE
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
 WHERE u.id = $1
-GROUP BY bg.id, bg.title, i.path, bct.latestChapter, bct.lastUpdated, bct.views, bcm.comments, bgl.likes
-ORDER BY lastUpdated DESC NULLS LAST
+GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
+ORDER BY last_updated DESC NULLS LAST
 `
 
 type BookGroupsByUserRow struct {
 	ID            int32       `json:"id"`
 	Image         interface{} `json:"image"`
 	Title         interface{} `json:"title"`
-	Latestchapter interface{} `json:"latestchapter"`
-	Lastupdated   interface{} `json:"lastupdated"`
+	LatestChapter interface{} `json:"latestChapter"`
+	LastUpdated   interface{} `json:"lastUpdated"`
 	Views         interface{} `json:"views"`
 	Comments      int64       `json:"comments"`
 	Likes         interface{} `json:"likes"`
@@ -68,8 +68,8 @@ func (q *Queries) BookGroupsByUser(ctx context.Context, id int32) ([]BookGroupsB
 			&i.ID,
 			&i.Image,
 			&i.Title,
-			&i.Latestchapter,
-			&i.Lastupdated,
+			&i.LatestChapter,
+			&i.LastUpdated,
 			&i.Views,
 			&i.Comments,
 			&i.Likes,
