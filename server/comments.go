@@ -94,10 +94,27 @@ func CreateCommentHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: CommentModule,
+		Action: PostAction,
+		ID:     userId,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
+
 	var postComment PostComment
 	reg := regexp.MustCompile(`(\r\n|\n){3,}`)
 
-	err := c.ShouldBindJSON(&postComment)
+	err = c.ShouldBindJSON(&postComment)
 	if err != nil {
 		ReportError(c, err, "error parsing json", http.StatusBadRequest)
 		return
@@ -118,8 +135,6 @@ func CreateCommentHandler(c *gin.Context) {
 		ReportError(c, errors.New("need book group or book chapter id"), "missing propertied", http.StatusBadRequest)
 		return
 	}
-
-	extract := jwt.ExtractClaims(c)
 
 	switch {
 	case len(bookChapterIdString) != 0:
@@ -155,7 +170,7 @@ func CreateCommentHandler(c *gin.Context) {
 					return
 				} else {
 					err = queries.AddComment(ctx, db.AddCommentParams{
-						UserID:      int32(extract[UserIdClaimKey].(float64)),
+						UserID:      userId,
 						BookGroupID: bookId,
 						BookChapterID: sql.NullInt32{
 							Valid: false,
@@ -173,7 +188,7 @@ func CreateCommentHandler(c *gin.Context) {
 			}
 		} else { // if it exists
 			err = queries.AddComment(ctx, db.AddCommentParams{
-				UserID:      int32(extract[UserIdClaimKey].(float64)),
+				UserID:      userId,
 				BookGroupID: peekChapterRow.BookGroupID,
 				BookChapterID: sql.NullInt32{
 					Int32: bookChapterId,
@@ -201,7 +216,7 @@ func CreateCommentHandler(c *gin.Context) {
 			return
 		} else {
 			err = queries.AddComment(ctx, db.AddCommentParams{
-				UserID:      int32(extract[UserIdClaimKey].(float64)),
+				UserID:      userId,
 				BookGroupID: bookId,
 				BookChapterID: sql.NullInt32{
 					Valid: false,
@@ -375,80 +390,150 @@ func EditCommentHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	commentIdString := c.Param("commentId")
-	commentId64, err := strconv.ParseInt(commentIdString, 10, 32)
-	if err != nil {
-		ReportError(c, err, "error parsing comment id", 500)
-		return
-	}
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	permAllow := false
 
-	check, err := queries.CheckIfCommentExist(ctx, int32(commentId64))
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: CommentModule,
+		Action: ModifyAction,
+		ID:     userId,
+	})
 	if err != nil {
-		ReportError(c, err, "internal error", 500)
+		ReportError(c, err, "error", 500)
 		return
 	}
 	if !check {
-		ReportError(c, errors.New("comment does not exist"), "error", http.StatusBadRequest)
-		return
+		check, err = queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+			Module: CommentModule,
+			Action: ModifySelfAction,
+			ID:     userId,
+		})
+		if err != nil {
+			ReportError(c, err, "error", 500)
+			return
+		}
+		if check {
+			permAllow = true
+		}
+	} else {
+		permAllow = true
 	}
 
-	var content string
-	err = c.ShouldBindJSON(content)
-	if err != nil {
-		ReportError(c, err, "error parsing json", http.StatusBadRequest)
+	if permAllow {
+		commentIdString := c.Param("commentId")
+		commentId64, err := strconv.ParseInt(commentIdString, 10, 32)
+		if err != nil {
+			ReportError(c, err, "error parsing comment id", 500)
+			return
+		}
+
+		check, err = queries.CheckIfCommentExist(ctx, int32(commentId64))
+		if err != nil {
+			ReportError(c, err, "internal error", 500)
+			return
+		}
+		if !check {
+			ReportError(c, errors.New("comment does not exist"), "error", http.StatusBadRequest)
+			return
+		}
+
+		var content string
+		err = c.ShouldBindJSON(content)
+		if err != nil {
+			ReportError(c, err, "error parsing json", http.StatusBadRequest)
+			return
+		}
+
+		reg := regexp.MustCompile(`(\r\n|\n){3,}`)
+		content = reg.ReplaceAllString(content, "\n\n")
+		if len(content) < 10 || len(content) > 500 || HasControlCharacters(content) || CheckEmptyString(content) {
+			ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
+			return
+		}
+
+		err = queries.UpdateComment(ctx, db.UpdateCommentParams{
+			ID:      int32(commentId64),
+			Content: content,
+		})
+
+		if err != nil {
+			ReportError(c, err, "error updating comment", 500)
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "success",
+		})
+	} else {
+		ReportError(c, errors.New("permission denied"), "error", 403)
 		return
 	}
-
-	reg := regexp.MustCompile(`(\r\n|\n){3,}`)
-	content = reg.ReplaceAllString(content, "\n\n")
-	if len(content) < 10 || len(content) > 500 || HasControlCharacters(content) || CheckEmptyString(content) {
-		ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
-		return
-	}
-
-	err = queries.UpdateComment(ctx, db.UpdateCommentParams{
-		ID:      int32(commentId64),
-		Content: content,
-	})
-
-	if err != nil {
-		ReportError(c, err, "error updating comment", 500)
-		return
-	}
-
-	c.JSON(200, gin.H{
-		"message": "success",
-	})
 }
 
 func DeleteCommentHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
-	commentIdString := c.Param("commentId")
-	commentId64, err := strconv.ParseInt(commentIdString, 10, 32)
-	if err != nil {
-		ReportError(c, err, "error parsing comment id", 500)
-		return
-	}
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	permAllow := false
 
-	check, err := queries.CheckIfCommentExist(ctx, int32(commentId64))
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: CommentModule,
+		Action: ModifyAction,
+		ID:     userId,
+	})
 	if err != nil {
-		ReportError(c, err, "internal error", 500)
+		ReportError(c, err, "error", 500)
 		return
 	}
 	if !check {
-		ReportError(c, errors.New("comment does not exist"), "error", http.StatusBadRequest)
-		return
+		check, err = queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+			Module: CommentModule,
+			Action: ModifySelfAction,
+			ID:     userId,
+		})
+		if err != nil {
+			ReportError(c, err, "error", 500)
+			return
+		}
+		if check {
+			permAllow = true
+		}
+	} else {
+		permAllow = true
 	}
 
-	err = queries.DeleteComment(ctx, int32(commentId64))
-	if err != nil {
-		ReportError(c, err, "error deleting comment", 500)
+	if permAllow {
+		commentIdString := c.Param("commentId")
+		commentId64, err := strconv.ParseInt(commentIdString, 10, 32)
+		if err != nil {
+			ReportError(c, err, "error parsing comment id", 500)
+			return
+		}
+
+		check, err = queries.CheckIfCommentExist(ctx, int32(commentId64))
+		if err != nil {
+			ReportError(c, err, "internal error", 500)
+			return
+		}
+		if !check {
+			ReportError(c, errors.New("comment does not exist"), "error", http.StatusBadRequest)
+			return
+		}
+
+		err = queries.DeleteComment(ctx, int32(commentId64))
+		if err != nil {
+			ReportError(c, err, "error deleting comment", 500)
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"message": "success",
+		})
+	} else {
+		ReportError(c, errors.New("permission denied"), "error", 403)
 		return
 	}
-
-	c.JSON(200, gin.H{
-		"message": "success",
-	})
 }

@@ -12,6 +12,20 @@ import (
 	"strings"
 )
 
+const (
+	BookGroupModule = "book"
+	BookChapterModule = "chapter"
+	CommentModule = "comment"
+	AuthorModule = "author"
+	LikeModule = "like"
+	PostAction = "post"
+	ReadAction = "read"
+	ModifyAction = "modify"
+	DeleteAction = "delete"
+	ModifySelfAction = "modifySelf"
+	DeleteSelfAction = "deleteSelf"
+)
+
 func CreateImage(width int, height int) (*os.File, int64, string, string, error) {
 	upLeft := image.Point{}
 	lowRight := image.Point{X: width, Y: height}

@@ -71,6 +71,23 @@ func LikeOperationHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: LikeModule,
+		Action: PostAction,
+		ID:     userId,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
+
 	bookGroupIdString := c.Param("bookGroupId")
 	operation := c.Param("operation")
 

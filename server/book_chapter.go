@@ -190,6 +190,26 @@ func DeleteBookChapterByBookGroupId(bookGroupId int32) error {
 }
 
 func CreateHypertextChapterHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: BookChapterModule,
+		Action: PostAction,
+		ID:     userId,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
+
 	var newHypertextChapter HypertextChapter
 	if err := c.ShouldBindJSON(&newHypertextChapter); err != nil {
 		ReportError(c, err, "error parsing json", http.StatusBadRequest)
@@ -218,15 +238,13 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 		return
 	}
 
-	extract := jwt.ExtractClaims(c)
-
 	newChapter, err := CreateBookChapter(
 		newHypertextChapter.ChapterNumber.(float64),
 		chapterName,
 		newHypertextChapter.TextContent,
 		"hypertext",
 		newHypertextChapter.BookGroupId,
-		int32(extract[UserIdClaimKey].(float64)))
+		userId)
 
 	if err != nil {
 		ReportError(c, err, "error creating new hypertext chapter", 500)
@@ -240,6 +258,23 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 func CreateImagesChapterHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
+
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: BookChapterModule,
+		Action: PostAction,
+		ID:     userId,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
 
 	var newImageChapter ImageChapter
 	if err := c.ShouldBindJSON(&newImageChapter); err != nil {
@@ -263,15 +298,13 @@ func CreateImagesChapterHandler(c *gin.Context) {
 		}
 	}
 
-	extract := jwt.ExtractClaims(c)
-
 	newChapter, err := CreateBookChapter(
 		newImageChapter.ChapterNumber.(float64),
 		chapterName,
 		"",
 		"images",
 		newImageChapter.BookGroupId,
-		int32(extract[UserIdClaimKey].(float64)))
+		userId)
 
 	if err != nil {
 		ReportError(c, err, "error creating new images chapter", 500)
@@ -350,36 +383,71 @@ func GetBookChapterContentHandler(c *gin.Context) {
 }
 
 func DeleteBookChapterHandler(c *gin.Context) {
-	var chapterId int32
-	_, err := fmt.Sscan(c.Param("chapterId"), &chapterId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	oldChapter, err := BookChapterById(chapterId)
-	if oldChapter == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Chapter not exist",
-		})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err = queries.DeleteBookChapterById(ctx, chapterId)
+
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	permAllow := false
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: BookChapterModule,
+		Action: DeleteAction,
+		ID:     userId,
+	})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		ReportError(c, err, "error", 500)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Delete Chapter successfully",
-	})
+	if !check {
+		check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+			Module: BookChapterModule,
+			Action: DeleteSelfAction,
+			ID:     userId,
+		})
+		if err != nil {
+			ReportError(c, err, "error", 500)
+			return
+		}
+		if check {
+			permAllow = true
+		}
+	} else {
+		permAllow = true
+	}
+	if permAllow {
+		var chapterId int32
+		_, err = fmt.Sscan(c.Param("chapterId"), &chapterId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		oldChapter, err := BookChapterById(chapterId)
+		if oldChapter == nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Chapter not exist",
+			})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		err = queries.DeleteBookChapterById(ctx, chapterId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Delete Chapter successfully",
+		})
+	} else {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
 }
 
 func UpdateHypertextChapter(c *gin.Context) {
