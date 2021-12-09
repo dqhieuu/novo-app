@@ -22,6 +22,8 @@ VALUES
        ('author', 'post', (SELECT id FROM roles WHERE name = 'admin')),
        ('author', 'modify', (SELECT id FROM roles WHERE name = 'admin')),
        ('author', 'delete', (SELECT id FROM roles WHERE name = 'admin')),
+       ('like', 'read', (SELECT id FROM roles WHERE name = 'admin')),
+       ('like', 'post', (SELECT id FROM roles WHERE name = 'admin')),
 
        ('comment', 'read', (SELECT id FROM roles WHERE name = 'member')),
        ('comment', 'post', (SELECT id FROM roles WHERE name = 'member')),
@@ -36,6 +38,8 @@ VALUES
        ('chapter', 'deleteSelf', (SELECT id FROM roles WHERE name = 'member')),
        ('author', 'read', (SELECT id FROM roles WHERE name = 'member')),
        ('author', 'post', (SELECT id FROM roles WHERE name = 'member')),
+       ('like', 'read', (SELECT id FROM roles WHERE name = 'member')),
+       ('like', 'post', (SELECT id FROM roles WHERE name = 'member')),
 
        ('comment', 'read', (SELECT id FROM roles WHERE name = 'moderator')),
        ('comment', 'post', (SELECT id FROM roles WHERE name = 'moderator')),
@@ -52,4 +56,6 @@ VALUES
        ('author', 'read', (SELECT id FROM roles WHERE name = 'moderator')),
        ('author', 'post', (SELECT id FROM roles WHERE name = 'moderator')),
        ('author', 'modify', (SELECT id FROM roles WHERE name = 'moderator')),
-       ('author', 'delete', (SELECT id FROM roles WHERE name = 'moderator'));
+       ('author', 'delete', (SELECT id FROM roles WHERE name = 'moderator')),
+       ('like', 'read', (SELECT id FROM roles WHERE name = 'moderator')),
+       ('like', 'post', (SELECT id FROM roles WHERE name = 'moderator'));

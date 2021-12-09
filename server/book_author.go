@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"net/http"
@@ -137,6 +138,26 @@ type CreateAuthor struct {
 }
 
 func CreateAuthorHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: AuthorModule,
+		Action: PostAction,
+		ID:     userId,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
+	
 	var a CreateAuthor
 	if err := c.ShouldBindJSON(&a); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -182,9 +203,7 @@ func CreateAuthorHandler(c *gin.Context) {
 			return
 		}
 	}
-
-	ctx := context.Background()
-	queries := db.New(db.Pool())
+	
 	exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -219,103 +238,176 @@ type UpdateAuthor struct {
 }
 
 func UpdateAuthorHandler(c *gin.Context) {
-	var authorId int32
-	_, err := fmt.Sscan(c.Param("authorId"), &authorId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	oldAuthor, err := BookAuthorById(authorId)
-	if oldAuthor == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Author not exist",
-		})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	var a UpdateAuthor
-	if err := c.ShouldBindJSON(&a); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if len(a.Name) > 30 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "name must be less than or equal to 30 characters",
-		})
-		return
-	}
-	if len(a.Description) > 500 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "description must be less than or equal to 50 characters",
-		})
-		return
-	}
-
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	if exist == true {
-		c.JSON(http.StatusConflict, gin.H{"error": "name was exist"})
-		return
-	}
 
-	if len(a.Name) == 0 {
-		a.Name = oldAuthor.Name
-	}
-	if len(a.Description) == 0 {
-		a.Description = oldAuthor.Description.String
-	}
-	if a.AvatarId == 0 {
-		a.AvatarId = oldAuthor.AvatarImageID.Int32
-	}
-	err = UpdateBookAuthor(authorId, a.Name, a.Description, a.AvatarId)
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	permAllow := false
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: AuthorModule,
+		Action: ModifyAction,
+		ID:     userId,
+	})
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		ReportError(c, err, "error", 500)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Update Author successfully",
-	})
+	if !check {
+		check, err = queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+			Module: AuthorModule,
+			Action: ModifySelfAction,
+			ID:     userId,
+		})
+		if err != nil {
+			ReportError(c, err, "error", 500)
+			return
+		}
+		if check {
+			permAllow = true
+		}
+	} else {
+		permAllow = true
+	}
+	if permAllow {
+		var authorId int32
+		_, err = fmt.Sscan(c.Param("authorId"), &authorId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		oldAuthor, err := BookAuthorById(authorId)
+		if oldAuthor == nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Author not exist",
+			})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		var a UpdateAuthor
+		if err := c.ShouldBindJSON(&a); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		if len(a.Name) > 30 {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "name must be less than or equal to 30 characters",
+			})
+			return
+		}
+		if len(a.Description) > 500 {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "description must be less than or equal to 50 characters",
+			})
+			return
+		}
+
+		exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if exist == true {
+			c.JSON(http.StatusConflict, gin.H{"error": "name was exist"})
+			return
+		}
+
+		if len(a.Name) == 0 {
+			a.Name = oldAuthor.Name
+		}
+		if len(a.Description) == 0 {
+			a.Description = oldAuthor.Description.String
+		}
+		if a.AvatarId == 0 {
+			a.AvatarId = oldAuthor.AvatarImageID.Int32
+		}
+		err = UpdateBookAuthor(authorId, a.Name, a.Description, a.AvatarId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Update Author successfully",
+		})
+	} else {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
 }
 
 func DeleteAuthorHandler(c *gin.Context) {
-	var authorId int32
-	_, err := fmt.Sscan(c.Param("authorId"), &authorId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	oldAuthor, err := BookAuthorById(authorId)
-	if oldAuthor == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": "Author not exist",
-		})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	err = DeleteBookAuthor(authorId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Delete Author successfully",
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+	permAllow := false
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: AuthorModule,
+		Action: DeleteAction,
+		ID:     userId,
 	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		check, err = queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+			Module: AuthorModule,
+			Action: DeleteSelfAction,
+			ID:     userId,
+		})
+		if err != nil {
+			ReportError(c, err, "error", 500)
+			return
+		}
+		if check {
+			permAllow = true
+		}
+	} else {
+		permAllow = true
+	}
+
+	if permAllow {
+		var authorId int32
+		_, err = fmt.Sscan(c.Param("authorId"), &authorId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		oldAuthor, err := BookAuthorById(authorId)
+		if oldAuthor == nil {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "Author not exist",
+			})
+			return
+		}
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err = DeleteBookAuthor(authorId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": "Delete Author successfully",
+		})
+	} else {
+		ReportError(c, errors.New("permission denied"), "error", 403)
+		return
+	}
 }
 
 func SearchAuthorHandler(c *gin.Context) {
