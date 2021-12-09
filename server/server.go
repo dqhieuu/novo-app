@@ -49,11 +49,13 @@ func Run() {
 
 	r.GET("/author/:authorId", GetAuthorInfoHandler)
 	r.GET("/search-author/:query", SearchAuthorHandler)
+	r.GET("/book/:bookGroupId", GetBookGroupContentHandler)
 
 	auth := r.Group("/auth")
+
+	auth.POST("/refresh-token", authMiddleware.RefreshHandler)
 	{
 		auth.Use(authMiddleware.MiddlewareFunc())
-		auth.POST("/refresh-token", authMiddleware.RefreshHandler)
 		auth.POST("/logout", authMiddleware.LogoutHandler)
 		auth.GET("/role", GetRoleHandler)
 		auth.POST("/author", CreateAuthorHandler)
@@ -64,7 +66,6 @@ func Run() {
 		auth.POST("/chapter/hypertext", CreateHypertextChapterHandler)
 		auth.POST("/chapter/images", CreateImagesChapterHandler)
 		auth.POST("/comment", CreateCommentHandler)
-		auth.GET("/book/:bookGroupId", GetBookGroupContentHandler)
 		auth.DELETE("chapter/:chapterId", DeleteBookChapterHandler)
 		auth.DELETE("/comment/:commentId", DeleteCommentHandler)
 		auth.PATCH("/comment/:commentId", EditCommentHandler)

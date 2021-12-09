@@ -57,11 +57,8 @@ func CreateImage(width int, height int) (*os.File, int64, string, string, error)
 }
 
 func HasControlCharacters(content string) bool {
-	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x1F\x7F]`, content)
-	if hasInvalidChars {
-		return true
-	}
-	return false
+	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x07\x0E-\x1F\x7F]`, content)
+	return hasInvalidChars
 }
 
 func CheckEmptyString(content string) bool {
