@@ -165,7 +165,7 @@ const searchAuthors = `-- name: SearchAuthors :many
 SELECT book_authors.name, book_authors.id, i.path
 FROM book_authors
          LEFT JOIN images i on book_authors.avatar_image_id = i.id
-WHERE name ILIKE '%' || $1 || '%'
+WHERE book_authors.name ILIKE '%' || $1 || '%'
 LIMIT 5
 `
 
