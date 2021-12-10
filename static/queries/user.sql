@@ -74,3 +74,6 @@ WHERE u.id = $1
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC NULLS LAST;
 
+-- name: SearchUsers :many
+SELECT * FROM users WHERE user_name LIKE '%' || $1 || '%' LIMIT 5;
+

@@ -16,8 +16,9 @@ import (
 const limitBookAuthors = 50
 
 type Author struct {
-	Name string `json:"name" binding:"required"`
-	Id   int32  `json:"id" binding:"required"`
+	Name  string      `json:"name" binding:"required"`
+	Id    int32       `json:"id" binding:"required"`
+	Image interface{} `json:"image"`
 }
 
 func BookAuthorById(id int32) (*db.BookAuthor, error) {
@@ -140,10 +141,10 @@ type CreateAuthor struct {
 func CreateAuthorHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	
+
 	extract := jwt.ExtractClaims(c)
 	userId := int32(extract[UserIdClaimKey].(float64))
-	
+
 	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
 		Module: AuthorModule,
 		Action: PostAction,
@@ -157,7 +158,7 @@ func CreateAuthorHandler(c *gin.Context) {
 		ReportError(c, errors.New("permission denied"), "error", 403)
 		return
 	}
-	
+
 	var a CreateAuthor
 	if err := c.ShouldBindJSON(&a); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -203,7 +204,7 @@ func CreateAuthorHandler(c *gin.Context) {
 			return
 		}
 	}
-	
+
 	exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -431,10 +432,13 @@ func SearchAuthorHandler(c *gin.Context) {
 	}
 
 	for _, author := range authors {
-		response = append(response, Author{
-			Name: author.Name,
-			Id:   author.ID,
-		})
+		var authorInfo Author
+		authorInfo.Name = author.Name
+		authorInfo.Id = author.ID
+		if author.AvatarImageID.Valid {
+			authorInfo.Image = author.AvatarImageID.Int32
+		}
+		response = append(response, authorInfo)
 	}
 
 	c.JSON(200, response)

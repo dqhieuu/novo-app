@@ -48,6 +48,12 @@ type BookByUser struct {
 	LastUpdated   interface{} `json:"lastUpdated"`
 }
 
+type User struct {
+	Name  string      `json:"name" binding:"required"`
+	Id    int32       `json:"id" binding:"required"`
+	Image interface{} `json:"image"`
+}
+
 func EqualPasswords(hashedPassword, password []byte) bool {
 	return bcrypt.CompareHashAndPassword(hashedPassword, password) == nil
 }
@@ -311,4 +317,37 @@ func GetUserInfoByIdHandler(c *gin.Context) {
 		}
 	}
 	c.JSON(200, userProfile)
+}
+
+func SearchUserHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+	keyword := c.Param("query")
+
+	if len(keyword) == 0 || len(keyword) > 100 {
+		return
+	}
+
+	var response []User
+
+	users, err := queries.SearchUsers(ctx, sql.NullString{
+		String: keyword,
+		Valid:  true,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	for _, user := range users {
+		var userInfo User
+		userInfo.Name = user.UserName.String
+		userInfo.Id = user.ID
+		if user.AvatarImageID.Valid {
+			userInfo.Image = user.AvatarImageID.Int32
+		}
+		response = append(response, userInfo)
+	}
+
+	c.JSON(200, response)
 }

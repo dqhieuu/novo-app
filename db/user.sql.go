@@ -188,6 +188,40 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 	return i, err
 }
 
+const searchUsers = `-- name: SearchUsers :many
+SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list FROM users WHERE user_name LIKE '%' || $1 || '%' LIMIT 5
+`
+
+func (q *Queries) SearchUsers(ctx context.Context, dollar_1 sql.NullString) ([]User, error) {
+	rows, err := q.db.Query(ctx, searchUsers, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.DateCreated,
+			&i.UserName,
+			&i.Password,
+			&i.Email,
+			&i.Summary,
+			&i.AvatarImageID,
+			&i.RoleID,
+			&i.FavoriteList,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const userByEmail = `-- name: UserByEmail :one
 SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list
 FROM users
