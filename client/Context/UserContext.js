@@ -1,15 +1,20 @@
-import React, { createContext, useState } from "react";
+import React, {
+  createContext,
+  useEffect,
+  useState,
+} from 'react';
 
 export const UserContext = createContext();
 export default function UserContextProvider({ children }) {
-  const [isAuthenication, setAuthentication] = useState(false);
+  const [isAuthenication, setAuthentication] =
+    useState(false);
   const [userData, setUserData] = useState({
-    username: "",
-    password: "",
-    displayName: "",
-    email: "",
-    sex: "",
-    DOB: "",
+    username: '',
+    password: '',
+    displayName: '',
+    email: '',
+    sex: '',
+    DOB: '',
   });
   const toggleAuth = () => {
     setAuthentication(!isAuthenication);

@@ -62,3 +62,21 @@
   color: white;
   padding: 5px;
 }
+.onSmallDevices {
+  display: none;
+}
+@media screen and (max-width: 560px) {
+  .onSmallDevices {
+    display: block;
+    margin-top: 10px;
+  }
+  .container {
+    margin-top: 30px;
+  }
+  .overlay {
+    display: none;
+  }
+  .image {
+    aspect-ratio: 3/4;
+  }
+}
