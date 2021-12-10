@@ -49,6 +49,7 @@ func Run() {
 
 	r.GET("/author/:authorId", GetAuthorInfoHandler)
 	r.GET("/search-author/:query", SearchAuthorHandler)
+	r.GET("/search-user/:query", SearchUserHandler)
 	r.GET("/book/:bookGroupId", GetBookGroupContentHandler)
 
 	auth := r.Group("/auth")

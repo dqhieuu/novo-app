@@ -30,8 +30,7 @@ const bookAuthors = `-- name: BookAuthors :many
 SELECT id, name, description, avatar_image_id
 FROM book_authors
 ORDER BY id ASC
-OFFSET $1 ROWS
-    FETCH FIRST $2 ROWS ONLY
+OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
 `
 
 type BookAuthorsParams struct {
@@ -66,10 +65,10 @@ func (q *Queries) BookAuthors(ctx context.Context, arg BookAuthorsParams) ([]Boo
 
 const checkAuthorExistById = `-- name: CheckAuthorExistById :one
 SELECT EXISTS(
-   SELECT 1
-   FROM book_authors
-   WHERE id = $1
-)
+               SELECT 1
+               FROM book_authors
+               WHERE id = $1
+           )
 `
 
 func (q *Queries) CheckAuthorExistById(ctx context.Context, id int32) (bool, error) {
@@ -81,10 +80,10 @@ func (q *Queries) CheckAuthorExistById(ctx context.Context, id int32) (bool, err
 
 const checkAuthorExistByName = `-- name: CheckAuthorExistByName :one
 SELECT EXISTS(
-   SELECT 1
-   FROM book_authors
-   WHERE name = $1
-)
+               SELECT 1
+               FROM book_authors
+               WHERE name = $1
+           )
 `
 
 func (q *Queries) CheckAuthorExistByName(ctx context.Context, name string) (bool, error) {
@@ -107,8 +106,9 @@ func (q *Queries) DeleteBookAuthor(ctx context.Context, id int32) error {
 
 const getBookGroupAuthors = `-- name: GetBookGroupAuthors :many
 SELECT book_authors.id, book_authors.name
-FROM book_authors JOIN book_group_authors bga on book_authors.id = bga.book_author_id
-                    JOIN book_groups bg on bga.book_group_id = bg.id
+FROM book_authors
+         JOIN book_group_authors bga on book_authors.id = bga.book_author_id
+         JOIN book_groups bg on bga.book_group_id = bg.id
 WHERE bg.id = $1
 `
 
@@ -162,24 +162,29 @@ func (q *Queries) InsertBookAuthor(ctx context.Context, arg InsertBookAuthorPara
 }
 
 const searchAuthors = `-- name: SearchAuthors :many
-SELECT id, name, description, avatar_image_id FROM book_authors WHERE name ILIKE '%' || $1 || '%' LIMIT 5
+SELECT book_authors.name, book_authors.id, i.path
+FROM book_authors
+         LEFT JOIN images i on book_authors.avatar_image_id = i.id
+WHERE name ILIKE '%' || $1 || '%'
+LIMIT 5
 `
 
-func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([]BookAuthor, error) {
+type SearchAuthorsRow struct {
+	Name string         `json:"name"`
+	ID   int32          `json:"id"`
+	Path sql.NullString `json:"path"`
+}
+
+func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([]SearchAuthorsRow, error) {
 	rows, err := q.db.Query(ctx, searchAuthors, dollar_1)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BookAuthor
+	var items []SearchAuthorsRow
 	for rows.Next() {
-		var i BookAuthor
-		if err := rows.Scan(
-			&i.ID,
-			&i.Name,
-			&i.Description,
-			&i.AvatarImageID,
-		); err != nil {
+		var i SearchAuthorsRow
+		if err := rows.Scan(&i.Name, &i.ID, &i.Path); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -192,9 +197,9 @@ func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([
 
 const updateBookAuthor = `-- name: UpdateBookAuthor :exec
 UPDATE book_authors
-SET name        = $2,
-    description = $3,
-    avatar_image_id    = $4
+SET name            = $2,
+    description     = $3,
+    avatar_image_id = $4
 WHERE id = $1
 `
 

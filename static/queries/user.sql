@@ -74,3 +74,10 @@ WHERE u.id = $1
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC NULLS LAST;
 
+-- name: SearchUsers :many
+SELECT users.user_name, users.id, i.path
+FROM users
+         LEFT JOIN images i on users.avatar_image_id = i.id
+WHERE user_name LIKE '%' || $1 || '%'
+LIMIT 5;
+

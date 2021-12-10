@@ -188,6 +188,40 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 	return i, err
 }
 
+const searchUsers = `-- name: SearchUsers :many
+SELECT users.user_name, users.id, i.path
+FROM users
+         LEFT JOIN images i on users.avatar_image_id = i.id
+WHERE user_name LIKE '%' || $1 || '%'
+LIMIT 5
+`
+
+type SearchUsersRow struct {
+	UserName sql.NullString `json:"userName"`
+	ID       int32          `json:"id"`
+	Path     sql.NullString `json:"path"`
+}
+
+func (q *Queries) SearchUsers(ctx context.Context, dollar_1 sql.NullString) ([]SearchUsersRow, error) {
+	rows, err := q.db.Query(ctx, searchUsers, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchUsersRow
+	for rows.Next() {
+		var i SearchUsersRow
+		if err := rows.Scan(&i.UserName, &i.ID, &i.Path); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const userByEmail = `-- name: UserByEmail :one
 SELECT id, date_created, user_name, password, email, summary, avatar_image_id, role_id, favorite_list
 FROM users
