@@ -16,24 +16,31 @@ a {
   box-sizing: border-box;
 }
 
+a:hover {
+  cursor: pointer;
+}
+
 input:focus {
   outline: none;
 }
 
 .dataResult {
   border-radius: 5px;
+  width: inherit;
 
-  width: 300px;
-  max-height: 200px;
+  max-height: 400px;
   background-color: white;
   box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
   overflow: hidden;
   overflow-y: auto;
 }
 .list-chapter {
-  max-height: 200px;
+  max-height: 500px;
   overflow: hidden;
   overflow-y: auto;
+}
+.list-chapter::-webkit-scrollbar {
+  display: none;
 }
 
 .dataResult::-webkit-scrollbar {
@@ -66,4 +73,39 @@ input:focus {
 
 a {
   text-decoration: none;
+}
+.author-gradient {
+  background: rgb(2, 0, 36);
+  background: linear-gradient(
+    90deg,
+    rgba(2, 0, 36, 1) 0%,
+    rgba(65, 65, 75, 1) 28%,
+    rgba(245, 245, 245, 1) 100%
+  );
+  height: 300px;
+  position: relative;
+}
+
+.author-gradient img {
+  position: absolute;
+  bottom: -100px;
+  left: 50px;
+  z-index: 1;
+  width: 200px;
+  border: 1px solid grey;
+}
+.search-Input {
+  width: 400px;
+}
+@media screen and (max-width: 560px) {
+  .author-gradient img {
+    bottom: 0;
+    left: 0;
+  }
+  .search-Input {
+    width: 100%;
+  }
+  .dataResult {
+    width: 100%;
+  }
 }

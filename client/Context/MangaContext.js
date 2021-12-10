@@ -1,16 +1,59 @@
-import React, { createContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useEffect,
+  useState,
+} from 'react';
 
 export const MangaContext = createContext();
-
 export default function MangaContextProvider({ children }) {
-  const [listObjects, setListObjects] = useState([]);
+  const server = 'http://113.22.75.159:7001';
+  const [latestManga, setLatest] = useState([]);
+  const [randomBooks, setRandomBooks] = useState([]);
+  const [mostViewedAll, setMostViewedAll] = useState([]);
+  const [mostViewedMonth, setMostViewedMonth] = useState(
+    []
+  );
+
+  const [mostViewedYear, setMostViewedYear] = useState([]);
+  const [mostViewedWeek, setMostViewedWeek] = useState([]);
+  const [genres, setGenre] = useState([]);
+
   useEffect(() => {
-    fetch("http://localhost:3300/manga")
+    fetch(`${server}/book/latest?limit=16`)
       .then((res) => res.json())
-      .then((data) => setListObjects(data));
+      .then((data) => {
+        setLatest(data.books);
+      });
+    fetch(`${server}/book/random`)
+      .then((res) => res.json())
+      .then((data) => setRandomBooks(data.books));
+    fetch(`${server}/book/top/all?limit=100`)
+      .then((res) => res.json())
+      .then((data) => setMostViewedAll(data.books));
+    fetch(`${server}/book/top/year?limit=100`)
+      .then((res) => res.json())
+      .then((data) => setMostViewedYear(data.books));
+
+    fetch(`${server}/book/top/month?limit=100`)
+      .then((res) => res.json())
+      .then((data) => setMostViewedMonth(data.books));
+    fetch(`${server}/book/top/week?limit=100`)
+      .then((res) => res.json())
+      .then((data) => setMostViewedWeek(data.books));
+    fetch(`${server}/genre/all`)
+      .then((res) => res.json())
+      .then((data) => setGenre(data));
   }, []);
+
   const MangaContextData = {
-    listObjects,
+    server,
+    latestManga,
+    randomBooks,
+    mostViewedAll,
+    mostViewedMonth,
+    mostViewedYear,
+    mostViewedWeek,
+    genres,
   };
   return (
     <MangaContext.Provider value={MangaContextData}>

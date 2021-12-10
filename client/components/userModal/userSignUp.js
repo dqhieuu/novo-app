@@ -1,10 +1,12 @@
 import React, {
-  useContext,
   useEffect,
   useState,
+  useContext,
 } from 'react';
-import { UserContext } from '../../Context/UserContext';
+import { MangaContext } from '../../Context/MangaContext';
+import axios from 'axios';
 export default function UserSignUp() {
+  const { server } = useContext(MangaContext);
   const initialValues = {
     username: '',
     email: '',
@@ -16,22 +18,29 @@ export default function UserSignUp() {
     email: 'Bạn cần nhập email',
     password: 'Bạn cần nhập mật khẩu',
   });
+
   const [isSubmit, setIsSubmit] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setData({ ...formData, [name]: value });
-    console.log(formData);
+
     setFormErrors(validate(formData));
   };
   const handleSubmit = (e) => {
     e.preventDefault();
+    axios
+      .post(`${server}/register`, {
+        username: formData.username,
+        password: formData.password,
+        email: formData.email,
+      })
+      .then((res) => {
+        console.log(res);
+      });
 
     setIsSubmit(true);
   };
-  useEffect(() => {
-    console.log(formErrors);
-    console.log(formData);
-  }, [formErrors]);
+
   const validate = (values) => {
     const errors = {};
     const regex =
@@ -167,24 +176,28 @@ export default function UserSignUp() {
                   Đăng nhập
                 </button>
                 <hr />
-                <div className="d-grid">
-                  <button
-                    type="submit"
-                    className="btn btn-secondary"
-                    style={{ background: '#3b5998' }}
-                  >
-                    Đăng nhập bằng Facebook
-                  </button>
-                </div>
-                <button
-                  type="submit"
-                  className="btn btn-secondary mt-3"
-                  style={{ background: '#c23321' }}
-                >
-                  Đăng nhập bằng Gmail
-                </button>
               </div>
             </form>
+            <div className="d-grid">
+              <button
+                type="submit"
+                className="btn btn-secondary"
+                style={{ background: '#3b5998' }}
+              >
+                Đăng nhập bằng Facebook
+              </button>
+            </div>
+            <div className="d-grid">
+              <button
+                className="btn btn-secondary mt-3"
+                style={{ background: '#c23321' }}
+                onClick={() =>
+                  (window.location.href = `${server}/oauth/google`)
+                }
+              >
+                Đăng nhập bằng Gmail
+              </button>
+            </div>
           </div>
           <div
             className="tab-pane fade"

@@ -1,124 +1,176 @@
-import React, { useState, useEffect } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useContext,
+} from 'react';
 import {
   SortableContainer,
   SortableElement,
 } from 'react-sortable-hoc';
+import { MangaContext } from '../../Context/MangaContext';
 import { arrayMove } from 'react-sortable-hoc';
-const mangaTypes = [
-  'Action',
-  'Adult',
-  'Adventure',
-  'Anime',
-  'Award Winning',
-  'Comedy',
-  'Cooking',
-  'Demons',
-  'Doujinshi',
-  'Drama',
-  'Ecchi',
-  'Fantasy',
-  'Gender bender',
-  'Harem',
-  'Historical',
-  'Horror',
-  'Josei',
-  'Live Action',
-  'Magic',
-  'Manhua',
-  'Manhwa',
-  'Martial Arts',
-  'Mature',
-];
-const SortableListItem = SortableElement(
-  ({ image, stt }) => {
-    return (
-      <div className="m-3 border rounded">
-        <img
-          src={image}
-          style={{
-            objectFit: 'cover',
-            aspectRatio: '3/4',
-            width: '150px',
-          }}
-        />
-        <div className="d-flex justify-content-center mt-1">
-          {stt + 1}
-        </div>
-      </div>
-    );
-  }
-);
+import uploadImages from '../../utilities/uploadImages';
+import NULL_CONSTANTS from '../../utilities/nullConstants';
 
-const SortableList = SortableContainer(({ images }) => {
-  return (
-    <div className="d-flex flex-wrap border mt-3">
-      {images.length > 0 &&
-        images.map((image, index) => {
-          return (
-            <SortableListItem
-              axis="xy"
-              key={index}
-              index={index}
-              image={image}
-              stt={index}
-            />
-          );
-        })}
-    </div>
-  );
-});
+export default function UploadPartOne() {
+  const { server } = useContext(MangaContext);
 
-export default function UploadPartOne({ data, update }) {
+  const [genres, setGenres] = useState([]);
   const [images, setImages] = useState([]);
-
-  const [checkedState, setCheckedState] = useState(
-    mangaTypes.reduce(
-      (acc, curr) => ((acc[curr] = false), acc),
-      {}
-    )
-  );
+  const [newBook, setnewBook] = useState({
+    name: '',
+    description: '',
+    authors: [],
+    coverArts: [],
+    genres: '',
+  });
+  useEffect(() => {
+    fetch(`${server}/genre/all`)
+      .then((res) => res.json())
+      .then((data) => {
+        setGenres(
+          data.map((elem) => ({
+            name: elem.name,
+            id: elem.id,
+            checked: false,
+          }))
+        );
+      });
+  }, []);
 
   const handlePreviewCover = (e) => {
     const files = e.target.files;
     const arrayFiles = Object.entries(files);
-    files.preview = [];
+    const preview = [];
+
     arrayFiles.map((file) => {
       const fileURL = URL.createObjectURL(file[1]);
-      files.preview = [...files.preview, fileURL];
+      preview.push({
+        status: 'uploading',
+        fileURL,
+        id: 0,
+      });
     });
-    setImages(files.preview);
-  };
-  const onSortEnd = ({ oldIndex, newIndex }) => {
-    setImages(arrayMove(images, oldIndex, newIndex));
-    update('mangaInfo', {
-      ...data,
-      mangaCover: images,
-    });
-    update('mangaInfo', {
-      ...data,
-      mangaMainPrimaryCover: images[images.length - 1],
+    setImages(preview);
+
+    arrayFiles.map((file, index) => {
+      uploadImages('chapter-image', file[1], (id) => {
+        const updated = [...preview];
+        console.log(updated, images);
+        if (id) {
+          updated[index].status = 'finished';
+          updated[index].id = id;
+        } else {
+          updated[index].status = 'failed';
+        }
+        setImages(updated);
+      });
     });
   };
 
+  const onSortEnd = ({ oldIndex, newIndex }) => {
+    setImages(arrayMove(images, oldIndex, newIndex));
+  };
   const handleCheckbox = (e) => {
-    let mangaGenre = [];
-    checkedState[e.target.value] = e.target.checked;
-    setCheckedState(checkedState);
-    for (const genre in checkedState) {
-      if (checkedState[genre] == true)
-        mangaGenre = [...mangaGenre, genre];
+    let updatedGenres = genres.slice();
+    updatedGenres[e.target.value].checked =
+      e.target.checked;
+    setGenres(updatedGenres);
+  };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+  };
+  const SortableListItem = SortableElement(
+    ({ image, stt }) => {
+      return (
+        <div>
+          {image.status === 'uploading' && (
+            <div className="spinner-border"></div>
+          )}
+          {image.status === 'failed' && (
+            <div>
+              <img
+                src="https://www.freeiconspng.com/uploads/error-icon-4.png"
+                width="20%"
+              ></img>
+            </div>
+          )}
+          <div>
+            <div className="card m-3">
+              <img
+                src={image}
+                style={{
+                  objectFit: 'cover',
+                  aspectRatio: '3/4',
+                  width: '150px',
+                }}
+                className="card-img-top"
+              />
+              <div className="card-img-overlay">
+                <div className="d-flex justify-content-between mt-1">
+                  <p className="card-title">
+                    <span className="badge bg-primary">
+                      {stt + 1}
+                    </span>
+                  </p>
+                  <div>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => {
+                        let updated = [...images];
+                        updated.splice(stt, 1);
+                        setImages(updated);
+                      }}
+                    >
+                      X
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
     }
-    update('mangaInfo', {
-      ...data,
-      mangaTypes: mangaGenre,
+  );
+
+  const SortableList = SortableContainer(({ images }) => {
+    console.log(images);
+    return (
+      <div className="d-flex flex-wrap border mt-3">
+        {images.length > 0 &&
+          images.map((image, index) => {
+            return (
+              <SortableListItem
+                axis="xy"
+                key={index}
+                index={index}
+                image={image.fileURL}
+                stt={index}
+              />
+            );
+          })}
+      </div>
+    );
+  });
+  const handleAuthor = (e) => {
+    const listAuthor = e.target.value;
+    setnewBook({
+      ...newBook,
+      authors: listAuthor.split(','),
     });
+    console.log(newBook.authors);
   };
   return (
     <div>
       <div>
-        <form data-aos="fade-up" className="p-3">
+        <form
+          data-aos="fade-up"
+          className="p-3"
+          onSubmit={handleSubmit}
+        >
           <div className="row">
-            <div className="col-8">
+            <div className="col-lg-6 col-12">
               <div className="mb-3 mt-3">
                 <label
                   htmlFor="mangaName"
@@ -132,16 +184,17 @@ export default function UploadPartOne({ data, update }) {
                   id="mangaName"
                   placeholder="Nhập tên truyện"
                   name="mangaName"
-                  value={data.mangaName}
+                  value={newBook.name}
                   onChange={(e) =>
-                    update('mangaInfo', {
-                      ...data,
-                      mangaName: e.target.value,
+                    setnewBook({
+                      ...newBook,
+                      name: e.target.value,
                     })
                   }
                 />
               </div>
-
+            </div>
+            <div className="col-lg-6 col-12">
               <div className="mt-3">
                 <label
                   htmlFor="mangaAuthor"
@@ -155,94 +208,59 @@ export default function UploadPartOne({ data, update }) {
                   id="mangaAuthor"
                   placeholder="Nhập tác giả"
                   name="mangaAuthor"
-                  value={data.mangaAuthor}
-                  onChange={(e) =>
-                    update('mangaInfo', {
-                      ...data,
-                      mangaAuthor: e.target.value,
-                    })
-                  }
+                  value={newBook.authors}
+                  onChange={handleAuthor}
                 />
               </div>
-
-              <div className="mt-3">
-                <label htmlFor="" className="mangaTypes">
-                  Thể loại:
+              <label
+                htmlFor=""
+                className="form-label"
+                style={{
+                  color: 'red',
+                  fontStyle: 'italic',
+                }}
+              >
+                Tên các tác giả cách nhau bởi một dấu phảy
+              </label>
+            </div>
+          </div>
+          <div className="mt-3">
+            <label htmlFor="" className="mangaTypes">
+              Thể loại:
+            </label>
+          </div>
+          <div className="d-flex mt-3 justify-content-between flex-wrap">
+            {genres.map((genre, index) => (
+              <div className="form-check" key={genre.id}>
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  checked={genre.checked}
+                  onChange={handleCheckbox}
+                  value={index}
+                />
+                <label className="form-check-label">
+                  {genre.name}
                 </label>
               </div>
-              <div className="d-flex mt-3 justify-content-between flex-wrap">
-                {mangaTypes.map((mangaType, index) => (
-                  <div
-                    className="form-check"
-                    key={mangaType}
-                  >
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id={index}
-                      name="option1"
-                      value={mangaType}
-                      onChange={handleCheckbox}
-                    />
-                    <label className="form-check-label">
-                      {mangaType}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-3">
-                <label htmlFor="mangaDescription">
-                  Mô tả:
-                </label>
-                <textarea
-                  name="mangaDescription"
-                  id="mangaDescription"
-                  cols="30"
-                  rows="5"
-                  className="form-control"
-                  value={data.mangaDescription}
-                  onChange={(e) =>
-                    update('mangaInfo', {
-                      ...data,
-                      mangaDescription: e.target.value,
-                    })
-                  }
-                ></textarea>
-              </div>
-
-              <div className="mt-3"></div>
-            </div>
-            <div className="col-4">
-              <div className="image-cover d-flex align-items-end">
-                {images.length > 0 ? (
-                  <div className="">
-                    <img
-                      src={images[images.length - 1]}
-                      alt=""
-                      width="80%"
-                      style={{
-                        aspectRatio: '3/4',
-                        objectFit: 'cover',
-                      }}
-                      className="img-thumbnail"
-                    />
-                  </div>
-                ) : (
-                  <div className="">
-                    <img
-                      src="https://www.niadd.com/files/images/def_logo.svg"
-                      alt=""
-                      width="100%"
-                      style={{
-                        aspectRatio: '3/4',
-                        objectFit: 'cover',
-                      }}
-                      className="img-thumbnail"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
+            ))}
+          </div>
+          <div className="mt-3">
+            <label htmlFor="mangaDescription">Mô tả:</label>
+            <textarea
+              name="mangaDescription"
+              id="mangaDescription"
+              cols="30"
+              rows="5"
+              className="form-control"
+              value={newBook.description}
+              onChange={(e) =>
+                setnewBook({
+                  ...newBook,
+                  description: e.target.value,
+                })
+              }
+            ></textarea>
           </div>
 
           <div data-aos="fade-up">
@@ -261,12 +279,30 @@ export default function UploadPartOne({ data, update }) {
                 onChange={handlePreviewCover}
               />
 
-              <div className="d-flex justify-content-center mt-3">
-                <SortableList
-                  axis={'xy'}
-                  images={images}
-                  onSortEnd={onSortEnd}
-                ></SortableList>
+              <div className="row mt-3">
+                <div className="col-9">
+                  <SortableList
+                    axis={'xy'}
+                    images={images}
+                    onSortEnd={onSortEnd}
+                  ></SortableList>
+                </div>
+                <div className="col-3">
+                  <img
+                    src={
+                      images.length != 0
+                        ? `${
+                            images[images.length - 1]
+                              .fileURL
+                          }`
+                        : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                    }
+                    width={'100%'}
+                    style={{
+                      border: '1px solid lightgrey',
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -292,6 +328,11 @@ export default function UploadPartOne({ data, update }) {
             >
               Để ảnh mong muốn làm ảnh chính ở cuối cùng
             </label>
+          </div>
+          <div className="form-footer d-flex justify-content-center">
+            <button className="btn btn-dark" type="submit">
+              Submit
+            </button>
           </div>
         </form>
       </div>

@@ -6,14 +6,14 @@ import DisplayImg from '../../components/displayImg';
 import { FaTrash } from 'react-icons/fa';
 import MangaInfo from '../../components/manageManga/mangaInfo';
 function ManageMangaUpload() {
-  const { listObjects } = useContext(MangaContext);
+  const { latestManga } = useContext(MangaContext);
   return (
-    <div className="container">
+    <div className="container mt-5">
       <div
-        className="row"
+        className="row p-3"
         style={{
           background: '#f3f3f3',
-          borderRadius: '5px',
+          borderRadius: '10px',
         }}
       >
         <div className="col-lg-3 col-6 ">
@@ -47,15 +47,17 @@ function ManageMangaUpload() {
           </div>
           <hr></hr>
           <div className="mt-3">
-            {listObjects
+            {latestManga
               .slice(0, 3)
               .map((listObject, index) => (
                 <div key={index}>
                   <div className="row">
                     <div className="col-12 col-lg-2">
                       <DisplayImg
-                        srcImg={listObject.imgSrc}
-                        text={'Chap ' + listObject.chapter}
+                        srcImg={listObject.image}
+                        text={
+                          'Chap ' + listObject.latestChapter
+                        }
                         height="200px"
                         bgColor="red"
                       ></DisplayImg>
