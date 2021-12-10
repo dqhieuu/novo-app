@@ -31,7 +31,7 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
 SELECT id, title, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
-WHERE  LOWER(title) LIKE '%' || $1 || '%'
+WHERE  LOWER(title) ILIKE '%' || $1 || '%'
 ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY
@@ -521,7 +521,7 @@ func (q *Queries) NumberBookGroup(ctx context.Context) (int64, error) {
 const numberBookGroupSearchResult = `-- name: NumberBookGroupSearchResult :one
 SELECT COUNT(id)
 FROM book_groups
-WHERE title LIKE '%' || $1 || '%'
+WHERE title ILIKE '%' || $1 || '%'
 `
 
 func (q *Queries) NumberBookGroupSearchResult(ctx context.Context, query sql.NullString) (int64, error) {
@@ -635,7 +635,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-WHERE bg.title LIKE '%'||$3||'%'
+WHERE bg.title ILIKE '%'||$3||'%'
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
@@ -695,7 +695,7 @@ SELECT bg.title AS title,
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
-WHERE bg.title LIKE '%'||$1||'%'
+WHERE bg.title ILIKE '%'||$1||'%'
 GROUP BY bg.id
 LIMIT 5
 `

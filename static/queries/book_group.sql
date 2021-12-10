@@ -6,7 +6,7 @@ WHERE id = $1;
 -- name: BookGroupsByTitle :many
 SELECT *
 FROM book_groups
-WHERE  LOWER(title) LIKE '%' || $1 || '%'
+WHERE  title ILIKE '%' || $1 || '%'
 ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY;
@@ -35,7 +35,7 @@ SELECT bg.title AS title,
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
-WHERE bg.title LIKE '%'||sqlc.arg(query)||'%'
+WHERE bg.title ILIKE '%'||sqlc.arg(query)||'%'
 GROUP BY bg.id
 LIMIT 5;
 
@@ -69,7 +69,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-WHERE bg.title LIKE '%'||sqlc.arg(query)||'%'
+WHERE bg.title ILIKE '%'||sqlc.arg(query)||'%'
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
@@ -77,7 +77,7 @@ OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
 -- name: NumberBookGroupSearchResult :one
 SELECT COUNT(id)
 FROM book_groups
-WHERE title LIKE '%' || sqlc.arg(query) || '%';
+WHERE title ILIKE '%' || sqlc.arg(query) || '%';
 
 -- name: LatestBookGroups :many
 SELECT bg.id id,
