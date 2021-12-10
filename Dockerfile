@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 
 FROM golang:1.17.2-alpine3.14
+ENV TZ="Asia/Ho_Chi_Minh"
+RUN apk add tzdata
 
 WORKDIR /app
 
