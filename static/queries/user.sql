@@ -78,6 +78,6 @@ ORDER BY last_updated DESC NULLS LAST;
 SELECT users.user_name, users.id, i.path
 FROM users
          LEFT JOIN images i on users.avatar_image_id = i.id
-WHERE user_name LIKE '%' || $1 || '%'
+WHERE user_name ILIKE '%' || $1 || '%'
 LIMIT 5;
 
