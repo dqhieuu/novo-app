@@ -435,8 +435,8 @@ func SearchAuthorHandler(c *gin.Context) {
 		var authorInfo Author
 		authorInfo.Name = author.Name
 		authorInfo.Id = author.ID
-		if author.AvatarImageID.Valid {
-			authorInfo.Image = author.AvatarImageID.Int32
+		if author.Path.Valid {
+			authorInfo.Image = author.Path.String
 		}
 		response = append(response, authorInfo)
 	}

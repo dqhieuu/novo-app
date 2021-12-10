@@ -343,8 +343,8 @@ func SearchUserHandler(c *gin.Context) {
 		var userInfo User
 		userInfo.Name = user.UserName.String
 		userInfo.Id = user.ID
-		if user.AvatarImageID.Valid {
-			userInfo.Image = user.AvatarImageID.Int32
+		if user.Path.Valid {
+			userInfo.Image = user.Path.String
 		}
 		response = append(response, userInfo)
 	}
