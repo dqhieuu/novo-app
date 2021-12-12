@@ -4,7 +4,6 @@ import { MangaContext } from '../../Context/MangaContext';
 import ImgOverlay from '../../components/ImgOverlay';
 import DisplayImg from '../../components/displayImg';
 import { FaTrash } from 'react-icons/fa';
-import MangaInfo from '../../components/manageManga/mangaInfo';
 function ManageMangaUpload() {
   const { latestManga } = useContext(MangaContext);
   return (

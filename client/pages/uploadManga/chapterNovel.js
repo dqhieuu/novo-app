@@ -12,7 +12,6 @@ const mdParser = new MarkdownIt(/* Markdown-it options */);
 
 export default function ChapterNovel({ chapter }) {
   function handleEditorChange({ html, text }, e) {
-    // setText(e.target.value);
     console.log('handleEditorChange', html, text);
   }
   const [text, setText] = useState(chapter.textContent);
@@ -20,7 +19,7 @@ export default function ChapterNovel({ chapter }) {
   return (
     <div>
       <MdEditor
-        // value={text}
+        value={text}
         style={{ height: '500px' }}
         renderHTML={(text) => mdParser.render(text)}
         onChange={handleEditorChange}

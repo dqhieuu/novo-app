@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { MangaContext } from '../../Context/MangaContext';
 import NULL_CONSTANTS from '../../utilities/nullConstants';
 import DisplayImg from '../../components/displayImg';
+import WEB_CONSTANTS from '../../utilities/constants';
 
 export async function getServerSideProps(context) {
-  const server = 'http://113.22.75.159:7001';
+  const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
   const { id } = params;
   const response = await fetch(`${server}/search/${id}`);

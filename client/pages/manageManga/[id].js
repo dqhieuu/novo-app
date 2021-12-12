@@ -1,7 +1,8 @@
 import EditChapter from '../../components/manageManga/EditChapter';
 import EditDetail from '../../components/manageManga/EditDetail';
+import WEB_CONSTANTS from '../../utilities/constants';
 export async function getServerSideProps(context) {
-  const server = 'http://113.22.75.159:7001';
+  const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
   const { id } = params;
   const response = await fetch(`${server}/book/${id}`);

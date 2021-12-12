@@ -6,7 +6,7 @@ import React, {
 
 export const MangaContext = createContext();
 export default function MangaContextProvider({ children }) {
-  const server = 'http://113.22.75.159:7001';
+  const server = ' https://api.novoapp.tech';
   const [latestManga, setLatest] = useState([]);
   const [randomBooks, setRandomBooks] = useState([]);
   const [mostViewedAll, setMostViewedAll] = useState([]);

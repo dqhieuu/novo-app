@@ -2,11 +2,13 @@ import DisplayImg from '../../components/displayImg';
 import Link from 'next/link';
 import { useContext, useState, useEffect } from 'react';
 import { MangaContext } from '../../Context/MangaContext';
+import ReactPaginate from 'react-paginate';
 
 import NULL_CONSTANTS from '../../utilities/nullConstants';
+import WEB_CONSTANTS from '../../utilities/constants';
 
 export async function getServerSideProps(context) {
-  const server = 'http://113.22.75.159:7001';
+  const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
   const { id } = params;
   const response = await fetch(`${server}/book/${id}`);
@@ -19,22 +21,77 @@ export async function getServerSideProps(context) {
   return {
     props: {
       manga: data,
-      comments: dataComment,
+      comments: dataComment.comments,
     },
   };
 }
 
 export default function Details({ manga, comments }) {
-  const [number, setNumber] = useState(5);
-  let sliceArr = comments.comments
-    ? comments.comments.slice(0, number)
-    : [];
+  const [pageNumber, setPageNumber] = useState(0);
+  const cmtPerPage = 5;
+  const pageVisited = pageNumber * cmtPerPage;
 
-  const loadMore = () => {
-    setNumber(number + number);
-  };
   const { server, randomBooks, mostViewedWeek } =
     useContext(MangaContext);
+  const pageCount = comments
+    ? Math.ceil(comments.length / cmtPerPage)
+    : 0;
+  const changePage = ({ selected }) => {
+    setPageNumber(selected);
+  };
+  const displayDatas = comments ? (
+    comments
+      .slice(pageVisited, pageVisited + cmtPerPage)
+      .map((comment) => (
+        <div className="row mb-3">
+          <div className="col-2">
+            <img
+              src={
+                comment.userAvatar
+                  ? `${sever}/image/${comment.userAvatar}`
+                  : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+              }
+              width={'60%'}
+              className="rounded-circle img-thumbnail"
+              alt=""
+            />
+          </div>
+          <div
+            className="col-8"
+            style={{
+              border: '1px solid #bdc3c7',
+              borderRadius: '10px',
+              background: '#ecf0f1',
+            }}
+          >
+            <p
+              className="display-6 text-primary"
+              style={{ fontSize: '20px' }}
+            >
+              {comment.userName}
+              <span
+                style={{
+                  fontSize: '12px',
+                  color: 'black',
+                }}
+              >
+                {' ' + comment.timePosted}
+              </span>
+            </p>
+            <p
+              style={{
+                fontStyle: 'italic',
+                fontSize: '13px',
+              }}
+            >
+              {comment.comment}
+            </p>
+          </div>
+        </div>
+      ))
+  ) : (
+    <div>Không có comments nào</div>
+  );
 
   return (
     <div className="container">
@@ -100,12 +157,22 @@ export default function Details({ manga, comments }) {
                     {manga.likeCount}
                   </span>
                 </button>
-                <button
-                  type="button"
-                  class="btn btn-primary "
-                >
-                  Đọc từ đầu
-                </button>
+                {manga.chapters.length != 0 && (
+                  <Link
+                    href={`/chapters/${
+                      manga.chapters[
+                        manga.chapters.length - 1
+                      ].id
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      class="btn btn-primary "
+                    >
+                      Đọc từ đầu
+                    </button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -355,68 +422,31 @@ export default function Details({ manga, comments }) {
         >
           BÌNH LUẬN
         </h5>
-        {sliceArr.length != 0 ? (
-          <div className="comment-section mt-3">
-            {sliceArr.map((comment) => (
-              <div className="row mb-3">
-                <div className="col-2">
-                  <img
-                    src={
-                      comment.userAvatar
-                        ? `${sever}/image/${comment.userAvatar}`
-                        : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                    }
-                    width={'60%'}
-                    className="rounded-circle img-thumbnail"
-                    alt=""
-                  />
-                </div>
-                <div
-                  className="col-8"
-                  style={{
-                    border: '1px solid #bdc3c7',
-                    borderRadius: '10px',
-                    background: '#ecf0f1',
-                  }}
-                >
-                  <p
-                    className="display-6 text-primary"
-                    style={{ fontSize: '20px' }}
-                  >
-                    {comment.userName}
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        color: 'black',
-                      }}
-                    >
-                      {' ' + comment.timePosted}
-                    </span>
-                  </p>
-                  <p
-                    style={{
-                      fontStyle: 'italic',
-                      fontSize: '13px',
-                    }}
-                  >
-                    {comment.comment}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <div className="d-flex justify-content-center">
-              <button
-                className="btn btn-dark"
-                onClick={() => loadMore()}
-                disabled={number >= mostViewedWeek.length}
-              >
-                Load More
-              </button>
-            </div>
+
+        <div className="comment-section mt-3">
+          {displayDatas}
+          <div className="d-flex justify-content-center">
+            <ReactPaginate
+              breakLabel="..."
+              previousLabel="Trước"
+              nextLabel="Sau"
+              pageCount={pageCount}
+              onPageChange={changePage}
+              pageClassName="page-item"
+              pageLinkClassName="page-link"
+              previousClassName="page-item"
+              previousLinkClassName="page-link"
+              nextClassName="page-item"
+              nextLinkClassName="page-link"
+              breakLabel="..."
+              breakClassName="page-item"
+              breakLinkClassName="page-link"
+              containerClassName="pagination"
+              activeClassName="active"
+              renderOnZeroPageCount={null}
+            ></ReactPaginate>
           </div>
-        ) : (
-          <p>Chưa có bình luận nào</p>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { MangaContext } from '../../Context/MangaContext';
 import NULL_CONSTANTS from '../../utilities/nullConstants';
 import DisplayImg from '../../components/displayImg';
-
+import WEB_CONSTANTS from '../../utilities/constants';
+import ReactPaginate from 'react-paginate';
 export async function getServerSideProps(context) {
-  const server = 'http://113.22.75.159:7001';
+  const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
   const { id } = params;
   const response = await fetch(`${server}/user/${id}`);
@@ -20,139 +21,146 @@ export async function getServerSideProps(context) {
 
 export default function User({ user }) {
   const { server } = useContext(MangaContext);
+  const [pageNumber, setPageNumber] = useState(0);
+  const bookPerPage = 4;
+  const pageVisited = pageNumber * bookPerPage;
+  const displayDatas = user.booksPosted ? (
+    user.booksPosted
+      .slice(pageVisited, pageVisited + bookPerPage)
+      .map((listObject) => (
+        <Link href={`/mangas/${listObject.id}`}>
+          <div
+            className="col-6 col-lg-3 col-md-4 col-xl-2"
+            data-aos="fade-up"
+          >
+            <DisplayImg
+              bgColor="green"
+              srcImg={
+                listObject.image
+                  ? `${server}/image/${listObject.image}`
+                  : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+              }
+              text={listObject.views + ' lượt đọc'}
+              title={listObject.title}
+              height="282px"
+            ></DisplayImg>
+          </div>
+        </Link>
+      ))
+  ) : (
+    <div>Chưa đăng truyện nào</div>
+  );
+  const pageCount = Math.ceil(
+    user.booksPosted &&
+      user.booksPosted.length / bookPerPage
+  );
+  const changePage = ({ selected }) => {
+    setPageNumber(selected);
+  };
   return (
     <div>
-      <div className="container">
-        <div
-          className="row"
-          style={{
-            background: '#f3f3f3',
-            borderRadius: '5px',
-          }}
-        >
-          <div className="col-3 p-5">
-            {user.avatar ? (
-              <img
-                className="rounded-circle"
-                src={`${server}/image/${user.avatar}`}
-                alt="User avatar"
-                style={{ border: '1px solid black' }}
-              ></img>
-            ) : (
-              <img
-                className="rounded-circle"
-                src={`https://www.niadd.com/files/images/def_logo.svg`}
-                alt="User avatar"
-                style={{ border: '1px solid black' }}
-              ></img>
-            )}
+      <div
+        className="author-gradient container-fluid"
+        data-aos="fade-in"
+      ></div>
+      <div className="container ">
+        <div className="row">
+          <div className="col-lg-2 col-12 image-container">
+            <img
+              className="rounded-circle"
+              data-aos="fade-down"
+              src={
+                user.avatar
+                  ? `${server}/image/${user.avatar}`
+                  : NULL_CONSTANTS.AVATAR
+              }
+              width={'100%'}
+              style={{ border: '2px solid white' }}
+            ></img>
           </div>
-          <div className="col-9 p-5">
+          <div className="col-lg-8 col-12 ps-5 pt-2">
             <h3>{user.name}</h3>
-            <p style={{ fontStyle: 'italic' }}>
-              {user.description}
-            </p>
-          </div>
-        </div>
-        <div
-          className="row mt-3"
-          style={{
-            background: '#f3f3f3',
-            borderRadius: '5px',
-          }}
-        >
-          <div className="col-9">
-            <div className="p-3">
-              <div className="d-flex justify-content-between">
-                <p className="h5">Truyện đã đăng</p>
-                <Link href="/manageMangaUpload">
-                  <button
-                    type="button"
-                    className="btn btn-link"
-                    style={{ textDecoration: 'none' }}
-                  >
-                    More
-                  </button>
-                </Link>
-              </div>
-              <hr></hr>
-              <div className="row">
-                {user.bookPosted ? (
-                  user.bookPosted
-                    .slice(0, 4)
-                    .map((book) => (
-                      <DisplayImg
-                        src={
-                          book.image
-                            ? `${server}/image/${book.image}`
-                            : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                        }
-                      ></DisplayImg>
-                    ))
-                ) : (
-                  <div className="d-flex flex-column align-items-center">
-                    <img
-                      src="https://www.niadd.com/files/images/default/no_post.png"
-                      width="200px"
-                    ></img>
-                    <p style={{ color: '#9aa6b8' }}>
-                      Bạn chưa đăng truyện nào!
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="mt-3 p-3">
-              <div className="d-flex justify-content-between">
-                <p className="h5">Truyện đã đọc</p>
+
+            <ul
+              className="nav nav-tabs nav-justified"
+              id="myTab"
+              role="tablist"
+            >
+              <li className="nav-item" role="presentation">
                 <button
+                  className="nav-link active"
+                  id="personalInfo-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#personalInfo"
                   type="button"
-                  className="btn btn-link"
-                  style={{ textDecoration: 'none' }}
+                  role="tab"
+                  aria-controls="personalInfo"
+                  aria-selected="true"
                 >
-                  More
+                  THÔNG TIN
                 </button>
-              </div>
-              <hr></hr>
-              <div className="d-flex flex-column align-items-center">
-                <img
-                  src="https://www.niadd.com/files/images/default/no_book.png"
-                  width="200px"
-                ></img>
-                <p style={{ color: '#9aa6b8' }}>
-                  Bạn chưa đọc truyện nào!
-                </p>
-              </div>
-            </div>
-            <div className="mt-3 p-3">
-              <div className="d-flex justify-content-between">
-                <p className="h5">Truyện đã thích</p>
+              </li>
+              <li className="nav-item" role="presentation">
                 <button
+                  className="nav-link"
+                  id="upload-tab"
+                  data-bs-toggle="tab"
+                  data-bs-target="#upload"
                   type="button"
-                  className="btn btn-link"
-                  style={{ textDecoration: 'none' }}
+                  role="tab"
+                  aria-controls="upload"
+                  aria-selected="false"
                 >
-                  More
+                  UPLOAD
                 </button>
-              </div>
-              <hr></hr>
-              <div className="d-flex flex-column align-items-center">
-                <img
-                  src="https://www.niadd.com/files/images/default/no_book.png"
-                  width="200px"
-                ></img>
-                <p style={{ color: '#9aa6b8' }}>
-                  Bạn chưa thích nào!
+              </li>
+            </ul>
+            <div className="tab-content mt-3 ">
+              <div
+                className="tab-pane active"
+                id="personalInfo"
+                role="tabpanel"
+                aria-labelledby="personalInfo-tab"
+              >
+                <p>
+                  {user.description
+                    ? user.description
+                    : 'Chưa có mô tả'}
                 </p>
+                <h5>Role</h5>
+                <p>{user.role}</p>
               </div>
-            </div>
-          </div>
-          <div className="mt-3 col-3">
-            <div className="">
-              <p>
-                Username:{' '}
-                {user.name ? user.name : 'Anonymous'}
-              </p>
+              <div
+                className="tab-pane "
+                id="upload"
+                role="tabpanel"
+                aria-labelledby="upload-tab"
+              >
+                <div className="row"> {displayDatas}</div>
+                <div className="mt-3 d-flex justify-content-center">
+                  {user.booksPosted && (
+                    <ReactPaginate
+                      breakLabel="..."
+                      previousLabel="Trước"
+                      nextLabel="Sau"
+                      pageCount={pageCount}
+                      onPageChange={changePage}
+                      pageClassName="page-item"
+                      pageLinkClassName="page-link"
+                      previousClassName="page-item"
+                      previousLinkClassName="page-link"
+                      nextClassName="page-item"
+                      nextLinkClassName="page-link"
+                      breakLabel="..."
+                      breakClassName="page-item"
+                      breakLinkClassName="page-link"
+                      containerClassName="pagination"
+                      activeClassName="active"
+                      renderOnZeroPageCount={null}
+                    ></ReactPaginate>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

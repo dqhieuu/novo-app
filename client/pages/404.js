@@ -7,7 +7,7 @@ export default function NotFound() {
   useEffect(() => {
     setTimeout(() => {
       router.replace('/');
-    }, 5000);
+    }, 3000);
   }, []);
   return (
     <div
@@ -26,7 +26,7 @@ export default function NotFound() {
       </h2>
       <p>
         Đá đít các bạn về <Link href="/">trang chủ</Link>{' '}
-        sau 5 giây nhé!
+        sau 3 giây nhé!
       </p>
     </div>
   );
