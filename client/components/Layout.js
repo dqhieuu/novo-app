@@ -52,7 +52,10 @@ export default function Layout({ children }) {
                   <div className="container-fluid">
                     <div className="row">
                       {genres.map((genre) => (
-                        <Link href={`/genres/${genre.id}`}>
+                        <Link
+                          href={`/genres/${genre.id}`}
+                          key={genre.id}
+                        >
                           <div className="col-2 col-lg-12">
                             <a>{genre.name}</a>
                           </div>
@@ -74,7 +77,7 @@ export default function Layout({ children }) {
                 </a>
               </li>
             </ul>
-            <Link href="/uploadManga/uploadManga">
+            <Link href="/uploadManga/uploadManga" passHref>
               <button className="nav-item btn btn-dark me-2">
                 Upload truyện
               </button>

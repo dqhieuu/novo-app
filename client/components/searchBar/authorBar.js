@@ -45,6 +45,7 @@ export default function AuthorBar() {
             {listObjects.slice(0, 10).map((author) => {
               return (
                 <div
+                  key={author.id}
                   className="dataItem "
                   onClick={() => setSearchWord(author.name)}
                 >

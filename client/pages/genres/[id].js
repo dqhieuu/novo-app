@@ -20,15 +20,19 @@ export async function getServerSideProps(context) {
   };
 }
 
-export default function genreManga({ manga, id }) {
+export default function GenreManga({ manga, id }) {
   const { server } = useContext(MangaContext);
   const [pageNumber, setPageNumber] = useState(0);
   const bookPerPage = 12;
   const pageVisited = pageNumber * bookPerPage;
   const displayDatas = manga
     .slice(pageVisited, pageVisited + bookPerPage)
-    .map((listObject) => (
-      <Link href={`/mangas/${listObject.id}`}>
+    .map((listObject, index) => (
+      <Link
+        href={`/mangas/${listObject.id}`}
+        passHref
+        key={index}
+      >
         <div
           className="col-6 col-lg-3 col-md-4 col-xl-2 mb-3"
           data-aos="fade-up"
@@ -74,7 +78,6 @@ export default function genreManga({ manga, id }) {
             previousLinkClassName="page-link"
             nextClassName="page-item"
             nextLinkClassName="page-link"
-            breakLabel="..."
             breakClassName="page-item"
             breakLinkClassName="page-link"
             containerClassName="pagination"

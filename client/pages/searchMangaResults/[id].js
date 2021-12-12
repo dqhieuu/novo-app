@@ -42,7 +42,11 @@ export default function SearchResult({
       {manga.length != 0 ? (
         <div className="row">
           {sliceArrManga.map((listObject) => (
-            <Link href={`/mangas/${listObject.id}`}>
+            <Link
+              href={`/mangas/${listObject.id}`}
+              key={listObject.id}
+              passHref
+            >
               <div
                 className="col-6 col-lg-3 col-md-4 col-xl-2"
                 data-aos="fade-up"

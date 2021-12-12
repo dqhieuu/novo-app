@@ -3,6 +3,9 @@ import Link from 'next/link';
 import { useContext, useState, useEffect } from 'react';
 import { MangaContext } from '../../Context/MangaContext';
 import ReactPaginate from 'react-paginate';
+import TimeAgo from 'react-timeago';
+import vietnameseStrings from 'react-timeago/lib/language-strings/vi';
+import buildFormatter from 'react-timeago/lib/formatters/buildFormatter';
 
 import NULL_CONSTANTS from '../../utilities/nullConstants';
 import WEB_CONSTANTS from '../../utilities/constants';
@@ -39,11 +42,13 @@ export default function Details({ manga, comments }) {
   const changePage = ({ selected }) => {
     setPageNumber(selected);
   };
+
+  const formatter = buildFormatter(vietnameseStrings);
   const displayDatas = comments ? (
     comments
       .slice(pageVisited, pageVisited + cmtPerPage)
-      .map((comment) => (
-        <div className="row mb-3">
+      .map((comment, index) => (
+        <div className="row mb-3" key={index}>
           <div className="col-2">
             <img
               src={
@@ -75,7 +80,11 @@ export default function Details({ manga, comments }) {
                   color: 'black',
                 }}
               >
-                {' ' + comment.timePosted}
+                {' '}
+                <TimeAgo
+                  date={comment.timePosted / 1000}
+                  formatter={formatter}
+                ></TimeAgo>
               </span>
             </p>
             <p
@@ -90,7 +99,7 @@ export default function Details({ manga, comments }) {
         </div>
       ))
   ) : (
-    <div>Không có comments nào</div>
+    <div>Không có comment nào</div>
   );
 
   return (
@@ -118,7 +127,7 @@ export default function Details({ manga, comments }) {
               <h3>{manga.name}</h3>
               <div className="d-flex justify-content-between col-lg-5 col-8">
                 <div>
-                  <p>Tác giả</p>
+                  <p>Tác giảx</p>
                   <p>Tình trạng</p>
                   <p>Mới nhất</p>
                   <p>Lượt đọc</p>
@@ -126,15 +135,19 @@ export default function Details({ manga, comments }) {
                 <div>
                   <p>
                     {manga.authors.length > 0
-                      ? manga.authors.map((author) => (
-                          <Link
-                            href={`/authors/${author.id}`}
-                          >
-                            <span>
-                              {author.name + ', '}
-                            </span>
-                          </Link>
-                        ))
+                      ? manga.authors.map(
+                          (author, index) => (
+                            <Link
+                              href={`/authors/${author.id}`}
+                              passHref
+                              key={index}
+                            >
+                              <span>
+                                {author.name + ', '}
+                              </span>
+                            </Link>
+                          )
+                        )
                       : 'Đang cập nhật'}
                   </p>
                   <p>Đang cập nhật</p>
@@ -150,7 +163,7 @@ export default function Details({ manga, comments }) {
               <div className="button-utilities col-12">
                 <button
                   type="button"
-                  class="btn btn-success me-2"
+                  className="btn btn-success me-2"
                 >
                   Thích{' '}
                   <span className="badge bg-danger">
@@ -159,6 +172,7 @@ export default function Details({ manga, comments }) {
                 </button>
                 {manga.chapters.length != 0 && (
                   <Link
+                    passHref
                     href={`/chapters/${
                       manga.chapters[
                         manga.chapters.length - 1
@@ -167,7 +181,7 @@ export default function Details({ manga, comments }) {
                   >
                     <button
                       type="button"
-                      class="btn btn-primary "
+                      className="btn btn-primary "
                     >
                       Đọc từ đầu
                     </button>
@@ -196,11 +210,12 @@ export default function Details({ manga, comments }) {
                   ></button>
                   {Array.from(
                     Array(manga.coverArts.length - 1).keys()
-                  ).map((index) => (
+                  ).map((value, index) => (
                     <button
                       type="button"
                       data-bs-target="#carouselExampleDark"
-                      data-bs-slide-to={index + 1}
+                      data-bs-slide-to={value + 1}
+                      key={index}
                     ></button>
                   ))}
                 </div>
@@ -219,17 +234,24 @@ export default function Details({ manga, comments }) {
                       <h5>{manga.name}</h5>
                       <p>{'Thể loại'}</p>
                       <p>
-                        {manga.genres.map((genre) => (
-                          <span>{genre.name + ' '}</span>
-                        ))}
+                        {manga.genres.map(
+                          (genre, index) => (
+                            <span key={index}>
+                              {genre.name + ' '}
+                            </span>
+                          )
+                        )}
                       </p>
                     </div>
                   </div>
                   {manga.coverArts.length > 0 &&
                     manga.coverArts
                       .slice(1, manga.coverArts.length)
-                      .map((coverArt) => (
-                        <div className="carousel-item">
+                      .map((coverArt, index) => (
+                        <div
+                          className="carousel-item"
+                          key={index}
+                        >
                           <img
                             src={`${server}/image/${coverArt}`}
                             width="100%"
@@ -243,11 +265,13 @@ export default function Details({ manga, comments }) {
                             <h5>{manga.name}</h5>
                             <p>{'Thể loại'}</p>
                             <p>
-                              {manga.genres.map((genre) => (
-                                <span>
-                                  {genre.name + ' '}
-                                </span>
-                              ))}
+                              {manga.genres.map(
+                                (genre, index) => (
+                                  <span key={index}>
+                                    {genre.name + ' '}
+                                  </span>
+                                )
+                              )}
                             </p>
                           </div>
                         </div>
@@ -310,7 +334,7 @@ export default function Details({ manga, comments }) {
               className="d-flex justify-content-between"
               style={{ borderBottom: '1px solid grey' }}
             >
-              <p>Tên Chap</p>
+              <p>Tên chap</p>
               <p>Cập nhật</p>
               <p>Người đăng</p>
             </div>
@@ -326,12 +350,18 @@ export default function Details({ manga, comments }) {
                   <Link href={`/chapters/${chapter.id}`}>
                     <p>
                       Chapter
-                      {' ' + chapter.chapterNumber}
+                      {' ' +
+                        chapter.chapterNumber +
+                        (chapter?.name
+                          ? `: ${chapter.name}`
+                          : '')}
                     </p>
                   </Link>
 
                   <p>
-                    {Date(chapter.timePosted).toString()}
+                    {new Date(
+                      chapter.timePosted
+                    ).toString()}
                   </p>
 
                   <p>{chapter.userPosted.name}</p>
@@ -353,24 +383,30 @@ export default function Details({ manga, comments }) {
           >
             TOP TRONG TUẦN
           </h5>
-          {mostViewedWeek.slice(0, 3).map((manga) => (
-            <Link href={`/mangas/${manga.id}`}>
-              <div className="col-12">
-                {' '}
-                <DisplayImg
-                  srcImg={
-                    manga.image
-                      ? `${server}/image/${manga.image}`
-                      : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                  }
-                  text={manga.views + ' lượt đọc'}
-                  title={manga.title}
-                  height="205px"
-                  bgColor="green"
-                ></DisplayImg>
-              </div>
-            </Link>
-          ))}
+          {mostViewedWeek
+            .slice(0, 3)
+            .map((manga, index) => (
+              <Link
+                href={`/mangas/${manga.id}`}
+                passHref
+                key={index}
+              >
+                <div className="col-12">
+                  {' '}
+                  <DisplayImg
+                    srcImg={
+                      manga.image
+                        ? `${server}/image/${manga.image}`
+                        : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                    }
+                    text={manga.views + ' lượt đọc'}
+                    title={manga.title}
+                    height="205px"
+                    bgColor="green"
+                  ></DisplayImg>
+                </div>
+              </Link>
+            ))}
         </div>
       </div>
 
@@ -386,8 +422,12 @@ export default function Details({ manga, comments }) {
         </h5>
       </div>
       <div className="row">
-        {randomBooks.slice(0, 6).map((manga) => (
-          <Link href={`/mangas/${manga.id}`}>
+        {randomBooks.slice(0, 6).map((manga, index) => (
+          <Link
+            href={`/mangas/${manga.id}`}
+            passHref
+            key={index}
+          >
             <div
               className="col-6 col-lg-2"
               data-aos="fade-up"
@@ -438,7 +478,6 @@ export default function Details({ manga, comments }) {
               previousLinkClassName="page-link"
               nextClassName="page-item"
               nextLinkClassName="page-link"
-              breakLabel="..."
               breakClassName="page-item"
               breakLinkClassName="page-link"
               containerClassName="pagination"

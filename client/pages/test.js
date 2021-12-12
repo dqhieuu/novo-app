@@ -80,13 +80,14 @@ export default function SearchBar() {
                   {listAuthors.length > 0 ? (
                     listAuthors
                       .slice(0, 5)
-                      .map((author) => (
+                      .map((author, index) => (
                         <div
                           className="row mb-3"
                           style={{
                             background: '#7f8c8d',
                             borderRadius: '5px',
                           }}
+                          key={index}
                         >
                           <div className="col-2">
                             <img
@@ -134,43 +135,47 @@ export default function SearchBar() {
 
                 <div className="p-2">
                   {listMangas.length != 0 &&
-                    listMangas.slice(0, 5).map((manga) => (
-                      <div
-                        className="row mb-3"
-                        style={{
-                          background: '#34495e',
-                          borderRadius: '5px',
-                          height: '100px',
-                        }}
-                      >
-                        <div className="col-2 m-2">
-                          <img
-                            src={
-                              manga.image
-                                ? `${server}/image/${manga.image}`
-                                : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                            }
-                            width={'50%'}
-                            alt="Author Image"
-                            style={{
-                              borderRadius: '5px',
-                              objectFit: 'cover',
-                              border: '1px solid lightgrey',
-                            }}
-                          />
-                        </div>
+                    listMangas
+                      .slice(0, 5)
+                      .map((manga, index) => (
                         <div
-                          className="col-4 mt-3"
-                          style={{ color: '#ecf0f1' }}
+                          className="row mb-3"
+                          style={{
+                            background: '#34495e',
+                            borderRadius: '5px',
+                            height: '100px',
+                          }}
+                          key={index}
                         >
-                          <h5>{manga.title}</h5>
-                          <p>
-                            Chapter
-                            {' ' + manga.latestChapter}
-                          </p>
+                          <div className="col-2 m-2">
+                            <img
+                              src={
+                                manga.image
+                                  ? `${server}/image/${manga.image}`
+                                  : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                              }
+                              width={'50%'}
+                              alt="Author Image"
+                              style={{
+                                borderRadius: '5px',
+                                objectFit: 'cover',
+                                border:
+                                  '1px solid lightgrey',
+                              }}
+                            />
+                          </div>
+                          <div
+                            className="col-4 mt-3"
+                            style={{ color: '#ecf0f1' }}
+                          >
+                            <h5>{manga.title}</h5>
+                            <p>
+                              Chapter
+                              {' ' + manga.latestChapter}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                 </div>
               </div>
             </div>

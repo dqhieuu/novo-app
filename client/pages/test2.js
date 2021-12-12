@@ -15,7 +15,11 @@ function ByAll() {
   const displayDatas = mostViewedAll
     .slice(pageVisited, pageVisited + bookPerPage)
     .map((listObject) => (
-      <Link href={`/mangas/${listObject.id}`}>
+      <Link
+        href={`/mangas/${listObject.id}`}
+        passHref
+        key={listObject.id}
+      >
         <div
           className="col-6 col-lg-3 col-md-4 col-xl-2"
           data-aos="fade-up"
@@ -56,7 +60,6 @@ function ByAll() {
         previousLinkClassName="page-link"
         nextClassName="page-item"
         nextLinkClassName="page-link"
-        breakLabel="..."
         breakClassName="page-item"
         breakLinkClassName="page-link"
         containerClassName="pagination"

@@ -14,8 +14,12 @@ function ByAll() {
   const pageVisited = pageNumber * bookPerPage;
   const displayDatas = mostViewedAll
     .slice(pageVisited, pageVisited + bookPerPage)
-    .map((listObject) => (
-      <Link href={`/mangas/${listObject.id}`}>
+    .map((listObject, index) => (
+      <Link
+        href={`/mangas/${listObject.id}`}
+        key={index}
+        passHref
+      >
         <div
           className="col-6 col-lg-3 col-md-4 col-xl-2"
           data-aos="fade-up"
@@ -50,14 +54,12 @@ function ByAll() {
         nextLabel="Sau"
         pageCount={pageCount}
         onPageChange={changePage}
-        previousLabel="< previous"
         pageClassName="page-item"
         pageLinkClassName="page-link"
         previousClassName="page-item"
         previousLinkClassName="page-link"
         nextClassName="page-item"
         nextLinkClassName="page-link"
-        breakLabel="..."
         breakClassName="page-item"
         breakLinkClassName="page-link"
         containerClassName="pagination"
