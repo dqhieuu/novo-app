@@ -32,7 +32,11 @@ export default function Home() {
       </h5>
       <div className="row">
         {latestManga.slice(0, 12).map((manga) => (
-          <Link href={`mangas/${manga.id}`}>
+          <Link
+            href={`mangas/${manga.id}`}
+            key={manga.id}
+            passHref
+          >
             <div
               className="col-6 col-lg-2"
               data-aos="fade-up"
@@ -105,7 +109,11 @@ export default function Home() {
           </h5>
           <div className="row">
             {randomBooks.slice(0, 8).map((randomBook) => (
-              <Link href={`mangas/${randomBook.id}`}>
+              <Link
+                href={`mangas/${randomBook.id}`}
+                key={randomBook.id}
+                passHref
+              >
                 <div className="col-sm-6">
                   <div
                     className="row"
@@ -166,7 +174,11 @@ export default function Home() {
           </h5>
 
           {mostViewedAll.slice(0, 5).map((viewbook) => (
-            <Link href={`mangas/${viewbook.id}`}>
+            <Link
+              href={`mangas/${viewbook.id}`}
+              key={viewbook.id}
+              passHref
+            >
               <div className="col-12" data-aos="fade-left">
                 <DisplayImg
                   srcImg={

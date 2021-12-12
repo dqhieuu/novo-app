@@ -26,8 +26,8 @@ function EditChapter({ manga }) {
             </tr>
           </thead>
           <tbody>
-            {manga.chapters.map((chapter) => (
-              <tr>
+            {manga.chapters.map((chapter, index) => (
+              <tr key={index}>
                 <th scope="row">
                   Chapter {chapter.chapterNumber}
                 </th>
@@ -40,11 +40,15 @@ function EditChapter({ manga }) {
                   <div className="d-flex justify-content-around">
                     <Link
                       href={`/editChapter/${chapter.id}`}
+                      passHref
                     >
                       <FaPen></FaPen>
                     </Link>
 
-                    <Link href={`/chapters/${chapter.id}`}>
+                    <Link
+                      href={`/chapters/${chapter.id}`}
+                      passHref
+                    >
                       <FaEye></FaEye>
                     </Link>
                     <FaLink></FaLink>

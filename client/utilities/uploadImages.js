@@ -1,11 +1,12 @@
 import axios from 'axios';
+import WEB_CONSTANTS from './constants';
 
 export default async function uploadImages(
   type,
   data,
   callback
 ) {
-  const server = 'http://192.168.1.29:7001';
+  const server = WEB_CONSTANTS.SERVER;
   let formData = new FormData();
   formData.append('file', data);
 

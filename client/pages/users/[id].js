@@ -28,7 +28,11 @@ export default function User({ user }) {
     user.booksPosted
       .slice(pageVisited, pageVisited + bookPerPage)
       .map((listObject) => (
-        <Link href={`/mangas/${listObject.id}`}>
+        <Link
+          href={`/mangas/${listObject.id}`}
+          key={listObject.id}
+          passHref
+        >
           <div
             className="col-6 col-lg-3 col-md-4 col-xl-2"
             data-aos="fade-up"
@@ -151,7 +155,6 @@ export default function User({ user }) {
                       previousLinkClassName="page-link"
                       nextClassName="page-item"
                       nextLinkClassName="page-link"
-                      breakLabel="..."
                       breakClassName="page-item"
                       breakLinkClassName="page-link"
                       containerClassName="pagination"

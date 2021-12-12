@@ -17,7 +17,11 @@ function ByYear() {
   return (
     <div className="row">
       {sliceArrYear.map((listObject) => (
-        <Link href={`/mangas/${listObject.id}`}>
+        <Link
+          href={`/mangas/${listObject.id}`}
+          key={index}
+          passHref
+        >
           <div
             className="col-6 col-lg-3 col-md-4 col-xl-2"
             data-aos="fade-up"

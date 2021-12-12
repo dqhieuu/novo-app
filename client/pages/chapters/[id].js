@@ -8,6 +8,7 @@ import NULL_CONSTANTS from '../../utilities/nullConstants';
 import WEB_CONSTANTS from '../../utilities/constants';
 import { useRouter } from 'next/router';
 import styles from './[id].module.css';
+import { v4 as uuidv4 } from 'uuid';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -28,7 +29,7 @@ export async function getServerSideProps(context) {
   };
 }
 
-export default function chapterContent({
+export default function ChapterContent({
   chapter,
   book,
   id,
@@ -64,7 +65,7 @@ export default function chapterContent({
   return (
     <div className="container mt-5">
       <ul className="breadcrumb">
-        <Link href="/">
+        <Link href="/" passHref>
           <li
             className={`breadcrumb-item ${styles.breadcrumbItem}`}
           >
@@ -74,7 +75,10 @@ export default function chapterContent({
         <li
           className={`breadcrumb-item ${styles.breadcrumbItem}`}
         >
-          <Link href={`/mangas/${chapter.bookGroupId}`}>
+          <Link
+            href={`/mangas/${chapter.bookGroupId}`}
+            passHref
+          >
             <li className="breadcrumb-item">{book.name}</li>
           </Link>
         </li>
@@ -100,7 +104,11 @@ export default function chapterContent({
         </div>
         <div className="col-12 col-lg-6">
           <h3>
-            {book.name + ' chap ' + chapter.chapterNumber}
+            {book.name +
+              ' chap ' +
+              chapter.chapterNumber +
+              ' ' +
+              chapter?.name ?? ''}
           </h3>
           <div className="d-flex justify-content-between col-lg-4 col-12 ">
             <div>
@@ -113,7 +121,11 @@ export default function chapterContent({
               <p>
                 {book.authors.length > 0
                   ? book.authors.map((author) => (
-                      <Link href={`/authors/${author.id}`}>
+                      <Link
+                        href={`/authors/${author.id}`}
+                        key={author.id}
+                        passHref
+                      >
                         <span>{author.name + ', '}</span>
                       </Link>
                     ))
@@ -131,7 +143,7 @@ export default function chapterContent({
           <div className="button-utilities">
             <button
               type="button"
-              class="btn btn-success me-2"
+              className="btn btn-success me-2"
             >
               Thích
               <span className="badge bg-danger">
@@ -164,8 +176,12 @@ export default function chapterContent({
             {'Chap ' + chapter.chapterNumber}
           </button>
           <ul className="dropdown-menu">
-            {book.chapters.map((chapter) => (
-              <Link href={`/chapters/${chapter.id}`}>
+            {book.chapters.map((chapter, index) => (
+              <Link
+                href={`/chapters/${chapter.id}`}
+                passHref
+                key={index}
+              >
                 <li className="dropdown-item">
                   {'Chapter ' + chapter.chapterNumber}
                 </li>
@@ -174,7 +190,6 @@ export default function chapterContent({
           </ul>
         </div>
         <button
-          className="btn btn-success"
           className="btn btn-success me-2"
           disabled={nextPage == null}
           onClick={() =>
@@ -186,8 +201,12 @@ export default function chapterContent({
       </div>
       <div className="offset-md-2 col-lg-8 col-12 mt-5">
         {chapter.type === 'images' ? (
-          chapter.images.map((image) => (
-            <div className="mb-3" data-aos="fade-up">
+          chapter.images.map((image, index) => (
+            <div
+              className="mb-3"
+              data-aos="fade-up"
+              key={index}
+            >
               <img
                 src={`${server}/image/${image}`}
                 alt=""
@@ -197,8 +216,10 @@ export default function chapterContent({
           ))
         ) : (
           <ReactMarkdown
-            children={chapter.textContent}
-          ></ReactMarkdown>
+            className={styles.markDownContainer}
+          >
+            {chapter.textContent}
+          </ReactMarkdown>
         )}
       </div>
       <div className="d-flex justify-content-center">
@@ -214,14 +235,18 @@ export default function chapterContent({
         <div className="dropdown me-2">
           <button
             type="button"
-            class="btn btn-outline-secondary dropdown-toggle"
+            className="btn btn-outline-secondary dropdown-toggle"
             data-bs-toggle="dropdown"
           >
             {'Chap ' + chapter.chapterNumber}
           </button>
           <ul className="dropdown-menu">
-            {book.chapters.map((chapter) => (
-              <Link href={`/chapters/${chapter.id}`}>
+            {book.chapters.map((chapter, index) => (
+              <Link
+                href={`/chapters/${chapter.id}`}
+                passHref
+                key={index}
+              >
                 <li className="dropdown-item">
                   {'Chapter ' + chapter.chapterNumber}
                 </li>
@@ -230,8 +255,6 @@ export default function chapterContent({
           </ul>
           <button
             className="btn btn-success ms-2"
-            className="btn btn-success"
-            className="btn btn-success me-2"
             disabled={nextPage == null}
             onClick={() =>
               router.replace(`/chapters/${nextPage}`)

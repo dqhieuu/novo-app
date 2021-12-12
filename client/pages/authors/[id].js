@@ -29,7 +29,11 @@ export default function Author({ author }) {
     author.books
       .slice(pageVisited, pageVisited + bookPerPage)
       .map((book) => (
-        <Link href={`/mangas/${book.id}`}>
+        <Link
+          href={`/mangas/${book.id}`}
+          passHref
+          key={book.id}
+        >
           <div
             className="col-lg-3 col-12"
             data-aos="fade-up"
@@ -96,7 +100,6 @@ export default function Author({ author }) {
                 previousLinkClassName="page-link"
                 nextClassName="page-item"
                 nextLinkClassName="page-link"
-                breakLabel="..."
                 breakClassName="page-item"
                 breakLinkClassName="page-link"
                 containerClassName="pagination"

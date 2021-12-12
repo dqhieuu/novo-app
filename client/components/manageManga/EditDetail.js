@@ -118,6 +118,7 @@ function EditDetail({ manga }) {
               borderRadius: '5px',
               background: 'white',
             }}
+            alt="some description"
           />
         </div>
         <div className="col-lg-9 col-12">
