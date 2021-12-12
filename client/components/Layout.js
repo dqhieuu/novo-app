@@ -1,16 +1,10 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import React, {
-  useEffect,
-  useState,
-  useContext,
-} from 'react';
+import React, { useContext } from 'react';
 import { MangaContext } from '../Context/MangaContext';
-import { FaFacebook } from 'react-icons/fa';
-import DisplayImg from './displayImg';
+
 import UserModal from './userModal/UserModal';
 import SearchBar from './searchBar/searchBar';
-import UserSignUp from './userModal/userSignUp';
 
 export default function Layout({ children }) {
   const { server, genres } = useContext(MangaContext);

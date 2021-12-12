@@ -68,7 +68,7 @@ export default function Home() {
                     ? `${server}/image/${randomBooks[0].image}`
                     : NULL_CONSTANTS.BOOK_GROUP_IMAGE
                 }
-                description={randomBooks[0].description}
+                description={randomBooks[0].title}
                 title={randomBooks[0].title}
               ></ImgOverlay>
             </div>
@@ -82,7 +82,7 @@ export default function Home() {
                     ? `${server}/image/${randomBooks[1].image}`
                     : NULL_CONSTANTS.BOOK_GROUP_IMAGE
                 }
-                description={randomBooks[1].description}
+                description={randomBooks[1].title}
                 title={randomBooks[1].title}
               ></ImgOverlay>
             </div>

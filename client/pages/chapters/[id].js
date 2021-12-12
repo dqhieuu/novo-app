@@ -1,13 +1,15 @@
 import DisplayImg from '../../components/displayImg';
 import Link from 'next/link';
-import { useContext, useState, useEffect } from 'react';
+import { useContext } from 'react';
 import { MangaContext } from '../../Context/MangaContext';
 import { FaHome, FaBackward, Fa } from 'react-icons/fa';
 import ReactMarkdown from 'react-markdown';
 import NULL_CONSTANTS from '../../utilities/nullConstants';
-
+import WEB_CONSTANTS from '../../utilities/constants';
+import { useRouter } from 'next/router';
+import styles from './[id].module.css';
 export async function getServerSideProps(context) {
-  const server = 'http://113.22.75.159:7001';
+  const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
   const { id } = params;
   const response = await fetch(`${server}/chapter/${id}`);
@@ -21,28 +23,66 @@ export async function getServerSideProps(context) {
     props: {
       chapter: data,
       book: data1,
+      id,
     },
   };
 }
 
-export default function chapterContent({ chapter, book }) {
+export default function chapterContent({
+  chapter,
+  book,
+  id,
+}) {
   const { server } = useContext(MangaContext);
+  const router = useRouter();
+
+  function getPreviousChapter(chapterId) {
+    let prevId;
+    for (let i = 0; i < book.chapters.length - 1; i++) {
+      if (book.chapters[i].id == chapterId) {
+        prevId = i + 1;
+        break;
+      }
+    }
+    if (prevId) return book.chapters[prevId].id;
+    else return null;
+  }
+  const prevPage = getPreviousChapter(parseInt(id));
+  function getNextChapter(chapterId) {
+    let prevId;
+    for (let i = 1; i < book.chapters.length; i++) {
+      if (book.chapters[i].id == chapterId) {
+        prevId = i - 1;
+        break;
+      }
+    }
+    if (prevId != null) return book.chapters[prevId].id;
+    else return null;
+  }
+  const nextPage = getNextChapter(parseInt(id));
+
   return (
     <div className="container mt-5">
       <ul className="breadcrumb">
         <Link href="/">
-          <li className="breadcrumb-item">
+          <li
+            className={`breadcrumb-item ${styles.breadcrumbItem}`}
+          >
             <FaHome></FaHome>
           </li>
         </Link>
-        <li className="breadcrumb-item">
+        <li
+          className={`breadcrumb-item ${styles.breadcrumbItem}`}
+        >
           <Link href={`/mangas/${chapter.bookGroupId}`}>
             <li className="breadcrumb-item">{book.name}</li>
           </Link>
         </li>
 
         <li className="breadcrumb-item active">
-          <li className="breadcrumb-item">
+          <li
+            className={`breadcrumb-item ${styles.breadcrumbItem}`}
+          >
             {'Chap ' + chapter.chapterNumber}
           </li>
         </li>
@@ -106,11 +146,19 @@ export default function chapterContent({ chapter, book }) {
       </div>
       <hr />
       <div className="d-flex justify-content-center">
-        <button className="btn btn-success me-2">←</button>
+        <button
+          className="btn btn-success me-2"
+          disabled={prevPage == null}
+          onClick={() =>
+            router.replace(`/chapters/${prevPage}`)
+          }
+        >
+          ←
+        </button>
         <div className="dropdown me-2">
           <button
             type="button"
-            class="btn btn-outline-secondary dropdown-toggle"
+            className="btn btn-outline-secondary dropdown-toggle"
             data-bs-toggle="dropdown"
           >
             {'Chap ' + chapter.chapterNumber}
@@ -125,7 +173,16 @@ export default function chapterContent({ chapter, book }) {
             ))}
           </ul>
         </div>
-        <button className="btn btn-success">→</button>
+        <button
+          className="btn btn-success"
+          className="btn btn-success me-2"
+          disabled={nextPage == null}
+          onClick={() =>
+            router.replace(`/chapters/${nextPage}`)
+          }
+        >
+          →
+        </button>
       </div>
       <div className="offset-md-2 col-lg-8 col-12 mt-5">
         {chapter.type === 'images' ? (
@@ -145,7 +202,15 @@ export default function chapterContent({ chapter, book }) {
         )}
       </div>
       <div className="d-flex justify-content-center">
-        <button className="btn btn-success me-2">←</button>
+        <button
+          className="btn btn-success me-2"
+          disabled={prevPage == null}
+          onClick={() =>
+            router.replace(`/chapters/${prevPage}`)
+          }
+        >
+          ←
+        </button>
         <div className="dropdown me-2">
           <button
             type="button"
@@ -163,7 +228,15 @@ export default function chapterContent({ chapter, book }) {
               </Link>
             ))}
           </ul>
-          <button className="btn btn-success ms-2">
+          <button
+            className="btn btn-success ms-2"
+            className="btn btn-success"
+            className="btn btn-success me-2"
+            disabled={nextPage == null}
+            onClick={() =>
+              router.replace(`/chapters/${nextPage}`)
+            }
+          >
             →
           </button>
         </div>

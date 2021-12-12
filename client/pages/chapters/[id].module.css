@@ -1,0 +1,4 @@
+.breadcrumbItem:hover {
+  color: blue;
+  cursor: pointer;
+}

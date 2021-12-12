@@ -20,8 +20,6 @@ export default function SearchBar() {
       await fetch(`${server}/search-suggest/${inputSearch}`)
         .then((res) => res.json())
         .then((data) => setListObjects(data.books));
-
-      console.log(listObjects, inputSearch);
     } else {
       setListObjects([]);
     }
@@ -31,7 +29,7 @@ export default function SearchBar() {
   function handleSubmit(e) {
     e.preventDefault();
     deleteDisplay();
-    router.replace(`/searchResults/${searchWord}`);
+    router.replace(`/searchMangaResults/${searchWord}`);
   }
   return (
     <form onSubmit={handleSubmit}>
