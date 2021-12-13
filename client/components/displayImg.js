@@ -1,17 +1,29 @@
-import styles from "./displayImg.module.css";
-export default function DisplayImg({ srcImg, text, title, height, bgColor }) {
+import styles from './displayImg.module.css';
+export default function DisplayImg({
+  srcImg,
+  text,
+  title,
+  height,
+  bgColor,
+}) {
   return (
-    <div className={` ${styles.container} mb-5`} style={{ height: height }}>
+    <div
+      className={` ${styles.container} mb-5`}
+      style={{ height: height }}
+    >
       <img
         src={srcImg}
         className="rounded img-fluid"
         style={{
-          width: "100%",
-          objectFit: "cover",
-          height: "inherit",
+          width: '100%',
+          objectFit: 'cover',
+          aspectRatio: '3/4',
         }}
       />
-      <div className={styles.textBlock} style={{ backgroundColor: bgColor }}>
+      <div
+        className={styles.textBlock}
+        style={{ backgroundColor: bgColor }}
+      >
         {text}
       </div>
       <h6 className="text-center">{title}</h6>

@@ -46,7 +46,6 @@ export default function Author({ author }) {
               }
               text={'Chap ' + book.latestChapter}
               title={book.title}
-              height="205px"
               bgColor="green"
             ></DisplayImg>
           </div>

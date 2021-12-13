@@ -3,7 +3,6 @@
   font-family: 'Lora', serif;
 }
 
-.breadcrumbItem:hover {
-  color: blue;
+.object:hover {
   cursor: pointer;
 }
