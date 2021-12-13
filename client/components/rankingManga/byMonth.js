@@ -14,7 +14,7 @@ function ByMonth() {
   const pageVisited = pageNumber * bookPerPage;
   const displayDatas = mostViewedMonth
     .slice(pageVisited, pageVisited + bookPerPage)
-    .map((listObject) => (
+    .map((listObject, index) => (
       <Link
         href={`/mangas/${listObject.id}`}
         key={index}

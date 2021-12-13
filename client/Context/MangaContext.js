@@ -16,6 +16,7 @@ export default function MangaContextProvider({ children }) {
 
   const [mostViewedYear, setMostViewedYear] = useState([]);
   const [mostViewedWeek, setMostViewedWeek] = useState([]);
+  const [comments, setListComment] = useState([]);
   const [genres, setGenre] = useState([]);
 
   useEffect(() => {
@@ -43,6 +44,9 @@ export default function MangaContextProvider({ children }) {
     fetch(`${server}/genre/all`)
       .then((res) => res.json())
       .then((data) => setGenre(data));
+    fetch(`${server}/comment`)
+      .then((res) => res.json())
+      .then((data) => setListComment(data.comments));
   }, []);
 
   const MangaContextData = {
@@ -54,6 +58,7 @@ export default function MangaContextProvider({ children }) {
     mostViewedYear,
     mostViewedWeek,
     genres,
+    comments,
   };
   return (
     <MangaContext.Provider value={MangaContextData}>

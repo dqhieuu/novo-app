@@ -14,7 +14,7 @@ function ByWeek() {
   const pageVisited = pageNumber * bookPerPage;
   const displayDatas = mostViewedWeek
     .slice(pageVisited, pageVisited + bookPerPage)
-    .map((listObject) => (
+    .map((listObject, index) => (
       <Link
         href={`/mangas/${listObject.id}`}
         key={index}
