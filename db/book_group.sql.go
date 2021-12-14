@@ -9,7 +9,7 @@ import (
 )
 
 const bookGroupById = `-- name: BookGroupById :one
-SELECT id, title, description, date_created, owner_id, primary_cover_art_id
+SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id, book_group_tsv
 FROM book_groups
 WHERE id = $1
 `
@@ -20,18 +20,20 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
+		&i.Aliases,
 		&i.Description,
 		&i.DateCreated,
 		&i.OwnerID,
 		&i.PrimaryCoverArtID,
+		&i.BookGroupTsv,
 	)
 	return i, err
 }
 
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
-SELECT id, title, description, date_created, owner_id, primary_cover_art_id
+SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id, book_group_tsv
 FROM book_groups
-WHERE  title ILIKE '%' || $1 || '%'
+WHERE book_group_tsv @@ to_tsquery($1 || ':*')
 ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY
@@ -55,10 +57,12 @@ func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitlePa
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
+			&i.Aliases,
 			&i.Description,
 			&i.DateCreated,
 			&i.OwnerID,
 			&i.PrimaryCoverArtID,
+			&i.BookGroupTsv,
 		); err != nil {
 			return nil, err
 		}
@@ -397,7 +401,7 @@ func (q *Queries) DeleteBookGroup(ctx context.Context, id int32) error {
 const insertBookGroup = `-- name: InsertBookGroup :one
 INSERT INTO book_groups(title, description,owner_id,primary_cover_art_id)
 VALUES ($1, $2,$3,$4)
-RETURNING id, title, description, date_created, owner_id, primary_cover_art_id
+RETURNING id, title, aliases, description, date_created, owner_id, primary_cover_art_id, book_group_tsv
 `
 
 type InsertBookGroupParams struct {
@@ -418,10 +422,12 @@ func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
+		&i.Aliases,
 		&i.Description,
 		&i.DateCreated,
 		&i.OwnerID,
 		&i.PrimaryCoverArtID,
+		&i.BookGroupTsv,
 	)
 	return i, err
 }
@@ -521,7 +527,7 @@ func (q *Queries) NumberBookGroup(ctx context.Context) (int64, error) {
 const numberBookGroupSearchResult = `-- name: NumberBookGroupSearchResult :one
 SELECT COUNT(id)
 FROM book_groups
-WHERE title ILIKE '%' || $1 || '%'
+WHERE book_group_tsv @@ to_tsquery($1 || ':*')
 `
 
 func (q *Queries) NumberBookGroupSearchResult(ctx context.Context, query sql.NullString) (int64, error) {
@@ -635,7 +641,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-WHERE bg.title ILIKE '%'||$3||'%'
+WHERE bg.book_group_tsv @@ to_tsquery($3 || ':*')
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
@@ -695,7 +701,7 @@ SELECT bg.title AS title,
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
-WHERE bg.title ILIKE '%'||$1||'%'
+WHERE bg.book_group_tsv @@ to_tsquery($1 || ':*')
 GROUP BY bg.id
 LIMIT 5
 `

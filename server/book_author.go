@@ -416,7 +416,10 @@ func SearchAuthorHandler(c *gin.Context) {
 	queries := db.New(db.Pool())
 	searchString := c.Param("query")
 
+	searchString = CleanSearchString(searchString)
+
 	if len(searchString) == 0 || len(searchString) > 100 {
+		ReportError(c, errors.New("invalid query length"), "error", http.StatusBadRequest)
 		return
 	}
 

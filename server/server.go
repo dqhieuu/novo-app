@@ -3,6 +3,7 @@ package server
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"log"
 )
 
 func Run() {
@@ -52,16 +53,12 @@ func Run() {
 	r.GET("/search-user/:query", SearchUserHandler)
 	r.GET("/book/:bookGroupId", GetBookGroupContentHandler)
 	r.GET("/comment/latest", GetLatestCommentsHandler)
-	//r.GET("/test", func(c *gin.Context){
-	//	user, err := db.New(db.Pool()).GetUserInfo(context.Background(), 3)
-	//	if err != nil {
-	//		ReportError(c, err, "error", 500)
-	//		return
-	//	}
-	//	log.Printf("%+v\n", user)
-	//
-	//	c.JSON(200, user)
-	//})
+	r.GET("/test", func(c *gin.Context){
+		testString := c.Param("testId")
+		log.Printf("%s\n", testString)
+
+		c.JSON(200, testString)
+	})
 
 	auth := r.Group("/auth")
 
