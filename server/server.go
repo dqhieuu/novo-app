@@ -51,6 +51,17 @@ func Run() {
 	r.GET("/search-author/:query", SearchAuthorHandler)
 	r.GET("/search-user/:query", SearchUserHandler)
 	r.GET("/book/:bookGroupId", GetBookGroupContentHandler)
+	r.GET("/comment/latest", GetLatestCommentsHandler)
+	//r.GET("/test", func(c *gin.Context){
+	//	user, err := db.New(db.Pool()).GetUserInfo(context.Background(), 3)
+	//	if err != nil {
+	//		ReportError(c, err, "error", 500)
+	//		return
+	//	}
+	//	log.Printf("%+v\n", user)
+	//
+	//	c.JSON(200, user)
+	//})
 
 	auth := r.Group("/auth")
 
@@ -75,6 +86,8 @@ func Run() {
 		auth.PATCH("/book/:bookGroupId", UpdateBookGroupHandler)
 		auth.PATCH("/chapter/hypertext/:chapterId", UpdateHypertextChapter)
 		auth.PATCH("/chapter/images/:chapterId", UpdateImagesChapterHandler)
+		auth.PATCH("/change-user-info", ChangeCurrentUserInfoHandler)
+		auth.PATCH("/change-password", ChangeCurrentUserPasswordHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

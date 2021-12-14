@@ -35,10 +35,10 @@ WHERE book_group_id = $1
 SELECT book_comments.id,
        book_comments.content,
        book_comments.posted_time,
-       u.id as userId,
+       u.id   as userId,
        u.user_name,
        i.path as avatarPath,
-       bc.id as chapterId,
+       bc.id  as chapterId,
        bc.chapter_number
 FROM book_comments
          JOIN users u on u.id = book_comments.user_id
@@ -52,10 +52,10 @@ LIMIT 20 OFFSET $2;
 SELECT book_comments.id,
        book_comments.content,
        book_comments.posted_time,
-       u.id as userId,
+       u.id   as userId,
        u.user_name,
        i.path as avatarPath,
-       bc.id as chapterId,
+       bc.id  as chapterId,
        bc.chapter_number
 FROM book_comments
          JOIN users u on u.id = book_comments.user_id
@@ -70,10 +70,10 @@ LIMIT 20 OFFSET $2;
 SELECT book_comments.id,
        book_comments.content,
        book_comments.posted_time,
-       u.id as userId,
+       u.id   as userId,
        u.user_name,
        i.path as avatarPath,
-       bc.id as chapterId,
+       bc.id  as chapterId,
        bc.chapter_number
 FROM book_comments
          JOIN users u on u.id = book_comments.user_id
@@ -86,17 +86,39 @@ LIMIT 20 OFFSET $3;
 
 -- name: GetCommenter :one
 SELECT users.id, users.user_name, i.path
-FROM users JOIN book_comments bc on users.id = bc.user_id
-            LEFT JOIN images i on users.avatar_image_id = i.id
+FROM users
+         JOIN book_comments bc on users.id = bc.user_id
+         LEFT JOIN images i on users.avatar_image_id = i.id
 WHERE bc.id = $1;
 
 -- name: GetCommentChapterInfo :one
 SELECT book_chapters.id, book_chapters.chapter_number
-FROM book_chapters JOIN book_comments bc on book_chapters.id = bc.book_chapter_id
+FROM book_chapters
+         JOIN book_comments bc on book_chapters.id = bc.book_chapter_id
 WHERE bc.id = $1;
 
 
 -- name: CountCommentInBookGroup :one
-SELECT COUNT(id )
+SELECT COUNT(id)
 FROM book_comments
 WHERE book_group_id = $1;
+
+-- name: GetLatestComments :many
+SELECT book_comments.id,
+       book_comments.content,
+       book_comments.posted_time,
+       u.id   as userId,
+       u.user_name,
+       i.path as avatarPath,
+       bc.id  as chapterId,
+       bc.name as chapterName,
+       bc.chapter_number,
+       bg.id as bookId,
+       bg.title as bookName
+FROM book_comments
+         JOIN users u on u.id = book_comments.user_id
+         JOIN book_groups bg on book_comments.book_group_id = bg.id
+         LEFT JOIN images i on u.avatar_image_id = i.id
+         LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
+ORDER BY posted_time
+LIMIT 15;

@@ -29,8 +29,10 @@ SET user_name       = $2,
 WHERE id = $1;
 
 -- name: GetUserInfo :one
-SELECT users.user_name,
+SELECT users.id,
+       users.user_name,
        users.email,
+       users.password,
        r.name as role,
        users.summary,
        i.path as avatarPath
@@ -80,4 +82,17 @@ FROM users
          LEFT JOIN images i on users.avatar_image_id = i.id
 WHERE user_name ILIKE '%' || $1 || '%'
 LIMIT 5;
+
+-- name: UpdatePassword :exec
+UPDATE users
+SET password = $2
+WHERE id = $1;
+
+-- name: UpdateUserInfo :exec
+Update users
+SET email     = $2,
+    user_name = $3,
+    summary   = $4
+WHERE id = $1;
+
 

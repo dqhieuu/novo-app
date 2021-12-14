@@ -31,7 +31,7 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
 SELECT id, title, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
-WHERE  LOWER(title) ILIKE '%' || $1 || '%'
+WHERE  title ILIKE '%' || $1 || '%'
 ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY
