@@ -51,5 +51,5 @@ WHERE bg.id = $1;
 SELECT book_authors.name, book_authors.id, i.path
 FROM book_authors
          LEFT JOIN images i on book_authors.avatar_image_id = i.id
-WHERE book_authors.name ILIKE '%' || $1 || '%'
+WHERE book_author_tsv @@ to_tsquery($1 || ':*')
 LIMIT 5;

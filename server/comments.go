@@ -20,14 +20,28 @@ type CommentParams struct {
 }
 
 type Comment struct {
-	Id            int32   `json:"id" binding:"required"`
-	Comment       string  `json:"comment" binding:"required"`
-	UserName      string  `json:"userName" binding:"required"`
-	UserId        int32   `json:"userId" binding:"required"`
-	UserAvatar    interface{}  `json:"userAvatar" binding:"required"`
-	TimePosted    int64   `json:"timePosted" binding:"required"`
-	ChapterId     interface{}   `json:"chapterId"`
+	Id            int32       `json:"id" binding:"required"`
+	Comment       string      `json:"comment" binding:"required"`
+	UserName      string      `json:"userName" binding:"required"`
+	UserId        int32       `json:"userId" binding:"required"`
+	UserAvatar    interface{} `json:"userAvatar" binding:"required"`
+	TimePosted    int64       `json:"timePosted" binding:"required"`
+	ChapterId     interface{} `json:"chapterId"`
 	ChapterNumber interface{} `json:"chapterNumber"`
+}
+
+type LatestComment struct {
+	Id            int32       `json:"id" binding:"required"`
+	Comment       string      `json:"comment" binding:"required"`
+	UserName      string      `json:"userName" binding:"required"`
+	UserId        int32       `json:"userId" binding:"required"`
+	UserAvatar    interface{} `json:"userAvatar" binding:"required"`
+	TimePosted    int64       `json:"timePosted" binding:"required"`
+	ChapterId     interface{} `json:"chapterId"`
+	ChapterName   interface{} `json:"chapterName"`
+	ChapterNumber interface{} `json:"chapterNumber"`
+	BookId        int32       `json:"bookId" binding:"required"`
+	BookName      string      `json:"bookName" binding:"required"`
 }
 
 type CommentPage struct {
@@ -352,11 +366,11 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(bookComments) > 0 {
 			for _, comment := range bookComments {
 				resComment := Comment{
-					Id:            comment.ID,
-					Comment:       comment.Content,
-					UserName:      comment.UserName.String,
-					UserId:        comment.Userid,
-					TimePosted:    comment.PostedTime.UnixMicro(),
+					Id:         comment.ID,
+					Comment:    comment.Content,
+					UserName:   comment.UserName.String,
+					UserId:     comment.Userid,
+					TimePosted: comment.PostedTime.UnixMicro(),
 				}
 				if comment.Avatarpath.Valid {
 					resComment.UserAvatar = comment.Avatarpath.String
@@ -536,4 +550,46 @@ func DeleteCommentHandler(c *gin.Context) {
 		ReportError(c, errors.New("permission denied"), "error", 403)
 		return
 	}
+}
+
+func GetLatestCommentsHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	responseObj := make([]LatestComment, 0)
+
+	comments, err := queries.GetLatestComments(ctx)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	if len(comments) > 0 {
+		for _, comment := range comments {
+			tempComment := LatestComment{
+				Id:            comment.ID,
+				Comment:       comment.Content,
+				UserName:      comment.UserName.String,
+				UserId:        comment.Userid,
+				TimePosted:    comment.PostedTime.UnixMicro(),
+				BookId:        comment.Bookid,
+				BookName:      comment.Bookname,
+			}
+			if comment.Avatarpath.Valid {
+				tempComment.UserAvatar = comment.Avatarpath.String
+			}
+			if comment.Chapterid.Valid {
+				tempComment.ChapterId = comment.Chapterid.Int32
+			}
+			if comment.Chaptername.Valid {
+				tempComment.ChapterName = comment.Chaptername
+			}
+			if comment.ChapterNumber.Valid {
+				tempComment.ChapterNumber = comment.ChapterNumber
+			}
+			responseObj = append(responseObj, tempComment)
+		}
+	}
+
+	c.JSON(200, responseObj)
 }

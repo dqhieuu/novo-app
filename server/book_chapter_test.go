@@ -25,37 +25,37 @@ func TestBookChapterById(t *testing.T) {
 	assert.Equal(t, bookChapter1, bookChapter2)
 }
 
-func TestUpdateBookChapter(t *testing.T) {
-	db.Init()
-	defer db.Close()
-	createData()
-	defer removeData()
-
-	intRandom := r.Intn(len(bookChapters))
-	bookChapter1 := bookChapters[intRandom]
-	chapterNumber := 1224.123
-	description := "descriptionUpdate"
-	textContext := "textContextUpdate"
-	chapterType := types[r.Intn(len(types))]
-	bookGroupID := bookGroups[r.Intn(len(bookGroups))].ID
-	ownerID := users[r.Intn(len(users))].ID
-	err := UpdateBookChapter(bookChapter1.ID, chapterNumber, description,
-		textContext, chapterType, bookGroupID, ownerID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	bookChapter2, err := BookChapterById(bookChapter1.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	assert.Equal(t, bookChapter2.ChapterNumber, chapterNumber)
-	assert.Equal(t, bookChapter2.Name.String, description)
-	assert.Equal(t, bookChapter2.TextContext.String, textContext)
-	assert.Equal(t, bookChapter2.Type, chapterType)
-	assert.Equal(t, bookChapter2.BookGroupID, bookGroupID)
-	assert.Equal(t, bookChapter2.OwnerID, ownerID)
-}
+//func TestUpdateBookChapter(t *testing.T) {
+//	db.Init()
+//	defer db.Close()
+//	createData()
+//	defer removeData()
+//
+//	intRandom := r.Intn(len(bookChapters))
+//	bookChapter1 := bookChapters[intRandom]
+//	chapterNumber := 1224.123
+//	description := "descriptionUpdate"
+//	textContext := "textContextUpdate"
+//	chapterType := types[r.Intn(len(types))]
+//	bookGroupID := bookGroups[r.Intn(len(bookGroups))].ID
+//	ownerID := users[r.Intn(len(users))].ID
+//	err := UpdateBookChapter(bookChapter1.ID, chapterNumber, description,
+//		textContext, chapterType, bookGroupID, ownerID)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//	bookChapter2, err := BookChapterById(bookChapter1.ID)
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	assert.Equal(t, bookChapter2.ChapterNumber, chapterNumber)
+//	assert.Equal(t, bookChapter2.Name.String, description)
+//	assert.Equal(t, bookChapter2.TextContext.String, textContext)
+//	assert.Equal(t, bookChapter2.Type, chapterType)
+//	assert.Equal(t, bookChapter2.BookGroupID, bookGroupID)
+//	assert.Equal(t, bookChapter2.OwnerID, ownerID)
+//}
 
 func TestCreateBookChapter(t *testing.T) {
 	db.Init()

@@ -9,7 +9,7 @@ import (
 )
 
 const bookAuthorById = `-- name: BookAuthorById :one
-SELECT id, name, description, avatar_image_id
+SELECT id, name, aliases, description, avatar_image_id, book_author_tsv
 FROM book_authors
 WHERE id = $1
 `
@@ -20,14 +20,16 @@ func (q *Queries) BookAuthorById(ctx context.Context, id int32) (BookAuthor, err
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Aliases,
 		&i.Description,
 		&i.AvatarImageID,
+		&i.BookAuthorTsv,
 	)
 	return i, err
 }
 
 const bookAuthors = `-- name: BookAuthors :many
-SELECT id, name, description, avatar_image_id
+SELECT id, name, aliases, description, avatar_image_id, book_author_tsv
 FROM book_authors
 ORDER BY id ASC
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
@@ -50,8 +52,10 @@ func (q *Queries) BookAuthors(ctx context.Context, arg BookAuthorsParams) ([]Boo
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Aliases,
 			&i.Description,
 			&i.AvatarImageID,
+			&i.BookAuthorTsv,
 		); err != nil {
 			return nil, err
 		}
@@ -140,7 +144,7 @@ func (q *Queries) GetBookGroupAuthors(ctx context.Context, id int32) ([]GetBookG
 const insertBookAuthor = `-- name: InsertBookAuthor :one
 INSERT INTO book_authors(name, description, avatar_image_id)
 VALUES ($1, $2, $3)
-RETURNING id, name, description, avatar_image_id
+RETURNING id, name, aliases, description, avatar_image_id, book_author_tsv
 `
 
 type InsertBookAuthorParams struct {
@@ -155,8 +159,10 @@ func (q *Queries) InsertBookAuthor(ctx context.Context, arg InsertBookAuthorPara
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Aliases,
 		&i.Description,
 		&i.AvatarImageID,
+		&i.BookAuthorTsv,
 	)
 	return i, err
 }
@@ -165,7 +171,7 @@ const searchAuthors = `-- name: SearchAuthors :many
 SELECT book_authors.name, book_authors.id, i.path
 FROM book_authors
          LEFT JOIN images i on book_authors.avatar_image_id = i.id
-WHERE name ILIKE '%' || $1 || '%'
+WHERE book_author_tsv @@ to_tsquery($1 || ':*')
 LIMIT 5
 `
 

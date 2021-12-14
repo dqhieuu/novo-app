@@ -579,6 +579,8 @@ func GetSearchSuggestionHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	query := c.Param("query")
+
+	query = CleanSearchString(query)
 	books, err := queries.SearchSuggestion(ctx, sql.NullString{
 		String: query,
 		Valid:  true,
@@ -598,6 +600,7 @@ func GetSearchResultHandler(c *gin.Context) {
 	queries := db.New(db.Pool())
 	query := c.Param("query")
 
+	query = CleanSearchString(query)
 	var page int32
 	stringTmp := c.Query("page")
 	if len(stringTmp) > 0 {

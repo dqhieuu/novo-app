@@ -73,35 +73,35 @@ func TestCreateAndDeleteBookGroupAuthor(t *testing.T) {
 
 }
 
-func TestBookGroupsByBookAuthor(t *testing.T) {
-	db.Init()
-	defer db.Close()
-	createData()
-	defer removeData()
-
-	for i := 0; i < len(bookAuthors); i++ {
-		tmp1, err := BookGroupsByAuthor(bookAuthors[i].ID, 1) //xét page 1
-		if err != nil {
-			t.Fatal(err)
-		}
-		var tmp2 []int32
-		for j := 0; j < len(bookGroupAuthors) && len(tmp2) <= limitBookGroup; j++ { // page1 có limitBookGroup phẩn tử
-			if bookGroupAuthors[j].BookAuthorID == bookAuthors[i].ID {
-				tmp2 = append(tmp2, bookGroupAuthors[j].BookGroupID)
-			}
-		}
-		assert.Equal(t, len(tmp1), len(tmp2))
-		sort.Slice(tmp2, func(i, j int) bool {
-			return tmp2[i] < tmp2[j]
-		})
-		sort.Slice(tmp1, func(i, j int) bool {
-			return tmp1[i] < tmp1[j]
-		})
-		for j := 0; j < len(tmp1); j++ {
-			assert.Equal(t, tmp1[j], tmp2[j])
-		}
-	}
-}
+//func TestBookGroupsByBookAuthor(t *testing.T) {
+//	db.Init()
+//	defer db.Close()
+//	createData()
+//	defer removeData()
+//
+//	for i := 0; i < len(bookAuthors); i++ {
+//		tmp1, err := BookGroupsByAuthor(bookAuthors[i].ID, 1) //xét page 1
+//		if err != nil {
+//			t.Fatal(err)
+//		}
+//		var tmp2 []int32
+//		for j := 0; j < len(bookGroupAuthors) && len(tmp2) <= limitBookGroup; j++ { // page1 có limitBookGroup phẩn tử
+//			if bookGroupAuthors[j].BookAuthorID == bookAuthors[i].ID {
+//				tmp2 = append(tmp2, bookGroupAuthors[j].BookGroupID)
+//			}
+//		}
+//		assert.Equal(t, len(tmp1), len(tmp2))
+//		sort.Slice(tmp2, func(i, j int) bool {
+//			return tmp2[i] < tmp2[j]
+//		})
+//		sort.Slice(tmp1, func(i, j int) bool {
+//			return tmp1[i] < tmp1[j]
+//		})
+//		for j := 0; j < len(tmp1); j++ {
+//			assert.Equal(t, tmp1[j], tmp2[j])
+//		}
+//	}
+//}
 
 func TestBookAuthorsByBookGroup(t *testing.T) {
 	db.Init()
@@ -133,24 +133,24 @@ func TestBookAuthorsByBookGroup(t *testing.T) {
 	}
 }
 
-func TestDeleteBooksGroupByBookAuthor(t *testing.T) {
-	db.Init()
-	defer db.Close()
-	createData()
-	defer removeData()
-
-	for i := 0; i < len(bookAuthors); i++ {
-		err := DeleteBookGroupsByBookAuthor(bookAuthors[i].ID) //xóa theo bookAuthor
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		tmp2, err := BookGroupsByAuthor(bookAuthors[i].ID, 1) // kiểm tra đã xóa hết chưa
-		if len(tmp2) > 0 {
-			t.Fatal(errors.New("DeleteBookGroupByBookAuthor failed"))
-		}
-	}
-}
+//func TestDeleteBooksGroupByBookAuthor(t *testing.T) {
+//	db.Init()
+//	defer db.Close()
+//	createData()
+//	defer removeData()
+//
+//	for i := 0; i < len(bookAuthors); i++ {
+//		err := DeleteBookGroupsByBookAuthor(bookAuthors[i].ID) //xóa theo bookAuthor
+//		if err != nil {
+//			t.Fatal(err)
+//		}
+//
+//		tmp2, err := BookGroupsByAuthor(bookAuthors[i].ID, 1) // kiểm tra đã xóa hết chưa
+//		if len(tmp2) > 0 {
+//			t.Fatal(errors.New("DeleteBookGroupByBookAuthor failed"))
+//		}
+//	}
+//}
 
 func TestDeleteBookAuthorsByBookGroup(t *testing.T) {
 	db.Init()
