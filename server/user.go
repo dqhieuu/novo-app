@@ -453,12 +453,22 @@ func ChangeCurrentUserInfoHandler(c *gin.Context) {
 
 	var updateInfoParam db.UpdateUserInfoParams
 	if newUserInfo.Email != nil {
+		_, ok := newUserInfo.Email.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid email"), "error", http.StatusBadRequest)
+			return
+		}
 		updateInfoParam.Email = newUserInfo.Email.(string)
 	} else {
 		updateInfoParam.Email = user.Email
 	}
 
 	if newUserInfo.Username != nil {
+		_, ok := newUserInfo.Username.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid username"), "error", http.StatusBadRequest)
+			return
+		}
 		updateInfoParam.UserName = sql.NullString{
 			String: newUserInfo.Username.(string),
 			Valid:  true,
@@ -468,6 +478,11 @@ func ChangeCurrentUserInfoHandler(c *gin.Context) {
 	}
 
 	if newUserInfo.Description != nil {
+		_, ok := newUserInfo.Description.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid description"), "error", http.StatusBadRequest)
+			return
+		}
 		updateInfoParam.Summary = sql.NullString{
 			String: newUserInfo.Description.(string),
 			Valid:  true,

@@ -190,6 +190,11 @@ func CompleteOauthAccountHandler(c *gin.Context) {
 	var avatarIdPointer *int32
 	var avatarId int32
 	if user.Avatar != nil {
+		_, ok := user.Avatar.(float64)
+		if !ok {
+			ReportError(c, errors.New("invalid avatar id"), "error", http.StatusBadRequest)
+			return
+		}
 		avatarId = int32(user.Avatar.(float64))
 		avatarIdPointer = &avatarId
 	}

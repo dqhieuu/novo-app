@@ -38,6 +38,7 @@ WHERE book_group_id = $1;
 -- name: GetBookAuthor :one
 SELECT ba.name,
        ba.description,
+       ba.aliases,
        i.path AS avatar
 FROM book_authors ba
          LEFT JOIN images i on ba.avatar_image_id = i.id

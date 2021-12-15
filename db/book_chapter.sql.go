@@ -121,11 +121,14 @@ SELECT book_chapters.chapter_number,
        book_chapters.id as chapterId,
        book_chapters.date_created,
        u.id             as userId,
-       u.user_name
+       u.user_name,
+       coalesce(sum(bcv.count), 0) as totalView
 FROM book_chapters
          JOIN book_groups bg on book_chapters.book_group_id = bg.id
          JOIN users u on book_chapters.owner_id = u.id
+         JOIN book_chapter_views bcv on book_chapters.id = bcv.book_chapter_id
 WHERE bg.id = $1
+GROUP BY book_chapters.id, u.id
 `
 
 type GetBookGroupChaptersRow struct {
@@ -135,6 +138,7 @@ type GetBookGroupChaptersRow struct {
 	DateCreated   time.Time      `json:"dateCreated"`
 	Userid        int32          `json:"userid"`
 	UserName      sql.NullString `json:"userName"`
+	Totalview     interface{}    `json:"totalview"`
 }
 
 func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBookGroupChaptersRow, error) {
@@ -153,6 +157,7 @@ func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBook
 			&i.DateCreated,
 			&i.Userid,
 			&i.UserName,
+			&i.Totalview,
 		); err != nil {
 			return nil, err
 		}

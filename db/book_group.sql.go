@@ -9,14 +9,24 @@ import (
 )
 
 const bookGroupById = `-- name: BookGroupById :one
-SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id, book_group_tsv
+SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
 WHERE id = $1
 `
 
-func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error) {
+type BookGroupByIdRow struct {
+	ID                int32          `json:"id"`
+	Title             string         `json:"title"`
+	Aliases           sql.NullString `json:"aliases"`
+	Description       sql.NullString `json:"description"`
+	DateCreated       sql.NullTime   `json:"dateCreated"`
+	OwnerID           int32          `json:"ownerID"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+}
+
+func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroupByIdRow, error) {
 	row := q.db.QueryRow(ctx, bookGroupById, id)
-	var i BookGroup
+	var i BookGroupByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
@@ -25,13 +35,12 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroup, error
 		&i.DateCreated,
 		&i.OwnerID,
 		&i.PrimaryCoverArtID,
-		&i.BookGroupTsv,
 	)
 	return i, err
 }
 
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
-SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id, book_group_tsv
+SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
 WHERE book_group_tsv @@ to_tsquery($1 || ':*')
 ORDER BY id
@@ -45,15 +54,25 @@ type BookGroupsByTitleParams struct {
 	Limit   int32          `json:"limit"`
 }
 
-func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitleParams) ([]BookGroup, error) {
+type BookGroupsByTitleRow struct {
+	ID                int32          `json:"id"`
+	Title             string         `json:"title"`
+	Aliases           sql.NullString `json:"aliases"`
+	Description       sql.NullString `json:"description"`
+	DateCreated       sql.NullTime   `json:"dateCreated"`
+	OwnerID           int32          `json:"ownerID"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+}
+
+func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitleParams) ([]BookGroupsByTitleRow, error) {
 	rows, err := q.db.Query(ctx, bookGroupsByTitle, arg.Column1, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BookGroup
+	var items []BookGroupsByTitleRow
 	for rows.Next() {
-		var i BookGroup
+		var i BookGroupsByTitleRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Title,
@@ -62,7 +81,6 @@ func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitlePa
 			&i.DateCreated,
 			&i.OwnerID,
 			&i.PrimaryCoverArtID,
-			&i.BookGroupTsv,
 		); err != nil {
 			return nil, err
 		}
@@ -399,26 +417,38 @@ func (q *Queries) DeleteBookGroup(ctx context.Context, id int32) error {
 }
 
 const insertBookGroup = `-- name: InsertBookGroup :one
-INSERT INTO book_groups(title, description,owner_id,primary_cover_art_id)
-VALUES ($1, $2,$3,$4)
-RETURNING id, title, aliases, description, date_created, owner_id, primary_cover_art_id, book_group_tsv
+INSERT INTO book_groups(title, aliases, description,owner_id,primary_cover_art_id)
+VALUES ($1, $2, $3,$4,$5)
+RETURNING id, title, aliases, description, date_created, owner_id, primary_cover_art_id
 `
 
 type InsertBookGroupParams struct {
 	Title             string         `json:"title"`
+	Aliases           sql.NullString `json:"aliases"`
 	Description       sql.NullString `json:"description"`
 	OwnerID           int32          `json:"ownerID"`
 	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
 }
 
-func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) (BookGroup, error) {
+type InsertBookGroupRow struct {
+	ID                int32          `json:"id"`
+	Title             string         `json:"title"`
+	Aliases           sql.NullString `json:"aliases"`
+	Description       sql.NullString `json:"description"`
+	DateCreated       sql.NullTime   `json:"dateCreated"`
+	OwnerID           int32          `json:"ownerID"`
+	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+}
+
+func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams) (InsertBookGroupRow, error) {
 	row := q.db.QueryRow(ctx, insertBookGroup,
 		arg.Title,
+		arg.Aliases,
 		arg.Description,
 		arg.OwnerID,
 		arg.PrimaryCoverArtID,
 	)
-	var i BookGroup
+	var i InsertBookGroupRow
 	err := row.Scan(
 		&i.ID,
 		&i.Title,
@@ -427,7 +457,6 @@ func (q *Queries) InsertBookGroup(ctx context.Context, arg InsertBookGroupParams
 		&i.DateCreated,
 		&i.OwnerID,
 		&i.PrimaryCoverArtID,
-		&i.BookGroupTsv,
 	)
 	return i, err
 }
@@ -742,7 +771,8 @@ const updateBookGroup = `-- name: UpdateBookGroup :exec
 UPDATE book_groups
 SET title = $2,
     description=$3,
-    primary_cover_art_id=$4
+    primary_cover_art_id=$4,
+    aliases = $5
 WHERE id = $1
 `
 
@@ -751,6 +781,7 @@ type UpdateBookGroupParams struct {
 	Title             string         `json:"title"`
 	Description       sql.NullString `json:"description"`
 	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+	Aliases           sql.NullString `json:"aliases"`
 }
 
 func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams) error {
@@ -759,6 +790,7 @@ func (q *Queries) UpdateBookGroup(ctx context.Context, arg UpdateBookGroupParams
 		arg.Title,
 		arg.Description,
 		arg.PrimaryCoverArtID,
+		arg.Aliases,
 	)
 	return err
 }
