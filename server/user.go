@@ -84,7 +84,7 @@ func ValidPassword(password string) bool {
 }
 
 func ValidUsername(username string) bool {
-	hasInvalidChars, _ := regexp.MatchString(` [\x00-\x1F\x7F\r\n]`, username)
+	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x1F\x7F\r\n@]`, username)
 	if hasInvalidChars == true {
 		return false
 	}
