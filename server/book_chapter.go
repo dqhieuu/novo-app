@@ -22,6 +22,7 @@ type Chapter struct {
 	Id            int32       `json:"id" binding:"required"`
 	TimePosted    int64       `json:"timePosted" binding:"required"`
 	UserPosted    Author      `json:"userPosted" binding:"required"`
+	Views         int64       `json:"views"`
 }
 
 type HypertextChapter struct {
@@ -195,7 +196,7 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 
 	extract := jwt.ExtractClaims(c)
 	userId := int32(extract[UserIdClaimKey].(float64))
-	
+
 	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
 		Module: BookChapterModule,
 		Action: PostAction,
@@ -224,6 +225,11 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 	//check chapter name
 	var chapterName string
 	if newHypertextChapter.Name != nil {
+		_, ok := newHypertextChapter.Name.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
+			return
+		}
 		chapterName = newHypertextChapter.Name.(string)
 		chapterName = strings.TrimSpace(chapterName)
 		if !checkChapterName(chapterName) || CheckEmptyString(chapterName) {
@@ -290,6 +296,11 @@ func CreateImagesChapterHandler(c *gin.Context) {
 	//check chapter name
 	var chapterName string
 	if newImageChapter.Name != nil {
+		_, ok := newImageChapter.Name.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
+			return
+		}
 		chapterName = newImageChapter.Name.(string)
 		chapterName = strings.TrimSpace(chapterName)
 		if !checkChapterName(chapterName) || CheckEmptyString(chapterName) {

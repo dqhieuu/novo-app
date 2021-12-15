@@ -17,11 +17,12 @@ const limitBookAuthors = 50
 
 type Author struct {
 	Name  string      `json:"name" binding:"required"`
+	Alias interface{} `json:"alias"`
 	Id    int32       `json:"id" binding:"required"`
 	Image interface{} `json:"image"`
 }
 
-func BookAuthorById(id int32) (*db.BookAuthor, error) {
+func BookAuthorById(id int32) (*db.BookAuthorByIdRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	bookAuthor, err := queries.BookAuthorById(ctx, id)
@@ -33,7 +34,7 @@ func BookAuthorById(id int32) (*db.BookAuthor, error) {
 	return &bookAuthor, err
 }
 
-func BookAuthors(page int32) ([]*db.BookAuthor, error) {
+func BookAuthors(page int32) ([]*db.BookAuthorsRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	bookAuthors, err := queries.BookAuthors(ctx, db.BookAuthorsParams{
@@ -44,7 +45,7 @@ func BookAuthors(page int32) ([]*db.BookAuthor, error) {
 		stringErr := fmt.Sprintf("Get bookAuthors list failed: %s", err)
 		return nil, errors.New(stringErr)
 	}
-	var outData []*db.BookAuthor
+	var outData []*db.BookAuthorsRow
 	for i := 0; i < len(bookAuthors); i++ {
 		outData = append(outData, &bookAuthors[i])
 	}
@@ -81,7 +82,7 @@ func UpdateBookAuthor(id int32, name, description string, imageID int32) error {
 	return nil
 }
 
-func CreateBookAuthor(name, description string, imageID int32) (*db.BookAuthor, error) {
+func CreateBookAuthor(name, description string, imageID int32, alias interface{}) (*db.BookAuthor, error) {
 
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -98,11 +99,20 @@ func CreateBookAuthor(name, description string, imageID int32) (*db.BookAuthor, 
 		Valid: imageID > 0,
 	}
 
-	bookAuthor, err := queries.InsertBookAuthor(ctx, db.InsertBookAuthorParams{
+	newBookAuthor := db.InsertBookAuthorParams{
 		Name:          name,
 		Description:   descriptionSql,
 		AvatarImageID: imageIdSql,
-	})
+	}
+
+	if alias != nil {
+		newBookAuthor.Aliases = sql.NullString{
+			String: alias.(string),
+			Valid:  true,
+		}
+	}
+
+	bookAuthor, err := queries.InsertBookAuthor(ctx, newBookAuthor)
 	if err != nil {
 		stringErr := fmt.Sprintf("Create bookAuthor failed: %s", err)
 		return nil, errors.New(stringErr)
@@ -133,9 +143,10 @@ func CheckAuthorExistById(id int32) (bool, error) {
 }
 
 type CreateAuthor struct {
-	Name        string `json:"name" form:"name" binding:"required"`
-	Description string `json:"description" form:"description"`
-	AvatarId    int32  `json:"avatarId" form:"avatarId"`
+	Name        string      `json:"name" form:"name" binding:"required"`
+	Alias       interface{} `json:"alias"`
+	Description string      `json:"description" form:"description"`
+	AvatarId    int32       `json:"avatarId" form:"avatarId"`
 }
 
 func CreateAuthorHandler(c *gin.Context) {
@@ -186,6 +197,18 @@ func CreateAuthorHandler(c *gin.Context) {
 		}
 	}
 
+	if a.Alias != nil {
+		_, ok := a.Alias.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
+			return
+		}
+		if HasControlCharacters(a.Alias.(string)) || CheckEmptyString(a.Alias.(string)) {
+			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
+			return
+		}
+	}
+
 	if len(a.Description) > 500 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "description must be less than or equal to 50 characters",
@@ -220,7 +243,7 @@ func CreateAuthorHandler(c *gin.Context) {
 		return
 	}
 
-	_, err = CreateBookAuthor(a.Name, a.Description, a.AvatarId)
+	_, err = CreateBookAuthor(a.Name, a.Description, a.AvatarId, a.Alias)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
@@ -440,6 +463,9 @@ func SearchAuthorHandler(c *gin.Context) {
 		authorInfo.Id = author.ID
 		if author.Path.Valid {
 			authorInfo.Image = author.Path.String
+		}
+		if author.Aliases.Valid {
+			authorInfo.Alias = author.Aliases.String
 		}
 		response = append(response, authorInfo)
 	}

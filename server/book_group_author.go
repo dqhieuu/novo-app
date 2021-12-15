@@ -116,17 +116,22 @@ func GetAuthorInfoHandler(c *gin.Context) {
 	}
 	var avatar interface{}
 	var description interface{}
+	var aliases interface{}
 	if author.Avatar.Valid == true {
 		avatar = author.Avatar.String
 	}
 	if author.Description.Valid == true {
 		description = author.Description.String
 	}
+	if author.Aliases.Valid {
+		aliases = author.Aliases.String
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"name":        author.Name,
 		"description": description,
 		"avatar":      avatar,
 		"books":       bookGroups,
+		"alias":       aliases,
 	})
 
 }

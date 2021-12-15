@@ -13,19 +13,19 @@ SELECT EXISTS(
            );
 
 -- name: BookAuthorById :one
-SELECT *
+SELECT id, name, aliases, description, avatar_image_id
 FROM book_authors
 WHERE id = $1;
 
 -- name: BookAuthors :many
-SELECT *
+SELECT id, name, aliases, description, avatar_image_id
 FROM book_authors
 ORDER BY id ASC
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
 
 -- name: InsertBookAuthor :one
-INSERT INTO book_authors(name, description, avatar_image_id)
-VALUES (@name, @description, @avatar_image_id)
+INSERT INTO book_authors(name, aliases, description, avatar_image_id)
+VALUES (@name, @aliases, @description, @avatar_image_id)
 RETURNING *;
 
 -- name: DeleteBookAuthor :exec
@@ -48,7 +48,7 @@ FROM book_authors
 WHERE bg.id = $1;
 
 -- name: SearchAuthors :many
-SELECT book_authors.name, book_authors.id, i.path
+SELECT book_authors.name, book_authors.id, book_authors.aliases, i.path
 FROM book_authors
          LEFT JOIN images i on book_authors.avatar_image_id = i.id
 WHERE book_author_tsv @@ to_tsquery($1 || ':*')
