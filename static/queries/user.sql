@@ -95,4 +95,10 @@ SET email     = $2,
     summary   = $4
 WHERE id = $1;
 
+-- name: CheckUsernameExist :one
+SELECT exists(select 1 from users where user_name = $1);
+
+-- name: CheckEmailExist :one
+SELECT exists(select 1 from users where email = $1);
+
 

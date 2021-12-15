@@ -190,6 +190,9 @@ type Register struct {
 }
 
 func RegisterPasswordHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
 	var r Register
 	if err := c.ShouldBindJSON(&r); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -216,13 +219,36 @@ func RegisterPasswordHandler(c *gin.Context) {
 		return
 	}
 
+	check, err := queries.CheckUsernameExist(ctx, sql.NullString{
+		String: r.Username,
+		Valid:  true,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if check {
+		ReportError(c, errors.New("username already exists"), "error", http.StatusBadRequest)
+		return
+	}
+
 	if len(r.Password) < 8 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Password must be at least 8 characters",
 		})
 		return
 	}
-	_, _, err := RegisterAccount(r.Username, r.Password, r.Email)
+
+	check, err = queries.CheckEmailExist(ctx, r.Email)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if check {
+		ReportError(c, errors.New("email already exists"), "error", http.StatusBadRequest)
+		return
+	}
+	_, _, err = RegisterAccount(r.Username, r.Password, r.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
