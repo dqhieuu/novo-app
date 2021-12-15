@@ -45,7 +45,7 @@ FROM book_comments
          LEFT JOIN images i on u.avatar_image_id = i.id
          LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
 WHERE book_comments.book_group_id = $1
-ORDER BY posted_time
+ORDER BY posted_time desc
 LIMIT 20 OFFSET $2;
 
 -- name: GetBookChapterComments :many
@@ -62,7 +62,7 @@ FROM book_comments
          LEFT JOIN images i on u.avatar_image_id = i.id
          LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
 WHERE book_chapter_id = $1
-ORDER BY posted_time
+ORDER BY posted_time desc
 LIMIT 20 OFFSET $2;
 
 
@@ -81,7 +81,7 @@ FROM book_comments
          LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
 WHERE book_comments.book_group_id = $1
   AND book_chapter_id = $2
-ORDER BY posted_time
+ORDER BY posted_time desc
 LIMIT 20 OFFSET $3;
 
 -- name: GetCommenter :one
@@ -120,5 +120,5 @@ FROM book_comments
          JOIN book_groups bg on book_comments.book_group_id = bg.id
          LEFT JOIN images i on u.avatar_image_id = i.id
          LEFT JOIN book_chapters bc on bc.id = book_comments.book_chapter_id
-ORDER BY posted_time
+ORDER BY posted_time DESC
 LIMIT 15;
