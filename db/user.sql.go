@@ -84,6 +84,28 @@ func (q *Queries) BookGroupsByUser(ctx context.Context, id int32) ([]BookGroupsB
 	return items, nil
 }
 
+const checkEmailExist = `-- name: CheckEmailExist :one
+SELECT exists(select 1 from users where email = $1)
+`
+
+func (q *Queries) CheckEmailExist(ctx context.Context, email string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkEmailExist, email)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkUsernameExist = `-- name: CheckUsernameExist :one
+SELECT exists(select 1 from users where user_name = $1)
+`
+
+func (q *Queries) CheckUsernameExist(ctx context.Context, userName sql.NullString) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUsernameExist, userName)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const completeOauthAccount = `-- name: CompleteOauthAccount :exec
 UPDATE users
 SET user_name       = $2,
