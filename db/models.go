@@ -21,7 +21,7 @@ type BookChapter struct {
 	DateCreated   time.Time      `json:"dateCreated"`
 	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
-	TextContext   sql.NullString `json:"textContext"`
+	TextContent   sql.NullString `json:"textContent"`
 	Type          string         `json:"type"`
 	BookGroupID   int32          `json:"bookGroupID"`
 	OwnerID       int32          `json:"ownerID"`

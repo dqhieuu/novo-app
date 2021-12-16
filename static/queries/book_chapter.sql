@@ -14,12 +14,12 @@ OFFSET $2 ROWS FETCH FIRST $3 ROWS ONLY;
 UPDATE book_chapters
 SET chapter_number=$2,
     name=$3,
-    text_context=$4
+    text_content=$4
 WHERE id = $1;
 
 -- name: InsertBookChapter :one
-INSERT INTO book_chapters(chapter_number, name, text_context, type, book_group_id, owner_id)
-VALUES (@chapter_number, @name, @text_context, @type, @book_group_id, @owner_id)
+INSERT INTO book_chapters(chapter_number, name, text_content, type, book_group_id, owner_id)
+VALUES (@chapter_number, @name, @text_content, @type, @book_group_id, @owner_id)
 RETURNING *;
 
 -- name: DeleteBookChapterById :exec

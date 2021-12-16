@@ -115,7 +115,7 @@ func UpdateBookChapter(chapter UpdateChapterParams) error {
 		ID:            chapter.Id,
 		ChapterNumber: chapter.ChapterNumber,
 		Name:          nameSql,
-		TextContext:   textContextSql,
+		TextContent:   textContextSql,
 	})
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
@@ -167,7 +167,7 @@ func CreateBookChapter(chapterNumber float64, description, textContext, chapterT
 	bookChapter, err := queries.InsertBookChapter(ctx, db.InsertBookChapterParams{
 		ChapterNumber: chapterNumber,
 		Name:          descriptionSql,
-		TextContext:   textContextSql,
+		TextContent:   textContextSql,
 		Type:          chapterType,
 		BookGroupID:   bookGroupID,
 		OwnerID:       ownerID,
@@ -382,7 +382,7 @@ func GetBookChapterContentHandler(c *gin.Context) {
 			"bookGroupId":   bookChapter.BookGroupID,
 			"chapterNumber": bookChapter.ChapterNumber,
 			"name":          bookChapter.Name.String,
-			"textContent":   bookChapter.TextContext.String,
+			"textContent":   bookChapter.TextContent.String,
 		})
 	}
 
@@ -501,7 +501,7 @@ func UpdateHypertextChapter(c *gin.Context) {
 		newChapter.Name = oldChapter.Name.String
 	}
 	if newChapter.TextContent == "" {
-		newChapter.TextContent = oldChapter.TextContext.String
+		newChapter.TextContent = oldChapter.TextContent.String
 	}
 	newChapter.Images = nil
 
@@ -571,7 +571,7 @@ func UpdateImagesChapterHandler(c *gin.Context) {
 	if newChapter.Name == "" {
 		newChapter.Name = oldChapter.Name.String
 	}
-	newChapter.TextContent = oldChapter.TextContext.String
+	newChapter.TextContent = oldChapter.TextContent.String
 
 	err = ValidTitle(&newChapter.Name)
 	if err != nil {
