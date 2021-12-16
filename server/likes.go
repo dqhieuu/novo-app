@@ -156,7 +156,7 @@ func LikeOperationHandler(c *gin.Context) {
 				return
 			}
 		case Unlike:
-			alreadyLike, err := queries.CheckAlreadyLike(ctx, db.CheckAlreadyLikeParams{
+			alreadyLike, err := queries.CheckUnlike(ctx, db.CheckUnlikeParams{
 				UserID:      userId,
 				BookGroupID: bookId,
 			})
