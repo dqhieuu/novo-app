@@ -20,3 +20,6 @@ SELECT EXISTS(select 1 from book_group_likes where user_id = $1 and book_group_i
 
 -- name: CheckAlreadyDislike :one
 SELECT exists(select 1 from book_group_likes where user_id = $1 and book_group_id = $2 and point < 0);
+
+-- name: CheckUnlike :one
+SELECT EXISTS(select 1 from book_group_likes where user_id = $1 and book_group_id = $2);

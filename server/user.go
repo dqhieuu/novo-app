@@ -408,21 +408,23 @@ func ChangeCurrentUserPasswordHandler(c *gin.Context) {
 		return
 	}
 
-	hexPassword := user.Password
-	if !hexPassword.Valid {
-		ReportError(c, errors.New("can not get user password"), "error", http.StatusBadRequest)
-		return
-	}
+	if user.Password.Valid {
+		hexPassword := user.Password
+		if !hexPassword.Valid {
+			ReportError(c, errors.New("can not get user password"), "error", http.StatusBadRequest)
+			return
+		}
 
-	bytePassword, err := hex.DecodeString(hexPassword.String)
-	if err != nil {
-		ReportError(c, err, "error", 500)
-		return
-	}
+		bytePassword, err := hex.DecodeString(hexPassword.String)
+		if err != nil {
+			ReportError(c, err, "error", 500)
+			return
+		}
 
-	if !EqualPasswords(bytePassword, []byte(editPass.OldPassword)) {
-		ReportError(c, errors.New("password does not exist"), "error", http.StatusBadRequest)
-		return
+		if !EqualPasswords(bytePassword, []byte(editPass.OldPassword)) {
+			ReportError(c, errors.New("password does not exist"), "error", http.StatusBadRequest)
+			return
+		}
 	}
 
 	if !ValidPassword(editPass.NewPassword) {

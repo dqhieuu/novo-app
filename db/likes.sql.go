@@ -39,6 +39,22 @@ func (q *Queries) CheckAlreadyLike(ctx context.Context, arg CheckAlreadyLikePara
 	return exists, err
 }
 
+const checkUnlike = `-- name: CheckUnlike :one
+SELECT EXISTS(select 1 from book_group_likes where user_id = $1 and book_group_id = $2)
+`
+
+type CheckUnlikeParams struct {
+	UserID      int32 `json:"userID"`
+	BookGroupID int32 `json:"bookGroupID"`
+}
+
+func (q *Queries) CheckUnlike(ctx context.Context, arg CheckUnlikeParams) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUnlike, arg.UserID, arg.BookGroupID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const disLikes = `-- name: DisLikes :exec
 INSERT INTO book_group_likes(user_id, book_group_id, point)
 VALUES ($1, $2, -1)
