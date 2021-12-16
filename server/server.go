@@ -17,6 +17,13 @@ func Run() {
 	r.Use(gin.Recovery())
 
 	// CORS middleware allows cross-origin requests
+	config := cors.DefaultConfig()
+	//config.AllowOrigins = []
+	//config.AllowCredentials = true
+	config.AllowAllOrigins = true
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(config))
+
 	r.Use(cors.Default())
 
 	InitOauth()

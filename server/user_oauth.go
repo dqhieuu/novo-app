@@ -31,7 +31,7 @@ func InitOauth() {
 			ClientSecret: "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",
 			Endpoint:     google.Endpoint,
 			Scopes:       []string{googleOauth2.UserinfoEmailScope, googleOauth2.UserinfoProfileScope},
-			RedirectURL:  "http://localhost:7001/login?provider=google",
+			RedirectURL:  "http://localhost:3000/?provider=google",
 		}
 	}
 }
