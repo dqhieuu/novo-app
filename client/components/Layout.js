@@ -1,42 +1,13 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import React, {
-  useEffect,
-  useState,
-  useContext,
-} from 'react';
+import React, { useContext } from 'react';
 import { MangaContext } from '../Context/MangaContext';
-import { FaFacebook } from 'react-icons/fa';
-import DisplayImg from './displayImg';
+
 import UserModal from './userModal/UserModal';
 import SearchBar from './searchBar/searchBar';
-import UserSignUp from './userModal/userSignUp';
-const mangaTypes = [
-  'Action',
-  'Adult',
-  'Adventure',
-  'Anime',
-  'Award Winning',
-  'Comedy',
-  'Cooking',
-  'Demons',
-  'Doujinshi',
-  'Drama',
-  'Ecchi',
-  'Fantasy',
-  'Gender bender',
-  'Harem',
-  'Historical',
-  'Horror',
-  'Josei',
-  'Live Action',
-  'Magic',
-  'Manhua',
-  'Manhwa',
-  'Martial Arts',
-  'Mature',
-];
+
 export default function Layout({ children }) {
+  const { server, genres } = useContext(MangaContext);
   return (
     <div>
       <Head>
@@ -77,252 +48,36 @@ export default function Layout({ children }) {
                 <ul
                   className="dropdown-menu"
                   aria-labelledby="navbarDropdown"
-                  style={{ width: '900px' }}
                 >
-                  <div className="container">
+                  <div className="container-fluid">
                     <div className="row">
-                      <div
-                        className="col-12 col-sm-12 col-md-12 col-lg-2"
-                        style={{
-                          borderRight: '1px solid grey',
-                        }}
-                      >
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manga
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhwa
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhua
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Comic
-                          </a>
-                        </li>
-                      </div>
-                      <div className="col-12 col-sm-12 col-md-12 col-lg-2">
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manga
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhwa
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhua
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Comic
-                          </a>
-                        </li>
-                      </div>
-                      <div className="col-12 col-sm-12 col-md-12 col-lg-2">
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manga
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhwa
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhua
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Comic
-                          </a>
-                        </li>
-                      </div>
-                      <div className="col-12 col-sm-12 col-md-12 col-lg-2">
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manga
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhwa
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhua
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Comic
-                          </a>
-                        </li>
-                      </div>
-                      <div className="col-12 col-sm-12 col-md-12 col-lg-2">
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manga
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhwa
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhua
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Comic
-                          </a>
-                        </li>
-                      </div>
-                      <div className="col-12 col-sm-12 col-md-12 col-lg-2">
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manga
-                          </a>
-                        </li>
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhwa
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Manhua
-                          </a>
-                        </li>
-
-                        <li>
-                          <a
-                            className="dropdown-item"
-                            href="#"
-                          >
-                            Comic
-                          </a>
-                        </li>
-                      </div>
+                      {genres.map((genre) => (
+                        <Link
+                          href={`/genres/${genre.id}`}
+                          key={genre.id}
+                        >
+                          <div className="col-2 col-lg-12">
+                            <a>{genre.name}</a>
+                          </div>
+                        </Link>
+                      ))}
                     </div>
                   </div>
                 </ul>
               </li>
               <li className="nav-item">
-                <Link href="/hotManga" passHref>
-                  <a className="nav-link">Truyện Hot</a>
+                <Link href="/rankingManga" passHref>
+                  <a className="nav-link">BXH</a>
                 </Link>
               </li>
-              <li className="nav-item">
-                <a className="nav-link" href="#">
-                  BXH
-                </a>
-              </li>
+
               <li className="nav-item">
                 <a className="nav-link" href="#">
                   Donate
                 </a>
               </li>
             </ul>
-            <Link href="/uploadManga/uploadManga">
+            <Link href="/uploadManga/uploadManga" passHref>
               <button className="nav-item btn btn-dark me-2">
                 Upload truyện
               </button>
@@ -337,7 +92,7 @@ export default function Layout({ children }) {
               data-bs-target="#demo"
             >
               <img
-                src="https://source.unsplash.com/random"
+                src="https://www.niadd.com/files/images/def_logo.svg"
                 alt=""
                 className="rounded-pill"
                 style={{
@@ -351,7 +106,7 @@ export default function Layout({ children }) {
       </nav>
       <UserModal></UserModal>
 
-      <div className="container">{children}</div>
+      <div>{children}</div>
     </div>
   );
 }

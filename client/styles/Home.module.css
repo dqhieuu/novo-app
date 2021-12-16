@@ -1,5 +1,4 @@
-.container {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+.object:hover {
+  color: #ff7043;
+  cursor: pointer;
 }

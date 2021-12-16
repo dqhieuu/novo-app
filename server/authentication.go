@@ -5,7 +5,6 @@ import (
 	jwt "github.com/appleboy/gin-jwt/v2"
 	"github.com/gin-gonic/gin"
 	"log"
-	"net/http"
 	"time"
 )
 
@@ -76,12 +75,12 @@ func AuthMiddleware() *jwt.GinJWTMiddleware {
 			return jwt.MapClaims{}
 		},
 
-		SendCookie:     true,
-		SecureCookie:   false, //non HTTPS dev environments
-		CookieHTTPOnly: true,  // JS can't modify. Helps mitigate cookie hijacking
-		CookieDomain:   "localhost:7001",
-		CookieName:     "token",
-		CookieSameSite: http.SameSiteDefaultMode, // (https only/Lax mode) CSRF protection
+		SendCookie:   true,
+		SecureCookie: false, //non HTTPS dev environments
+		//CookieHTTPOnly: true,  // JS can't modify. Helps mitigate cookie hijacking
+		//CookieDomain:   "novoapp.tech",
+		CookieName: "token",
+		//CookieSameSite: http.SameSiteDefaultMode, // (https only/Lax mode) CSRF protection
 
 		// TokenLookup is a string in the form of "<source>:<name>" that is used
 		// to extract token from the request.
