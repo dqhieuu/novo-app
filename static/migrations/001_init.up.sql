@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS book_chapters
     date_created   timestamptz      NOT NULL DEFAULT now(),
     chapter_number double precision NOT NULL,
     name           text,
-    text_context   text,
+    text_content   text,
     type           text             NOT NULL CHECK (type IN ('images', 'hypertext')),
     book_group_id  int              NOT NULL,
     owner_id       int              NOT NULL,

@@ -10,7 +10,7 @@ import (
 )
 
 const bookChapterById = `-- name: BookChapterById :one
-SELECT id, date_created, chapter_number, name, text_context, type, book_group_id, owner_id
+SELECT id, date_created, chapter_number, name, text_content, type, book_group_id, owner_id
 FROM book_chapters
 WHERE id = $1
 `
@@ -23,7 +23,7 @@ func (q *Queries) BookChapterById(ctx context.Context, id int32) (BookChapter, e
 		&i.DateCreated,
 		&i.ChapterNumber,
 		&i.Name,
-		&i.TextContext,
+		&i.TextContent,
 		&i.Type,
 		&i.BookGroupID,
 		&i.OwnerID,
@@ -32,7 +32,7 @@ func (q *Queries) BookChapterById(ctx context.Context, id int32) (BookChapter, e
 }
 
 const bookChaptersByBookGroupId = `-- name: BookChaptersByBookGroupId :many
-SELECT id, date_created, chapter_number, name, text_context, type, book_group_id, owner_id
+SELECT id, date_created, chapter_number, name, text_content, type, book_group_id, owner_id
 FROM book_chapters
 WHERE book_group_id = $1
 ORDER BY id
@@ -59,7 +59,7 @@ func (q *Queries) BookChaptersByBookGroupId(ctx context.Context, arg BookChapter
 			&i.DateCreated,
 			&i.ChapterNumber,
 			&i.Name,
-			&i.TextContext,
+			&i.TextContent,
 			&i.Type,
 			&i.BookGroupID,
 			&i.OwnerID,
@@ -170,15 +170,15 @@ func (q *Queries) GetBookGroupChapters(ctx context.Context, id int32) ([]GetBook
 }
 
 const insertBookChapter = `-- name: InsertBookChapter :one
-INSERT INTO book_chapters(chapter_number, name, text_context, type, book_group_id, owner_id)
+INSERT INTO book_chapters(chapter_number, name, text_content, type, book_group_id, owner_id)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, date_created, chapter_number, name, text_context, type, book_group_id, owner_id
+RETURNING id, date_created, chapter_number, name, text_content, type, book_group_id, owner_id
 `
 
 type InsertBookChapterParams struct {
 	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
-	TextContext   sql.NullString `json:"textContext"`
+	TextContent   sql.NullString `json:"textContent"`
 	Type          string         `json:"type"`
 	BookGroupID   int32          `json:"bookGroupID"`
 	OwnerID       int32          `json:"ownerID"`
@@ -188,7 +188,7 @@ func (q *Queries) InsertBookChapter(ctx context.Context, arg InsertBookChapterPa
 	row := q.db.QueryRow(ctx, insertBookChapter,
 		arg.ChapterNumber,
 		arg.Name,
-		arg.TextContext,
+		arg.TextContent,
 		arg.Type,
 		arg.BookGroupID,
 		arg.OwnerID,
@@ -199,7 +199,7 @@ func (q *Queries) InsertBookChapter(ctx context.Context, arg InsertBookChapterPa
 		&i.DateCreated,
 		&i.ChapterNumber,
 		&i.Name,
-		&i.TextContext,
+		&i.TextContent,
 		&i.Type,
 		&i.BookGroupID,
 		&i.OwnerID,
@@ -211,7 +211,7 @@ const updateBookChapter = `-- name: UpdateBookChapter :exec
 UPDATE book_chapters
 SET chapter_number=$2,
     name=$3,
-    text_context=$4
+    text_content=$4
 WHERE id = $1
 `
 
@@ -219,7 +219,7 @@ type UpdateBookChapterParams struct {
 	ID            int32          `json:"id"`
 	ChapterNumber float64        `json:"chapterNumber"`
 	Name          sql.NullString `json:"name"`
-	TextContext   sql.NullString `json:"textContext"`
+	TextContent   sql.NullString `json:"textContent"`
 }
 
 func (q *Queries) UpdateBookChapter(ctx context.Context, arg UpdateBookChapterParams) error {
@@ -227,7 +227,7 @@ func (q *Queries) UpdateBookChapter(ctx context.Context, arg UpdateBookChapterPa
 		arg.ID,
 		arg.ChapterNumber,
 		arg.Name,
-		arg.TextContext,
+		arg.TextContent,
 	)
 	return err
 }
