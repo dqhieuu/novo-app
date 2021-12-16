@@ -10,6 +10,7 @@ import (
 	"github.com/dqhieuu/novo-app/db"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 	"net/http"
 	"net/mail"
 	"regexp"
@@ -54,6 +55,17 @@ type User struct {
 	Image interface{} `json:"image"`
 }
 
+type ChangePassword struct {
+	OldPassword string `json:"oldPassword" binding:"required"`
+	NewPassword string `json:"newPassword" binding:"required"`
+}
+
+type ChangeUserInfo struct {
+	Email       interface{} `json:"email"`
+	Username    interface{} `json:"username"`
+	Description interface{} `json:"description"`
+}
+
 func EqualPasswords(hashedPassword, password []byte) bool {
 	return bcrypt.CompareHashAndPassword(hashedPassword, password) == nil
 }
@@ -72,7 +84,7 @@ func ValidPassword(password string) bool {
 }
 
 func ValidUsername(username string) bool {
-	hasInvalidChars, _ := regexp.MatchString(` [\x00-\x1F\x7F\r\n]`, username)
+	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x1F\x7F\r\n@]`, username)
 	if hasInvalidChars == true {
 		return false
 	}
@@ -139,14 +151,12 @@ func UserByLoginInfo(loginInfo PasswordLogin) (*db.User, *db.RoleRow, error) {
 		return nil, nil, errors.New("can't access oauth user (having a nullable password)")
 	}
 
-	var bytePassword []byte
-
-	_, err = hex.Decode([]byte(hexPassword.String), bytePassword)
+	passwordHash, err := hex.DecodeString(hexPassword.String)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if !EqualPasswords(bytePassword, []byte(loginInfo.Password)) {
+	if !EqualPasswords(passwordHash, []byte(loginInfo.Password)) {
 		return nil, nil, errors.New("incorrect password")
 	}
 
@@ -180,6 +190,9 @@ type Register struct {
 }
 
 func RegisterPasswordHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
 	var r Register
 	if err := c.ShouldBindJSON(&r); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -206,13 +219,36 @@ func RegisterPasswordHandler(c *gin.Context) {
 		return
 	}
 
+	check, err := queries.CheckUsernameExist(ctx, sql.NullString{
+		String: r.Username,
+		Valid:  true,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if check {
+		ReportError(c, errors.New("username already exists"), "error", http.StatusBadRequest)
+		return
+	}
+
 	if len(r.Password) < 8 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": "Password must be at least 8 characters",
 		})
 		return
 	}
-	_, _, err := RegisterAccount(r.Username, r.Password, r.Email)
+
+	check, err = queries.CheckEmailExist(ctx, r.Email)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if check {
+		ReportError(c, errors.New("email already exists"), "error", http.StatusBadRequest)
+		return
+	}
+	_, _, err = RegisterAccount(r.Username, r.Password, r.Email)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
@@ -350,4 +386,146 @@ func SearchUserHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, response)
+}
+
+func ChangeCurrentUserPasswordHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	var editPass ChangePassword
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+
+	user, err := queries.GetUserInfo(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	err = c.ShouldBindJSON(&editPass)
+	if err != nil {
+		ReportError(c, err, "error", http.StatusBadRequest)
+		return
+	}
+
+	hexPassword := user.Password
+	if !hexPassword.Valid {
+		ReportError(c, errors.New("can not get user password"), "error", http.StatusBadRequest)
+		return
+	}
+
+	bytePassword, err := hex.DecodeString(hexPassword.String)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	if !EqualPasswords(bytePassword, []byte(editPass.OldPassword)) {
+		ReportError(c, errors.New("password does not exist"), "error", http.StatusBadRequest)
+		return
+	}
+
+	if !ValidPassword(editPass.NewPassword) {
+		ReportError(c, errors.New("invalid password"), "error", http.StatusBadRequest)
+		return
+	}
+
+	hashedPassword, err := GeneratePasswordHash(editPass.NewPassword)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	err = queries.UpdatePassword(ctx, db.UpdatePasswordParams{
+		ID: userId,
+		Password: sql.NullString{
+			String: hex.EncodeToString(hashedPassword),
+			Valid:  true,
+		},
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"message": "change password successful",
+	})
+}
+
+func ChangeCurrentUserInfoHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	extract := jwt.ExtractClaims(c)
+	userId := int32(extract[UserIdClaimKey].(float64))
+
+	user, err := queries.GetUserInfo(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if user.ID == 0 {
+		ReportError(c, errors.New("user is not authorized"), "error", 403)
+		return
+	}
+
+	var newUserInfo ChangeUserInfo
+	err = c.ShouldBindJSON(&newUserInfo)
+	if err != nil {
+		ReportError(c, err, "error", 400)
+		return
+	}
+
+	var updateInfoParam db.UpdateUserInfoParams
+	if newUserInfo.Email != nil {
+		_, ok := newUserInfo.Email.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid email"), "error", http.StatusBadRequest)
+			return
+		}
+		updateInfoParam.Email = newUserInfo.Email.(string)
+	} else {
+		updateInfoParam.Email = user.Email
+	}
+
+	if newUserInfo.Username != nil {
+		_, ok := newUserInfo.Username.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid username"), "error", http.StatusBadRequest)
+			return
+		}
+		updateInfoParam.UserName = sql.NullString{
+			String: newUserInfo.Username.(string),
+			Valid:  true,
+		}
+	} else {
+		updateInfoParam.UserName = user.UserName
+	}
+
+	if newUserInfo.Description != nil {
+		_, ok := newUserInfo.Description.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid description"), "error", http.StatusBadRequest)
+			return
+		}
+		updateInfoParam.Summary = sql.NullString{
+			String: newUserInfo.Description.(string),
+			Valid:  true,
+		}
+	} else {
+		updateInfoParam.Summary = user.Summary
+	}
+	updateInfoParam.ID = userId
+
+	err = queries.UpdateUserInfo(ctx, updateInfoParam)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	log.Printf("%+v\n", updateInfoParam)
+
+	c.JSON(200, gin.H{
+		"message": "update info successful",
+	})
 }

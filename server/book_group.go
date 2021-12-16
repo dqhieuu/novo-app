@@ -18,6 +18,7 @@ const limitBookGroup = 40
 
 type BookGroup struct {
 	Name            string      `json:"name"`
+	Alias           interface{} `json:"alias"`
 	Description     interface{} `json:"description"`
 	Views           int64       `json:"views"`
 	LikeCount       int64       `json:"likeCount"`
@@ -29,7 +30,7 @@ type BookGroup struct {
 	PrimaryCoverArt interface{} `json:"primaryCoverArt"`
 }
 
-func BookGroupById(id int32) (*db.BookGroup, error) {
+func BookGroupById(id int32) (*db.BookGroupByIdRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	data, err := queries.BookGroupById(ctx, id)
@@ -40,7 +41,7 @@ func BookGroupById(id int32) (*db.BookGroup, error) {
 	return &data, err
 }
 
-func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
+func BookGroupsByTitle(title string, page int32) ([]*db.BookGroupsByTitleRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	bookGroups, err := queries.BookGroupsByTitle(ctx, db.BookGroupsByTitleParams{
@@ -55,7 +56,7 @@ func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
 		stringErr := fmt.Sprintf("Get bookGroups by title failed: %s", err)
 		return nil, errors.New(stringErr)
 	}
-	var outData []*db.BookGroup
+	var outData []*db.BookGroupsByTitleRow
 	for i := 0; i < len(bookGroups); i++ {
 		outData = append(outData, &bookGroups[i])
 	}
@@ -65,7 +66,7 @@ func BookGroupsByTitle(title string, page int32) ([]*db.BookGroup, error) {
 func UpdateBookGroup(id int32, input *InputBookGroup) error {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	err := queries.UpdateBookGroup(ctx, db.UpdateBookGroupParams{
+	updateBookGroup := db.UpdateBookGroupParams{
 		ID:    id,
 		Title: input.Title,
 		Description: sql.NullString{
@@ -76,7 +77,20 @@ func UpdateBookGroup(id int32, input *InputBookGroup) error {
 			Int32: input.PrimaryCoverArtId,
 			Valid: input.PrimaryCoverArtId != 0,
 		},
-	})
+	}
+	switch input.Alias.(type) {
+	case sql.NullString:
+		updateBookGroup.Aliases = sql.NullString{
+			String: input.Alias.(sql.NullString).String,
+			Valid:  input.Alias.(sql.NullString).Valid,
+		}
+	case string:
+		updateBookGroup.Aliases = sql.NullString{
+			String: input.Alias.(string),
+			Valid:  true,
+		}
+	}
+	err := queries.UpdateBookGroup(ctx, updateBookGroup)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book group failed: %s", err)
 		return errors.New(stringErr)
@@ -129,10 +143,10 @@ func UpdateBookGroup(id int32, input *InputBookGroup) error {
 	return nil
 }
 
-func CreateBookGroup(input *InputBookGroup) (*db.BookGroup, error) {
+func CreateBookGroup(input *InputBookGroup) (*db.InsertBookGroupRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	bookGroup, err := queries.InsertBookGroup(ctx, db.InsertBookGroupParams{
+	newBookGroup := db.InsertBookGroupParams{
 		Title: input.Title,
 		Description: sql.NullString{
 			String: input.Description,
@@ -143,7 +157,15 @@ func CreateBookGroup(input *InputBookGroup) (*db.BookGroup, error) {
 			Int32: input.PrimaryCoverArtId,
 			Valid: input.PrimaryCoverArtId != 0,
 		},
-	})
+	}
+	if input.Alias != nil {
+		newBookGroup.Aliases = sql.NullString{
+			String: input.Alias.(string),
+			Valid:  true,
+		}
+	}
+
+	bookGroup, err := queries.InsertBookGroup(ctx, newBookGroup)
 	if err != nil {
 		stringErr := fmt.Sprintf("Create book group failed: %s", err)
 		return nil, errors.New(stringErr)
@@ -210,6 +232,10 @@ func GetBookGroupContentHandler(c *gin.Context) {
 		responseObject.Name = bookGroup.Title
 		if bookGroup.Description.Valid {
 			responseObject.Description = bookGroup.Description.String
+		}
+
+		if bookGroup.Aliases.Valid {
+			responseObject.Alias = bookGroup.Aliases.String
 		}
 
 		//get views
@@ -286,6 +312,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 						Id:   chapter.Userid,
 						Name: chapter.UserName.String,
 					},
+					Views: chapter.Totalview.(int64),
 				}
 				if chapter.Name.Valid {
 					resChapter.Name = chapter.Name.String
@@ -388,23 +415,24 @@ func GetBookByGenreHandler(c *gin.Context) {
 }
 
 type InputBookGroup struct {
-	Title             string  `json:"name" form:"name"`
-	Description       string  `json:"description" form:"description"`
-	AuthorIds         []int32 `json:"authors" form:"authors"`
-	GenreIds          []int32 `json:"genres" form:"genres"`
-	CoverArtIds       []int32 `json:"coverArts" form:"coverArts"`
-	PrimaryCoverArtId int32   `json:"primaryCoverArt" form:"primaryCoverArt"`
-	OwnerId           int32   `json:"owner" form:"owner"`
+	Title             string      `json:"name" form:"name"`
+	Alias             interface{} `json:"alias"`
+	Description       string      `json:"description" form:"description"`
+	AuthorIds         []int32     `json:"authors" form:"authors"`
+	GenreIds          []int32     `json:"genres" form:"genres"`
+	CoverArtIds       []int32     `json:"coverArts" form:"coverArts"`
+	PrimaryCoverArtId int32       `json:"primaryCoverArt" form:"primaryCoverArt"`
+	OwnerId           int32       `json:"owner" form:"owner"`
 }
 
 func CreateBookGroupHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
-	
+
 	claims := jwt.ExtractClaims(c)
 	var bookGroup InputBookGroup
 	userId := int32(claims[UserIdClaimKey].(float64))
-	
+
 	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
 		Module: BookGroupModule,
 		Action: PostAction,
@@ -436,6 +464,17 @@ func CreateBookGroupHandler(c *gin.Context) {
 	if err := ValidTitle(&bookGroup.Title); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+	if bookGroup.Alias != nil {
+		_, ok := bookGroup.Alias.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
+			return
+		}
+		if HasControlCharacters(bookGroup.Alias.(string)) || CheckEmptyString(bookGroup.Alias.(string)) {
+			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
+			return
+		}
 	}
 	//fmt.Println("Title after ", bookGroup.Title)
 	if err := ValidDescription(&bookGroup.Description); err != nil {
@@ -579,6 +618,8 @@ func GetSearchSuggestionHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	query := c.Param("query")
+
+	query = CleanSearchString(query)
 	books, err := queries.SearchSuggestion(ctx, sql.NullString{
 		String: query,
 		Valid:  true,
@@ -598,6 +639,7 @@ func GetSearchResultHandler(c *gin.Context) {
 	queries := db.New(db.Pool())
 	query := c.Param("query")
 
+	query = CleanSearchString(query)
 	var page int32
 	stringTmp := c.Query("page")
 	if len(stringTmp) > 0 {
@@ -933,7 +975,7 @@ func UpdateBookGroupHandler(c *gin.Context) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	oldBookGroup, err := queries.BookGroupById(ctx, bookGroupId)
-	if oldBookGroup == (db.BookGroup{}) {
+	if oldBookGroup == (db.BookGroupByIdRow{}) {
 		c.JSON(http.StatusNotFound, gin.H{
 			"error": "Book group does exist",
 		})
@@ -949,6 +991,19 @@ func UpdateBookGroupHandler(c *gin.Context) {
 	}
 	if newBookGroup.Title == "" {
 		newBookGroup.Title = oldBookGroup.Title
+	}
+	if newBookGroup.Alias == nil {
+		newBookGroup.Alias = oldBookGroup.Aliases
+	} else {
+		_, ok := newBookGroup.Alias.(string)
+		if !ok {
+			ReportError(c, errors.New("invalid alias"), "error", http.StatusBadRequest)
+			return
+		}
+		if HasControlCharacters(newBookGroup.Alias.(string)) || CheckEmptyString(newBookGroup.Alias.(string)) {
+			ReportError(c, errors.New("invalid alias"), "error", http.StatusBadRequest)
+			return
+		}
 	}
 	if newBookGroup.Description == "" {
 		newBookGroup.Description = oldBookGroup.Description.String

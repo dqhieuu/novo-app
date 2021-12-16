@@ -182,6 +182,7 @@ func (q *Queries) DeleteBookGroupAuthor(ctx context.Context, arg DeleteBookGroup
 const getBookAuthor = `-- name: GetBookAuthor :one
 SELECT ba.name,
        ba.description,
+       ba.aliases,
        i.path AS avatar
 FROM book_authors ba
          LEFT JOIN images i on ba.avatar_image_id = i.id
@@ -191,13 +192,19 @@ WHERE ba.id=$1
 type GetBookAuthorRow struct {
 	Name        string         `json:"name"`
 	Description sql.NullString `json:"description"`
+	Aliases     sql.NullString `json:"aliases"`
 	Avatar      sql.NullString `json:"avatar"`
 }
 
 func (q *Queries) GetBookAuthor(ctx context.Context, id int32) (GetBookAuthorRow, error) {
 	row := q.db.QueryRow(ctx, getBookAuthor, id)
 	var i GetBookAuthorRow
-	err := row.Scan(&i.Name, &i.Description, &i.Avatar)
+	err := row.Scan(
+		&i.Name,
+		&i.Description,
+		&i.Aliases,
+		&i.Avatar,
+	)
 	return i, err
 }
 

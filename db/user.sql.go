@@ -84,6 +84,28 @@ func (q *Queries) BookGroupsByUser(ctx context.Context, id int32) ([]BookGroupsB
 	return items, nil
 }
 
+const checkEmailExist = `-- name: CheckEmailExist :one
+SELECT exists(select 1 from users where email = $1)
+`
+
+func (q *Queries) CheckEmailExist(ctx context.Context, email string) (bool, error) {
+	row := q.db.QueryRow(ctx, checkEmailExist, email)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const checkUsernameExist = `-- name: CheckUsernameExist :one
+SELECT exists(select 1 from users where user_name = $1)
+`
+
+func (q *Queries) CheckUsernameExist(ctx context.Context, userName sql.NullString) (bool, error) {
+	row := q.db.QueryRow(ctx, checkUsernameExist, userName)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const completeOauthAccount = `-- name: CompleteOauthAccount :exec
 UPDATE users
 SET user_name       = $2,
@@ -121,8 +143,10 @@ func (q *Queries) DeleteUser(ctx context.Context, userName sql.NullString) error
 }
 
 const getUserInfo = `-- name: GetUserInfo :one
-SELECT users.user_name,
+SELECT users.id,
+       users.user_name,
        users.email,
+       users.password,
        r.name as role,
        users.summary,
        i.path as avatarPath
@@ -133,8 +157,10 @@ WHERE users.id = $1
 `
 
 type GetUserInfoRow struct {
+	ID         int32          `json:"id"`
 	UserName   sql.NullString `json:"userName"`
 	Email      string         `json:"email"`
+	Password   sql.NullString `json:"password"`
 	Role       string         `json:"role"`
 	Summary    sql.NullString `json:"summary"`
 	Avatarpath sql.NullString `json:"avatarpath"`
@@ -144,8 +170,10 @@ func (q *Queries) GetUserInfo(ctx context.Context, id int32) (GetUserInfoRow, er
 	row := q.db.QueryRow(ctx, getUserInfo, id)
 	var i GetUserInfoRow
 	err := row.Scan(
+		&i.ID,
 		&i.UserName,
 		&i.Email,
+		&i.Password,
 		&i.Role,
 		&i.Summary,
 		&i.Avatarpath,
@@ -220,6 +248,47 @@ func (q *Queries) SearchUsers(ctx context.Context, dollar_1 sql.NullString) ([]S
 		return nil, err
 	}
 	return items, nil
+}
+
+const updatePassword = `-- name: UpdatePassword :exec
+UPDATE users
+SET password = $2
+WHERE id = $1
+`
+
+type UpdatePasswordParams struct {
+	ID       int32          `json:"id"`
+	Password sql.NullString `json:"password"`
+}
+
+func (q *Queries) UpdatePassword(ctx context.Context, arg UpdatePasswordParams) error {
+	_, err := q.db.Exec(ctx, updatePassword, arg.ID, arg.Password)
+	return err
+}
+
+const updateUserInfo = `-- name: UpdateUserInfo :exec
+Update users
+SET email     = $2,
+    user_name = $3,
+    summary   = $4
+WHERE id = $1
+`
+
+type UpdateUserInfoParams struct {
+	ID       int32          `json:"id"`
+	Email    string         `json:"email"`
+	UserName sql.NullString `json:"userName"`
+	Summary  sql.NullString `json:"summary"`
+}
+
+func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) error {
+	_, err := q.db.Exec(ctx, updateUserInfo,
+		arg.ID,
+		arg.Email,
+		arg.UserName,
+		arg.Summary,
+	)
+	return err
 }
 
 const userByEmail = `-- name: UserByEmail :one

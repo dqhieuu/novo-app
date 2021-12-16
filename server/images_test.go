@@ -169,7 +169,8 @@ func TestSaveImageFromStream(t *testing.T) {
 		t.Fatalf("Error creating test image: %s\n", err)
 	}
 
-	imageId, _, err := SaveImageFromStream(img, "test", uuid.NewString(), "")
+	imageId, dst, err := SaveImageFromStream(img, "test", uuid.NewString(), "")
+	log.Println(dst)
 
 	assert.Nil(t, err)
 

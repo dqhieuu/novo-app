@@ -58,6 +58,7 @@ func UploadImageHandler(c *gin.Context) {
 	case nil:
 		c.JSON(200, gin.H{
 			"id": saveImageId,
+			"path": savePath,
 		})
 	default:
 		c.JSON(500, gin.H{

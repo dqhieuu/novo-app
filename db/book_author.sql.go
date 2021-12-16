@@ -9,17 +9,26 @@ import (
 )
 
 const bookAuthorById = `-- name: BookAuthorById :one
-SELECT id, name, description, avatar_image_id
+SELECT id, name, aliases, description, avatar_image_id
 FROM book_authors
 WHERE id = $1
 `
 
-func (q *Queries) BookAuthorById(ctx context.Context, id int32) (BookAuthor, error) {
+type BookAuthorByIdRow struct {
+	ID            int32          `json:"id"`
+	Name          string         `json:"name"`
+	Aliases       sql.NullString `json:"aliases"`
+	Description   sql.NullString `json:"description"`
+	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
+}
+
+func (q *Queries) BookAuthorById(ctx context.Context, id int32) (BookAuthorByIdRow, error) {
 	row := q.db.QueryRow(ctx, bookAuthorById, id)
-	var i BookAuthor
+	var i BookAuthorByIdRow
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Aliases,
 		&i.Description,
 		&i.AvatarImageID,
 	)
@@ -27,7 +36,7 @@ func (q *Queries) BookAuthorById(ctx context.Context, id int32) (BookAuthor, err
 }
 
 const bookAuthors = `-- name: BookAuthors :many
-SELECT id, name, description, avatar_image_id
+SELECT id, name, aliases, description, avatar_image_id
 FROM book_authors
 ORDER BY id ASC
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
@@ -38,18 +47,27 @@ type BookAuthorsParams struct {
 	Limit  int32 `json:"limit"`
 }
 
-func (q *Queries) BookAuthors(ctx context.Context, arg BookAuthorsParams) ([]BookAuthor, error) {
+type BookAuthorsRow struct {
+	ID            int32          `json:"id"`
+	Name          string         `json:"name"`
+	Aliases       sql.NullString `json:"aliases"`
+	Description   sql.NullString `json:"description"`
+	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
+}
+
+func (q *Queries) BookAuthors(ctx context.Context, arg BookAuthorsParams) ([]BookAuthorsRow, error) {
 	rows, err := q.db.Query(ctx, bookAuthors, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []BookAuthor
+	var items []BookAuthorsRow
 	for rows.Next() {
-		var i BookAuthor
+		var i BookAuthorsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
+			&i.Aliases,
 			&i.Description,
 			&i.AvatarImageID,
 		); err != nil {
@@ -138,41 +156,50 @@ func (q *Queries) GetBookGroupAuthors(ctx context.Context, id int32) ([]GetBookG
 }
 
 const insertBookAuthor = `-- name: InsertBookAuthor :one
-INSERT INTO book_authors(name, description, avatar_image_id)
-VALUES ($1, $2, $3)
-RETURNING id, name, description, avatar_image_id
+INSERT INTO book_authors(name, aliases, description, avatar_image_id)
+VALUES ($1, $2, $3, $4)
+RETURNING id, name, aliases, description, avatar_image_id, book_author_tsv
 `
 
 type InsertBookAuthorParams struct {
 	Name          string         `json:"name"`
+	Aliases       sql.NullString `json:"aliases"`
 	Description   sql.NullString `json:"description"`
 	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
 }
 
 func (q *Queries) InsertBookAuthor(ctx context.Context, arg InsertBookAuthorParams) (BookAuthor, error) {
-	row := q.db.QueryRow(ctx, insertBookAuthor, arg.Name, arg.Description, arg.AvatarImageID)
+	row := q.db.QueryRow(ctx, insertBookAuthor,
+		arg.Name,
+		arg.Aliases,
+		arg.Description,
+		arg.AvatarImageID,
+	)
 	var i BookAuthor
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
+		&i.Aliases,
 		&i.Description,
 		&i.AvatarImageID,
+		&i.BookAuthorTsv,
 	)
 	return i, err
 }
 
 const searchAuthors = `-- name: SearchAuthors :many
-SELECT book_authors.name, book_authors.id, i.path
+SELECT book_authors.name, book_authors.id, book_authors.aliases, i.path
 FROM book_authors
          LEFT JOIN images i on book_authors.avatar_image_id = i.id
-WHERE name ILIKE '%' || $1 || '%'
+WHERE book_author_tsv @@ to_tsquery($1 || ':*')
 LIMIT 5
 `
 
 type SearchAuthorsRow struct {
-	Name string         `json:"name"`
-	ID   int32          `json:"id"`
-	Path sql.NullString `json:"path"`
+	Name    string         `json:"name"`
+	ID      int32          `json:"id"`
+	Aliases sql.NullString `json:"aliases"`
+	Path    sql.NullString `json:"path"`
 }
 
 func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([]SearchAuthorsRow, error) {
@@ -184,7 +211,12 @@ func (q *Queries) SearchAuthors(ctx context.Context, dollar_1 sql.NullString) ([
 	var items []SearchAuthorsRow
 	for rows.Next() {
 		var i SearchAuthorsRow
-		if err := rows.Scan(&i.Name, &i.ID, &i.Path); err != nil {
+		if err := rows.Scan(
+			&i.Name,
+			&i.ID,
+			&i.Aliases,
+			&i.Path,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

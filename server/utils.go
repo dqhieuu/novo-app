@@ -88,3 +88,11 @@ func ReportError(c *gin.Context, err error, message string, code int) {
 		"error": err.Error(),
 	})
 }
+
+func CleanSearchString(search string) string {
+	specialCharReg := regexp.MustCompile(`[-._!"\x60'#%&,:;<>=@{}~$()*+/\\?\[\]^|]+`)
+	search = specialCharReg.ReplaceAllString(search, " ")
+	spaceChar := regexp.MustCompile(` {2,}`)
+	search = spaceChar.ReplaceAllString(search, " ")
+	return strings.TrimSpace(search)
+}

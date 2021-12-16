@@ -1,12 +1,12 @@
 -- name: BookGroupById :one
-SELECT *
+SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
 WHERE id = $1;
 
 -- name: BookGroupsByTitle :many
-SELECT *
+SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
-WHERE  title ILIKE '%' || $1 || '%'
+WHERE book_group_tsv @@ to_tsquery($1 || ':*')
 ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY;
@@ -15,13 +15,14 @@ OFFSET $2 ROWS
 UPDATE book_groups
 SET title = $2,
     description=$3,
-    primary_cover_art_id=$4
+    primary_cover_art_id=$4,
+    aliases = $5
 WHERE id = $1;
 
 -- name: InsertBookGroup :one
-INSERT INTO book_groups(title, description,owner_id,primary_cover_art_id)
-VALUES (@title, @description,@owner_id,@primary_cover_art_id)
-RETURNING *;
+INSERT INTO book_groups(title, aliases, description,owner_id,primary_cover_art_id)
+VALUES (@title, @aliases, @description,@owner_id,@primary_cover_art_id)
+RETURNING id, title, aliases, description, date_created, owner_id, primary_cover_art_id;
 
 -- name: DeleteBookGroup :exec
 DELETE FROM book_groups
@@ -35,7 +36,7 @@ SELECT bg.title AS title,
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
-WHERE bg.title ILIKE '%'||sqlc.arg(query)||'%'
+WHERE bg.book_group_tsv @@ to_tsquery(sqlc.arg(query) || ':*')
 GROUP BY bg.id
 LIMIT 5;
 
@@ -69,7 +70,7 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-WHERE bg.title ILIKE '%'||sqlc.arg(query)||'%'
+WHERE bg.book_group_tsv @@ to_tsquery(sqlc.arg(query) || ':*')
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
@@ -77,7 +78,7 @@ OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY;
 -- name: NumberBookGroupSearchResult :one
 SELECT COUNT(id)
 FROM book_groups
-WHERE title ILIKE '%' || sqlc.arg(query) || '%';
+WHERE book_group_tsv @@ to_tsquery(sqlc.arg(query) || ':*');
 
 -- name: LatestBookGroups :many
 SELECT bg.id id,

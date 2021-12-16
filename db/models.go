@@ -10,8 +10,10 @@ import (
 type BookAuthor struct {
 	ID            int32          `json:"id"`
 	Name          string         `json:"name"`
+	Aliases       sql.NullString `json:"aliases"`
 	Description   sql.NullString `json:"description"`
 	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
+	BookAuthorTsv sql.NullString `json:"bookAuthorTsv"`
 }
 
 type BookChapter struct {
@@ -49,10 +51,12 @@ type BookComment struct {
 type BookGroup struct {
 	ID                int32          `json:"id"`
 	Title             string         `json:"title"`
+	Aliases           sql.NullString `json:"aliases"`
 	Description       sql.NullString `json:"description"`
 	DateCreated       sql.NullTime   `json:"dateCreated"`
 	OwnerID           int32          `json:"ownerID"`
 	PrimaryCoverArtID sql.NullInt32  `json:"primaryCoverArtID"`
+	BookGroupTsv      interface{}    `json:"bookGroupTsv"`
 }
 
 type BookGroupAltTitle struct {
