@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS users
     PRIMARY KEY (id),
     CONSTRAINT fk_users_images
         FOREIGN KEY (avatar_image_id)
-            REFERENCES images (id),
+            REFERENCES images (id) ON DELETE SET NULL ,
     CONSTRAINT fk_users_roles
         FOREIGN KEY (role_id)
             REFERENCES roles (id)
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS genres
     PRIMARY KEY (id),
     CONSTRAINT fk_genres_images
         FOREIGN KEY (image_id)
-            REFERENCES images (id)
+            REFERENCES images (id) ON DELETE SET NULL
 );
 
 INSERT INTO genres(name, description)
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS book_authors
     PRIMARY KEY (id),
     CONSTRAINT fk_book_authors_images
         FOREIGN KEY (avatar_image_id)
-            REFERENCES images (id)
+            REFERENCES images (id) ON DELETE SET NULL
 );
 
 
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS book_groups
             REFERENCES users (id),
     CONSTRAINT fk_book_groups_images
         FOREIGN KEY (primary_cover_art_id)
-            REFERENCES images (id)
+            REFERENCES images (id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS book_group_alt_titles
@@ -220,7 +220,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_images
             REFERENCES book_chapters (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_chapter_images_images
         FOREIGN KEY (image_id)
-            REFERENCES images (id)
+            REFERENCES images (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS book_chapter_views
@@ -231,7 +231,7 @@ CREATE TABLE IF NOT EXISTS book_chapter_views
     PRIMARY KEY (book_chapter_id, view_date),
     CONSTRAINT fk_book_chapter_views_book_chapters
         FOREIGN KEY (book_chapter_id)
-            REFERENCES book_chapters (id)
+            REFERENCES book_chapters (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS book_comments
@@ -251,6 +251,6 @@ CREATE TABLE IF NOT EXISTS book_comments
             REFERENCES book_groups (id) ON DELETE CASCADE,
     CONSTRAINT fk_book_comments_book_chapters
         FOREIGN KEY (book_chapter_id)
-            REFERENCES book_chapters (id)
+            REFERENCES book_chapters (id) ON DELETE SET NULL
 );
 
