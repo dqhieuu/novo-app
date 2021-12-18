@@ -30,3 +30,27 @@ func (q *Queries) CheckPermissionOnUserId(ctx context.Context, arg CheckPermissi
 	err := row.Scan(&exists)
 	return exists, err
 }
+
+const getUserPermission = `-- name: GetUserPermission :many
+SELECT rp.module, rp.action, rp.role_id FROM users JOIN role_permissions rp on users.role_id = rp.role_id WHERE users.id = $1
+`
+
+func (q *Queries) GetUserPermission(ctx context.Context, id int32) ([]RolePermission, error) {
+	rows, err := q.db.Query(ctx, getUserPermission, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RolePermission
+	for rows.Next() {
+		var i RolePermission
+		if err := rows.Scan(&i.Module, &i.Action, &i.RoleID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

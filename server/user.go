@@ -22,12 +22,12 @@ import (
 const LimitUserBookGroups = 20
 
 type UserInfo struct {
-	Role       string        `json:"role" binding:"required"`
-	Permission []interface{} `json:"permission" binding:"required"`
-	Id         int32         `json:"id" binding:"required"`
-	Name       interface{}   `json:"name"`
-	Avatar     interface{}   `json:"avatar"`
-	Email      string        `json:"email" binding:"required"`
+	Role       string      `json:"role" binding:"required"`
+	Permission []string    `json:"permission" binding:"required"`
+	Id         int32       `json:"id" binding:"required"`
+	Name       interface{} `json:"name"`
+	Avatar     interface{} `json:"avatar"`
+	Email      string      `json:"email" binding:"required"`
 }
 
 type UserProfile struct {
@@ -272,8 +272,21 @@ func GetRoleHandler(c *gin.Context) {
 		return
 	}
 
-	userInfo.Role = claims[RoleNameClaimKey].(string)
-	userInfo.Permission = claims[RolePermsClaimKey].([]interface{})
+	userPermission, err := queries.GetUserPermission(ctx, userId)
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if len(userPermission) > 0 {
+		for _, perm := range userPermission {
+			userInfo.Permission = append(userInfo.Permission, perm.Module + "." + perm.Action)
+		}
+	} else {
+		userInfo.Permission = make([]string, 0)
+	}
+
+	userInfo.Role = user.Role
+
 	userInfo.Id = userId
 	if user.Avatarpath.Valid {
 		userInfo.Avatar = user.Avatarpath.String
