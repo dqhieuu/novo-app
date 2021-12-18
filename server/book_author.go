@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strings"
-	"unicode"
 )
 
 const limitBookAuthors = 50
@@ -188,14 +187,14 @@ func CreateAuthorHandler(c *gin.Context) {
 		})
 		return
 	}
-	for i := 0; i < len(a.Name); i++ {
-		if unicode.IsControl(rune(a.Name[i])) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Name cannot contain control characters or newline characters",
-			})
-			return
-		}
-	}
+	//for i := 0; i < len(a.Name); i++ {
+	//	if unicode.IsControl(rune(a.Name[i])) {
+	//		c.JSON(http.StatusBadRequest, gin.H{
+	//			"error": "Name cannot contain control characters or newline characters",
+	//		})
+	//		return
+	//	}
+	//}
 
 	if a.Alias != nil {
 		_, ok := a.Alias.(string)
@@ -215,18 +214,18 @@ func CreateAuthorHandler(c *gin.Context) {
 		})
 		return
 	}
-	for i := 0; i < len(a.Description); i++ {
-		ch := a.Description[i]
-		if ch == '\r' || ch == '\n' {
-			continue
-		}
-		if unicode.IsControl(rune(ch)) {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Description cannot contain control characters",
-			})
-			return
-		}
-	}
+	//for i := 0; i < len(a.Description); i++ {
+	//	ch := a.Description[i]
+	//	if ch == '\r' || ch == '\n' {
+	//		continue
+	//	}
+	//	if unicode.IsControl(rune(ch)) {
+	//		c.JSON(http.StatusBadRequest, gin.H{
+	//			"error": "Description cannot contain control characters",
+	//		})
+	//		return
+	//	}
+	//}
 
 	exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
 	if err != nil {
