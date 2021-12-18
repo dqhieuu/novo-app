@@ -20,7 +20,7 @@ type CommentParams struct {
 }
 
 type Comment struct {
-	Id            int32       `json:"id" binding:"required"`
+	CommentId     int32       `json:"commentId" binding:"required"`
 	Comment       string      `json:"comment" binding:"required"`
 	UserName      string      `json:"userName" binding:"required"`
 	UserId        int32       `json:"userId" binding:"required"`
@@ -31,7 +31,7 @@ type Comment struct {
 }
 
 type LatestComment struct {
-	Id            int32       `json:"id" binding:"required"`
+	CommentId     int32       `json:"commentId" binding:"required"`
 	Comment       string      `json:"comment" binding:"required"`
 	UserName      string      `json:"userName" binding:"required"`
 	UserId        int32       `json:"userId" binding:"required"`
@@ -316,7 +316,7 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(chapterComments) > 0 {
 			for _, comment := range chapterComments {
 				resComment := Comment{
-					Id:            comment.ID,
+					CommentId:            comment.ID,
 					Comment:       comment.Content,
 					UserName:      comment.UserName.String,
 					UserId:        comment.Userid,
@@ -366,7 +366,7 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(bookComments) > 0 {
 			for _, comment := range bookComments {
 				resComment := Comment{
-					Id:         comment.ID,
+					CommentId:         comment.ID,
 					Comment:    comment.Content,
 					UserName:   comment.UserName.String,
 					UserId:     comment.Userid,
@@ -567,13 +567,13 @@ func GetLatestCommentsHandler(c *gin.Context) {
 	if len(comments) > 0 {
 		for _, comment := range comments {
 			tempComment := LatestComment{
-				Id:            comment.ID,
-				Comment:       comment.Content,
-				UserName:      comment.UserName.String,
-				UserId:        comment.Userid,
-				TimePosted:    comment.PostedTime.UnixMicro(),
-				BookId:        comment.Bookid,
-				BookName:      comment.Bookname,
+				CommentId:         comment.ID,
+				Comment:    comment.Content,
+				UserName:   comment.UserName.String,
+				UserId:     comment.Userid,
+				TimePosted: comment.PostedTime.UnixMicro(),
+				BookId:     comment.Bookid,
+				BookName:   comment.Bookname,
 			}
 			if comment.Avatarpath.Valid {
 				tempComment.UserAvatar = comment.Avatarpath.String
