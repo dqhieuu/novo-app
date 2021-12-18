@@ -51,7 +51,7 @@ func BookAuthors(page int32) ([]*db.BookAuthorsRow, error) {
 	return outData, err
 }
 
-func UpdateBookAuthor(id int32, name, description string, imageID int32) error {
+func UpdateBookAuthor(id int32, name, description string, imageID int32, alias interface{}) error {
 
 	ctx := context.Background()
 	queries := db.New(db.Pool())
@@ -68,12 +68,23 @@ func UpdateBookAuthor(id int32, name, description string, imageID int32) error {
 		Valid: imageID > 0,
 	}
 
-	err = queries.UpdateBookAuthor(ctx, db.UpdateBookAuthorParams{
+	param := db.UpdateBookAuthorParams{
 		ID:            id,
 		Name:          name,
 		Description:   descriptionSql,
 		AvatarImageID: imageIdSql,
-	})
+	}
+	switch alias.(type) {
+	case string:
+		param.Aliases = sql.NullString{
+			String: alias.(string),
+			Valid:  true,
+		}
+	case sql.NullString:
+		param.Aliases = alias.(sql.NullString)
+	}
+
+	err = queries.UpdateBookAuthor(ctx, param)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update bookAuthor failed: %s", err)
 		return errors.New(stringErr)
@@ -202,9 +213,12 @@ func CreateAuthorHandler(c *gin.Context) {
 			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
 			return
 		}
-		if HasControlCharacters(a.Alias.(string)) || CheckEmptyString(a.Alias.(string)) {
+		if HasControlCharacters(a.Alias.(string)) {
 			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
 			return
+		}
+		if CheckEmptyString(a.Alias.(string)) {
+			a.Alias = nil
 		}
 	}
 
@@ -255,9 +269,10 @@ func CreateAuthorHandler(c *gin.Context) {
 }
 
 type UpdateAuthor struct {
-	Name        string `json:"name" form:"name"`
-	Description string `json:"description" form:"description"`
-	AvatarId    int32  `json:"avatar" form:"avatar"`
+	Name        string      `json:"name" form:"name"`
+	Alias       interface{} `json:"alias"`
+	Description string      `json:"description" form:"description"`
+	AvatarId    int32       `json:"avatar" form:"avatar"`
 }
 
 func UpdateAuthorHandler(c *gin.Context) {
@@ -323,6 +338,22 @@ func UpdateAuthorHandler(c *gin.Context) {
 			})
 			return
 		}
+
+		if a.Alias != nil {
+			_, ok := a.Alias.(string)
+			if !ok {
+				ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
+				return
+			}
+			if HasControlCharacters(a.Alias.(string)) {
+				ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
+				return
+			}
+			if CheckEmptyString(a.Alias.(string)) {
+				a.Alias = nil
+			}
+		}
+
 		if len(a.Description) > 500 {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": "description must be less than or equal to 50 characters",
@@ -349,7 +380,10 @@ func UpdateAuthorHandler(c *gin.Context) {
 		if a.AvatarId == 0 {
 			a.AvatarId = oldAuthor.AvatarImageID.Int32
 		}
-		err = UpdateBookAuthor(authorId, a.Name, a.Description, a.AvatarId)
+		if a.Alias == nil {
+			a.Alias = oldAuthor.Aliases
+		}
+		err = UpdateBookAuthor(authorId, a.Name, a.Description, a.AvatarId, a.Alias)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
 				"error": err.Error(),

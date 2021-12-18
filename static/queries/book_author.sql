@@ -37,7 +37,8 @@ WHERE id = @id;
 UPDATE book_authors
 SET name            = $2,
     description     = $3,
-    avatar_image_id = $4
+    avatar_image_id = $4,
+    aliases = $5
 WHERE id = $1;
 
 -- name: GetBookGroupAuthors :many
