@@ -477,10 +477,10 @@ func CreateBookGroupHandler(c *gin.Context) {
 		}
 	}
 	//fmt.Println("Title after ", bookGroup.Title)
-	if err := ValidDescription(&bookGroup.Description); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+	//if err := ValidDescription(&bookGroup.Description); err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	//	return
+	//}
 	//fmt.Println("Description after ", bookGroup.Description)
 	ValidAuthors(&bookGroup.AuthorIds)
 	//fmt.Println("AuthorIds after ", bookGroup.AuthorIds)
@@ -490,12 +490,13 @@ func CreateBookGroupHandler(c *gin.Context) {
 	//fmt.Println("CoverArtIds after ", bookGroup.CoverArtIds)
 	ValidPrimaryCoverArtId(&bookGroup.PrimaryCoverArtId, &bookGroup.CoverArtIds)
 	//fmt.Println("PrimaryCoverArtId after ", bookGroup.PrimaryCoverArtId)
-	if _, err := CreateBookGroup(&bookGroup); err != nil {
+	newBook, err := CreateBookGroup(&bookGroup)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Create book group successfully",
+		"id": newBook.ID,
 	})
 }
 
