@@ -471,9 +471,12 @@ func CreateBookGroupHandler(c *gin.Context) {
 			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
 			return
 		}
-		if HasControlCharacters(bookGroup.Alias.(string)) || CheckEmptyString(bookGroup.Alias.(string)) {
+		if HasControlCharacters(bookGroup.Alias.(string)) {
 			ReportError(c, errors.New("invalid aliases"), "error", http.StatusBadRequest)
 			return
+		}
+		if CheckEmptyString(bookGroup.Alias.(string)) {
+			bookGroup.Alias = nil
 		}
 	}
 	//fmt.Println("Title after ", bookGroup.Title)
@@ -1001,9 +1004,12 @@ func UpdateBookGroupHandler(c *gin.Context) {
 			ReportError(c, errors.New("invalid alias"), "error", http.StatusBadRequest)
 			return
 		}
-		if HasControlCharacters(newBookGroup.Alias.(string)) || CheckEmptyString(newBookGroup.Alias.(string)) {
+		if HasControlCharacters(newBookGroup.Alias.(string)) {
 			ReportError(c, errors.New("invalid alias"), "error", http.StatusBadRequest)
 			return
+		}
+		if CheckEmptyString(newBookGroup.Alias.(string)) {
+			newBookGroup.Alias = oldBookGroup.Aliases
 		}
 	}
 	if newBookGroup.Description == "" {

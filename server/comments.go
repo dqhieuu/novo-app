@@ -20,7 +20,7 @@ type CommentParams struct {
 }
 
 type Comment struct {
-	Id            int32       `json:"id" binding:"required"`
+	CommentId     int32       `json:"commentId" binding:"required"`
 	Comment       string      `json:"comment" binding:"required"`
 	UserName      string      `json:"userName" binding:"required"`
 	UserId        int32       `json:"userId" binding:"required"`
@@ -31,7 +31,7 @@ type Comment struct {
 }
 
 type LatestComment struct {
-	Id            int32       `json:"id" binding:"required"`
+	CommentId     int32       `json:"commentId" binding:"required"`
 	Comment       string      `json:"comment" binding:"required"`
 	UserName      string      `json:"userName" binding:"required"`
 	UserId        int32       `json:"userId" binding:"required"`
@@ -316,7 +316,7 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(chapterComments) > 0 {
 			for _, comment := range chapterComments {
 				resComment := Comment{
-					Id:            comment.ID,
+					CommentId:            comment.ID,
 					Comment:       comment.Content,
 					UserName:      comment.UserName.String,
 					UserId:        comment.Userid,
@@ -366,7 +366,7 @@ func GetCommentsHandler(c *gin.Context) {
 		if len(bookComments) > 0 {
 			for _, comment := range bookComments {
 				resComment := Comment{
-					Id:         comment.ID,
+					CommentId:         comment.ID,
 					Comment:    comment.Content,
 					UserName:   comment.UserName.String,
 					UserId:     comment.Userid,
@@ -452,7 +452,7 @@ func EditCommentHandler(c *gin.Context) {
 			return
 		}
 
-		var content string
+		var content PostComment
 		err = c.ShouldBindJSON(content)
 		if err != nil {
 			ReportError(c, err, "error parsing json", http.StatusBadRequest)
@@ -460,15 +460,15 @@ func EditCommentHandler(c *gin.Context) {
 		}
 
 		reg := regexp.MustCompile(`(\r\n|\n){3,}`)
-		content = reg.ReplaceAllString(content, "\n\n")
-		if len(content) < 10 || len(content) > 500 || HasControlCharacters(content) || CheckEmptyString(content) {
+		content.Comment = reg.ReplaceAllString(content.Comment, "\n\n")
+		if len(content.Comment) < 10 || len(content.Comment) > 500 || HasControlCharacters(content.Comment) || CheckEmptyString(content.Comment) {
 			ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
 			return
 		}
 
 		err = queries.UpdateComment(ctx, db.UpdateCommentParams{
 			ID:      int32(commentId64),
-			Content: content,
+			Content: content.Comment,
 		})
 
 		if err != nil {
@@ -567,13 +567,13 @@ func GetLatestCommentsHandler(c *gin.Context) {
 	if len(comments) > 0 {
 		for _, comment := range comments {
 			tempComment := LatestComment{
-				Id:            comment.ID,
-				Comment:       comment.Content,
-				UserName:      comment.UserName.String,
-				UserId:        comment.Userid,
-				TimePosted:    comment.PostedTime.UnixMicro(),
-				BookId:        comment.Bookid,
-				BookName:      comment.Bookname,
+				CommentId:         comment.ID,
+				Comment:    comment.Content,
+				UserName:   comment.UserName.String,
+				UserId:     comment.Userid,
+				TimePosted: comment.PostedTime.UnixMicro(),
+				BookId:     comment.Bookid,
+				BookName:   comment.Bookname,
 			}
 			if comment.Avatarpath.Valid {
 				tempComment.UserAvatar = comment.Avatarpath.String
