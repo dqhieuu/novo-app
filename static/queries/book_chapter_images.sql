@@ -2,7 +2,7 @@
 INSERT INTO book_chapter_images(book_chapter_id, image_id, rank) VALUES($1, $2, $3);
 
 -- name: ImagesByBookChapter :many
-SELECT i.path
+SELECT i.id, i.path
 FROM book_chapter_images AS bci
 JOIN images AS i ON i.id=bci.image_id
 WHERE bci.book_chapter_id = $1

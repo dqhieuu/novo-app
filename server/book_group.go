@@ -17,17 +17,18 @@ import (
 const limitBookGroup = 40
 
 type BookGroup struct {
-	Name            string      `json:"name"`
-	Alias           interface{} `json:"alias"`
-	Description     interface{} `json:"description"`
-	Views           int64       `json:"views"`
-	LikeCount       int64       `json:"likeCount"`
-	DislikeCount    int64       `json:"dislikeCount"`
-	Authors         []Author    `json:"authors"`
-	Genres          []Genre     `json:"genres"`
-	Chapters        []Chapter   `json:"chapters"`
-	CoverArts       []string    `json:"coverArts"`
-	PrimaryCoverArt interface{} `json:"primaryCoverArt"`
+	Name              string      `json:"name"`
+	Alias             interface{} `json:"alias"`
+	Description       interface{} `json:"description"`
+	Views             int64       `json:"views"`
+	LikeCount         int64       `json:"likeCount"`
+	DislikeCount      int64       `json:"dislikeCount"`
+	Authors           []Author    `json:"authors"`
+	Genres            []Genre     `json:"genres"`
+	Chapters          []Chapter   `json:"chapters"`
+	CoverArts         []Image    `json:"coverArts"`
+	PrimaryCoverArt   interface{} `json:"primaryCoverArt"`
+	PrimaryCoverArtId interface{} `json:"primaryCoverArtId"`
 }
 
 func BookGroupById(id int32) (*db.BookGroupByIdRow, error) {
@@ -330,11 +331,14 @@ func GetBookGroupContentHandler(c *gin.Context) {
 			return
 		}
 		if len(coverArts) > 0 {
-			for _, imagePath := range coverArts {
-				responseObject.CoverArts = append(responseObject.CoverArts, imagePath)
+			for _, image := range coverArts {
+				responseObject.CoverArts = append(responseObject.CoverArts, Image{
+					Path: image.Path,
+					Id:   image.ID,
+				})
 			}
 		} else {
-			responseObject.CoverArts = make([]string, 0)
+			responseObject.CoverArts = make([]Image, 0)
 		}
 
 		//get primary cover art
@@ -350,6 +354,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 				return
 			}
 			responseObject.PrimaryCoverArt = primaryCoverArt.Path
+			responseObject.PrimaryCoverArtId = primaryCoverArt.ID
 		}
 	}
 

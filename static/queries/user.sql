@@ -35,7 +35,8 @@ SELECT users.id,
        users.password,
        r.name as role,
        users.summary,
-       i.path as avatarPath
+       i.path as avatarPath,
+       i.id as avatarId
 FROM users
          JOIN roles r on users.role_id = r.id
          LEFT JOIN images i on users.avatar_image_id = i.id
@@ -92,7 +93,8 @@ WHERE id = $1;
 Update users
 SET email     = $2,
     user_name = $3,
-    summary   = $4
+    summary   = $4,
+    avatar_image_id = $5
 WHERE id = $1;
 
 -- name: CheckUsernameExist :one

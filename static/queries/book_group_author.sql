@@ -39,7 +39,8 @@ WHERE book_group_id = $1;
 SELECT ba.name,
        ba.description,
        ba.aliases,
-       i.path AS avatar
+       i.path AS avatar,
+       i.id as avatarId
 FROM book_authors ba
          LEFT JOIN images i on ba.avatar_image_id = i.id
 WHERE ba.id=$1;
