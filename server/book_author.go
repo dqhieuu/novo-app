@@ -481,10 +481,12 @@ func SearchAuthorHandler(c *gin.Context) {
 
 	var response []Author
 
-	authors, err := queries.SearchAuthors(ctx, sql.NullString{
-		String: searchString,
-		Valid:  true,
-	})
+	words := strings.Fields(searchString)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
+
+	authors, err := queries.SearchAuthors(ctx, strings.Join(words, "&"))
 	if err != nil {
 		ReportError(c, err, "error", 500)
 		return

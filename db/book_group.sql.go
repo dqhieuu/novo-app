@@ -42,16 +42,16 @@ func (q *Queries) BookGroupById(ctx context.Context, id int32) (BookGroupByIdRow
 const bookGroupsByTitle = `-- name: BookGroupsByTitle :many
 SELECT id, title, aliases, description, date_created, owner_id, primary_cover_art_id
 FROM book_groups
-WHERE book_group_tsv @@ to_tsquery($1 || ':*')
+WHERE book_group_tsv @@ to_tsquery(unaccent($1))
 ORDER BY id
 OFFSET $2 ROWS
     FETCH FIRST $3 ROWS ONLY
 `
 
 type BookGroupsByTitleParams struct {
-	Column1 sql.NullString `json:"column1"`
-	Offset  int32          `json:"offset"`
-	Limit   int32          `json:"limit"`
+	Unaccent string `json:"unaccent"`
+	Offset   int32  `json:"offset"`
+	Limit    int32  `json:"limit"`
 }
 
 type BookGroupsByTitleRow struct {
@@ -65,7 +65,7 @@ type BookGroupsByTitleRow struct {
 }
 
 func (q *Queries) BookGroupsByTitle(ctx context.Context, arg BookGroupsByTitleParams) ([]BookGroupsByTitleRow, error) {
-	rows, err := q.db.Query(ctx, bookGroupsByTitle, arg.Column1, arg.Offset, arg.Limit)
+	rows, err := q.db.Query(ctx, bookGroupsByTitle, arg.Unaccent, arg.Offset, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -556,10 +556,10 @@ func (q *Queries) NumberBookGroup(ctx context.Context) (int64, error) {
 const numberBookGroupSearchResult = `-- name: NumberBookGroupSearchResult :one
 SELECT COUNT(id)
 FROM book_groups
-WHERE book_group_tsv @@ to_tsquery($1 || ':*')
+WHERE book_group_tsv @@ to_tsquery(unaccent($1))
 `
 
-func (q *Queries) NumberBookGroupSearchResult(ctx context.Context, query sql.NullString) (int64, error) {
+func (q *Queries) NumberBookGroupSearchResult(ctx context.Context, query string) (int64, error) {
 	row := q.db.QueryRow(ctx, numberBookGroupSearchResult, query)
 	var count int64
 	err := row.Scan(&count)
@@ -670,16 +670,16 @@ FROM book_groups AS bg
     WHERE bct.book_group_id = bg.id
     ) bct ON TRUE
          LEFT JOIN images i ON bg.primary_cover_art_id = i.id
-WHERE bg.book_group_tsv @@ to_tsquery($3 || ':*')
+WHERE bg.book_group_tsv @@ to_tsquery(unaccent($3))
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
 ORDER BY last_updated DESC  NULLS LAST
 OFFSET $1 ROWS FETCH FIRST $2 ROWS ONLY
 `
 
 type SearchResultParams struct {
-	Offset int32          `json:"offset"`
-	Limit  int32          `json:"limit"`
-	Query  sql.NullString `json:"query"`
+	Offset int32  `json:"offset"`
+	Limit  int32  `json:"limit"`
+	Query  string `json:"query"`
 }
 
 type SearchResultRow struct {
@@ -730,7 +730,7 @@ SELECT bg.title AS title,
 FROM book_groups AS bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
          LEFT JOIN book_chapters bct on bg.id = bct.book_group_id
-WHERE bg.book_group_tsv @@ to_tsquery($1 || ':*')
+WHERE bg.book_group_tsv @@ to_tsquery(unaccent($1))
 GROUP BY bg.id
 LIMIT 5
 `
@@ -742,7 +742,7 @@ type SearchSuggestionRow struct {
 	LatestChapter interface{} `json:"latestChapter"`
 }
 
-func (q *Queries) SearchSuggestion(ctx context.Context, query sql.NullString) ([]SearchSuggestionRow, error) {
+func (q *Queries) SearchSuggestion(ctx context.Context, query string) ([]SearchSuggestionRow, error) {
 	rows, err := q.db.Query(ctx, searchSuggestion, query)
 	if err != nil {
 		return nil, err

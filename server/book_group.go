@@ -45,11 +45,12 @@ func BookGroupById(id int32) (*db.BookGroupByIdRow, error) {
 func BookGroupsByTitle(title string, page int32) ([]*db.BookGroupsByTitleRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
+	words := strings.Fields(title)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
 	bookGroups, err := queries.BookGroupsByTitle(ctx, db.BookGroupsByTitleParams{
-		Column1: sql.NullString{
-			String: title,
-			Valid:  true, // chuỗi rỗng sẽ liệt kê tất cả
-		},
+		Unaccent: strings.Join(words, "&"),
 		Offset: (page - 1) * limitBookGroup,
 		Limit:  limitBookGroup,
 	})
@@ -629,10 +630,11 @@ func GetSearchSuggestionHandler(c *gin.Context) {
 	query := c.Param("query")
 
 	query = CleanSearchString(query)
-	books, err := queries.SearchSuggestion(ctx, sql.NullString{
-		String: query,
-		Valid:  true,
-	})
+	words := strings.Fields(query)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
+	books, err := queries.SearchSuggestion(ctx, strings.Join(words, "&"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -663,12 +665,14 @@ func GetSearchResultHandler(c *gin.Context) {
 	if page < 1 {
 		page = 1
 	}
+	words := strings.Fields(query)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
+	newQuery := strings.Join(words, "&")
 
 	books, err := queries.SearchResult(ctx, db.SearchResultParams{
-		Query: sql.NullString{
-			String: query,
-			Valid:  true,
-		},
+		Query: newQuery,
 		Offset: (page - 1) * limitBookGroup,
 		Limit:  limitBookGroup,
 	})
@@ -682,10 +686,7 @@ func GetSearchResultHandler(c *gin.Context) {
 	}
 
 	var latestPage interface{}
-	tmp, err := queries.NumberBookGroupSearchResult(ctx, sql.NullString{
-		String: query,
-		Valid:  true,
-	})
+	tmp, err := queries.NumberBookGroupSearchResult(ctx, newQuery)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error get latestPage": err.Error()})
 		return
