@@ -149,7 +149,8 @@ SELECT users.id,
        users.password,
        r.name as role,
        users.summary,
-       i.path as avatarPath
+       i.path as avatarPath,
+       i.id as avatarId
 FROM users
          JOIN roles r on users.role_id = r.id
          LEFT JOIN images i on users.avatar_image_id = i.id
@@ -164,6 +165,7 @@ type GetUserInfoRow struct {
 	Role       string         `json:"role"`
 	Summary    sql.NullString `json:"summary"`
 	Avatarpath sql.NullString `json:"avatarpath"`
+	Avatarid   sql.NullInt32  `json:"avatarid"`
 }
 
 func (q *Queries) GetUserInfo(ctx context.Context, id int32) (GetUserInfoRow, error) {
@@ -177,6 +179,7 @@ func (q *Queries) GetUserInfo(ctx context.Context, id int32) (GetUserInfoRow, er
 		&i.Role,
 		&i.Summary,
 		&i.Avatarpath,
+		&i.Avatarid,
 	)
 	return i, err
 }
@@ -270,15 +273,17 @@ const updateUserInfo = `-- name: UpdateUserInfo :exec
 Update users
 SET email     = $2,
     user_name = $3,
-    summary   = $4
+    summary   = $4,
+    avatar_image_id = $5
 WHERE id = $1
 `
 
 type UpdateUserInfoParams struct {
-	ID       int32          `json:"id"`
-	Email    string         `json:"email"`
-	UserName sql.NullString `json:"userName"`
-	Summary  sql.NullString `json:"summary"`
+	ID            int32          `json:"id"`
+	Email         string         `json:"email"`
+	UserName      sql.NullString `json:"userName"`
+	Summary       sql.NullString `json:"summary"`
+	AvatarImageID sql.NullInt32  `json:"avatarImageID"`
 }
 
 func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) error {
@@ -287,6 +292,7 @@ func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) 
 		arg.Email,
 		arg.UserName,
 		arg.Summary,
+		arg.AvatarImageID,
 	)
 	return err
 }

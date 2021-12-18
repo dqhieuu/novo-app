@@ -19,26 +19,31 @@ func (q *Queries) DeleteImageOfBookChapter(ctx context.Context, bookChapterID in
 }
 
 const imagesByBookChapter = `-- name: ImagesByBookChapter :many
-SELECT i.path
+SELECT i.id, i.path
 FROM book_chapter_images AS bci
 JOIN images AS i ON i.id=bci.image_id
 WHERE bci.book_chapter_id = $1
 ORDER BY bci.rank ASC
 `
 
-func (q *Queries) ImagesByBookChapter(ctx context.Context, bookChapterID int32) ([]string, error) {
+type ImagesByBookChapterRow struct {
+	ID   int32  `json:"id"`
+	Path string `json:"path"`
+}
+
+func (q *Queries) ImagesByBookChapter(ctx context.Context, bookChapterID int32) ([]ImagesByBookChapterRow, error) {
 	rows, err := q.db.Query(ctx, imagesByBookChapter, bookChapterID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []ImagesByBookChapterRow
 	for rows.Next() {
-		var path string
-		if err := rows.Scan(&path); err != nil {
+		var i ImagesByBookChapterRow
+		if err := rows.Scan(&i.ID, &i.Path); err != nil {
 			return nil, err
 		}
-		items = append(items, path)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

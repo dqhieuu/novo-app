@@ -34,6 +34,7 @@ type UserProfile struct {
 	Name        string       `json:"name"`
 	Role        string       `json:"role"`
 	Avatar      interface{}  `json:"avatar"`
+	AvatarId    interface{}  `json:"avatarId"`
 	Description interface{}  `json:"description"`
 	BookPosted  []BookByUser `json:"bookPosted"`
 }
@@ -64,6 +65,7 @@ type ChangeUserInfo struct {
 	Email       interface{} `json:"email"`
 	Username    interface{} `json:"username"`
 	Description interface{} `json:"description"`
+	Avatar      interface{} `json:"avatar"`
 }
 
 func EqualPasswords(hashedPassword, password []byte) bool {
@@ -279,7 +281,7 @@ func GetRoleHandler(c *gin.Context) {
 	}
 	if len(userPermission) > 0 {
 		for _, perm := range userPermission {
-			userInfo.Permission = append(userInfo.Permission, perm.Module + "." + perm.Action)
+			userInfo.Permission = append(userInfo.Permission, perm.Module+"."+perm.Action)
 		}
 	} else {
 		userInfo.Permission = make([]string, 0)
@@ -328,6 +330,9 @@ func GetUserInfoByIdHandler(c *gin.Context) {
 	}
 	if userInfo.Avatarpath.Valid {
 		userProfile.Avatar = userInfo.Avatarpath.String
+	}
+	if userInfo.Avatarid.Valid {
+		userProfile.AvatarId = userInfo.Avatarid.Int32
 	}
 
 	bookGroups, err := queries.BookGroupsByUser(ctx, userId)
@@ -531,6 +536,21 @@ func ChangeCurrentUserInfoHandler(c *gin.Context) {
 	} else {
 		updateInfoParam.Summary = user.Summary
 	}
+
+	if newUserInfo.Avatar != nil {
+		_, ok := newUserInfo.Avatar.(float64)
+		if !ok {
+			ReportError(c, errors.New("invalid avatar"), "error", http.StatusBadRequest)
+			return
+		}
+		updateInfoParam.AvatarImageID = sql.NullInt32{
+			Int32: int32(newUserInfo.Avatar.(float64)),
+			Valid: true,
+		}
+	} else {
+		updateInfoParam.AvatarImageID = user.Avatarid
+	}
+
 	updateInfoParam.ID = userId
 
 	err = queries.UpdateUserInfo(ctx, updateInfoParam)

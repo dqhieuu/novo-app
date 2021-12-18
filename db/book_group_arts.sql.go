@@ -8,25 +8,30 @@ import (
 )
 
 const getBookGroupCoverArts = `-- name: GetBookGroupCoverArts :many
-SELECT images.path
+SELECT images.id, images.path
 FROM images JOIN book_group_arts bga on images.id = bga.image_id
             JOIN book_groups bg on bga.book_group_id = bg.id
 WHERE bg.id = $1
 `
 
-func (q *Queries) GetBookGroupCoverArts(ctx context.Context, id int32) ([]string, error) {
+type GetBookGroupCoverArtsRow struct {
+	ID   int32  `json:"id"`
+	Path string `json:"path"`
+}
+
+func (q *Queries) GetBookGroupCoverArts(ctx context.Context, id int32) ([]GetBookGroupCoverArtsRow, error) {
 	rows, err := q.db.Query(ctx, getBookGroupCoverArts, id)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []string
+	var items []GetBookGroupCoverArtsRow
 	for rows.Next() {
-		var path string
-		if err := rows.Scan(&path); err != nil {
+		var i GetBookGroupCoverArtsRow
+		if err := rows.Scan(&i.ID, &i.Path); err != nil {
 			return nil, err
 		}
-		items = append(items, path)
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

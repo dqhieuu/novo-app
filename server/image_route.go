@@ -30,6 +30,11 @@ import (
 const MaxSize = 1024 * 1024 * 10
 const RootFolder = "static/images"
 
+type Image struct {
+	Path string `json:"path"`
+	Id   int32  `json:"id"`
+}
+
 type ResizeImageParams struct {
 	InType  string `json:"in_type"`
 	OutType string `json:"out_type"`
@@ -497,7 +502,7 @@ func CheckImageExistById(id int32) (bool, error) {
 	return result, nil
 }
 
-func ImagesByBookChapter(bookChapterId int32) (*[]string, error) {
+func ImagesByBookChapter(bookChapterId int32) (*[]db.ImagesByBookChapterRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
 	images, err := queries.ImagesByBookChapter(ctx, bookChapterId)
