@@ -366,7 +366,7 @@ func GetBookChapterContentHandler(c *gin.Context) {
 			return
 		}
 		if *images == nil {
-			images = &[]string{}
+			images = &[]db.ImagesByBookChapterRow{}
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"type":          bookChapter.Type,

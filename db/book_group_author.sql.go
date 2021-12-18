@@ -183,7 +183,8 @@ const getBookAuthor = `-- name: GetBookAuthor :one
 SELECT ba.name,
        ba.description,
        ba.aliases,
-       i.path AS avatar
+       i.path AS avatar,
+       i.id as avatarId
 FROM book_authors ba
          LEFT JOIN images i on ba.avatar_image_id = i.id
 WHERE ba.id=$1
@@ -194,6 +195,7 @@ type GetBookAuthorRow struct {
 	Description sql.NullString `json:"description"`
 	Aliases     sql.NullString `json:"aliases"`
 	Avatar      sql.NullString `json:"avatar"`
+	Avatarid    sql.NullInt32  `json:"avatarid"`
 }
 
 func (q *Queries) GetBookAuthor(ctx context.Context, id int32) (GetBookAuthorRow, error) {
@@ -204,6 +206,7 @@ func (q *Queries) GetBookAuthor(ctx context.Context, id int32) (GetBookAuthorRow
 		&i.Description,
 		&i.Aliases,
 		&i.Avatar,
+		&i.Avatarid,
 	)
 	return i, err
 }

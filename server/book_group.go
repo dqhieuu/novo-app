@@ -16,17 +16,18 @@ import (
 const limitBookGroup = 40
 
 type BookGroup struct {
-	Name            string      `json:"name"`
-	Alias           interface{} `json:"alias"`
-	Description     interface{} `json:"description"`
-	Views           int64       `json:"views"`
-	LikeCount       int64       `json:"likeCount"`
-	DislikeCount    int64       `json:"dislikeCount"`
-	Authors         []Author    `json:"authors"`
-	Genres          []Genre     `json:"genres"`
-	Chapters        []Chapter   `json:"chapters"`
-	CoverArts       []string    `json:"coverArts"`
-	PrimaryCoverArt interface{} `json:"primaryCoverArt"`
+	Name              string      `json:"name"`
+	Alias             interface{} `json:"alias"`
+	Description       interface{} `json:"description"`
+	Views             int64       `json:"views"`
+	LikeCount         int64       `json:"likeCount"`
+	DislikeCount      int64       `json:"dislikeCount"`
+	Authors           []Author    `json:"authors"`
+	Genres            []Genre     `json:"genres"`
+	Chapters          []Chapter   `json:"chapters"`
+	CoverArts         []Image    `json:"coverArts"`
+	PrimaryCoverArt   interface{} `json:"primaryCoverArt"`
+	PrimaryCoverArtId interface{} `json:"primaryCoverArtId"`
 }
 
 func BookGroupById(id int32) (*db.BookGroupByIdRow, error) {
@@ -43,11 +44,12 @@ func BookGroupById(id int32) (*db.BookGroupByIdRow, error) {
 func BookGroupsByTitle(title string, page int32) ([]*db.BookGroupsByTitleRow, error) {
 	ctx := context.Background()
 	queries := db.New(db.Pool())
+	words := strings.Fields(title)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
 	bookGroups, err := queries.BookGroupsByTitle(ctx, db.BookGroupsByTitleParams{
-		Column1: sql.NullString{
-			String: title,
-			Valid:  true, // chuỗi rỗng sẽ liệt kê tất cả
-		},
+		Unaccent: strings.Join(words, "&"),
 		Offset: (page - 1) * limitBookGroup,
 		Limit:  limitBookGroup,
 	})
@@ -329,11 +331,14 @@ func GetBookGroupContentHandler(c *gin.Context) {
 			return
 		}
 		if len(coverArts) > 0 {
-			for _, imagePath := range coverArts {
-				responseObject.CoverArts = append(responseObject.CoverArts, imagePath)
+			for _, image := range coverArts {
+				responseObject.CoverArts = append(responseObject.CoverArts, Image{
+					Path: image.Path,
+					Id:   image.ID,
+				})
 			}
 		} else {
-			responseObject.CoverArts = make([]string, 0)
+			responseObject.CoverArts = make([]Image, 0)
 		}
 
 		//get primary cover art
@@ -349,6 +354,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 				return
 			}
 			responseObject.PrimaryCoverArt = primaryCoverArt.Path
+			responseObject.PrimaryCoverArtId = primaryCoverArt.ID
 		}
 	}
 
@@ -623,10 +629,11 @@ func GetSearchSuggestionHandler(c *gin.Context) {
 	query := c.Param("query")
 
 	query = CleanSearchString(query)
-	books, err := queries.SearchSuggestion(ctx, sql.NullString{
-		String: query,
-		Valid:  true,
-	})
+	words := strings.Fields(query)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
+	books, err := queries.SearchSuggestion(ctx, strings.Join(words, "&"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -657,12 +664,14 @@ func GetSearchResultHandler(c *gin.Context) {
 	if page < 1 {
 		page = 1
 	}
+	words := strings.Fields(query)
+	for i := 0; i < len(words); i++ {
+		words[i] += ":*"
+	}
+	newQuery := strings.Join(words, "&")
 
 	books, err := queries.SearchResult(ctx, db.SearchResultParams{
-		Query: sql.NullString{
-			String: query,
-			Valid:  true,
-		},
+		Query: newQuery,
 		Offset: (page - 1) * limitBookGroup,
 		Limit:  limitBookGroup,
 	})
@@ -676,10 +685,7 @@ func GetSearchResultHandler(c *gin.Context) {
 	}
 
 	var latestPage interface{}
-	tmp, err := queries.NumberBookGroupSearchResult(ctx, sql.NullString{
-		String: query,
-		Valid:  true,
-	})
+	tmp, err := queries.NumberBookGroupSearchResult(ctx, newQuery)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error get latestPage": err.Error()})
 		return
