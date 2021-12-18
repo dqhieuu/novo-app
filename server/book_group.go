@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"unicode"
 )
 
 const limitBookGroup = 40
@@ -509,13 +508,13 @@ func ValidTitle(title *string) error {
 		stringErr := fmt.Sprintf("Name must be more than 1 character")
 		return errors.New(stringErr)
 	}
-	for i := 0; i < len(*title); i++ {
-		c := (*title)[i]
-		if unicode.IsControl(rune(c)) {
-			stringErr := fmt.Sprintf("Name cannot contain control characters or newline characters")
-			return errors.New(stringErr)
-		}
-	}
+	//for i := 0; i < len(*title); i++ {
+	//	c := (*title)[i]
+	//	if unicode.IsControl(rune(c)) {
+	//		stringErr := fmt.Sprintf("Name cannot contain control characters or newline characters")
+	//		return errors.New(stringErr)
+	//	}
+	//}
 	if len(*title) > 200 {
 		*title = (*title)[0:200]
 	}
@@ -528,16 +527,16 @@ func ValidDescription(description *string) error {
 	if len(*description) > 500 {
 		*description = (*description)[0:500]
 	}
-	for i := 0; i < len(*description); i++ {
-		c := (*description)[i]
-		if c == '\r' || c == '\n' {
-			continue
-		}
-		if unicode.IsControl(rune(c)) {
-			stringErr := fmt.Sprintf("Description cannot contain control characters")
-			return errors.New(stringErr)
-		}
-	}
+	//for i := 0; i < len(*description); i++ {
+	//	c := (*description)[i]
+	//	if c == '\r' || c == '\n' {
+	//		continue
+	//	}
+	//	if unicode.IsControl(rune(c)) {
+	//		stringErr := fmt.Sprintf("Description cannot contain control characters")
+	//		return errors.New(stringErr)
+	//	}
+	//}
 	return nil
 }
 
