@@ -452,7 +452,7 @@ func EditCommentHandler(c *gin.Context) {
 			return
 		}
 
-		var content string
+		var content PostComment
 		err = c.ShouldBindJSON(content)
 		if err != nil {
 			ReportError(c, err, "error parsing json", http.StatusBadRequest)
@@ -460,15 +460,15 @@ func EditCommentHandler(c *gin.Context) {
 		}
 
 		reg := regexp.MustCompile(`(\r\n|\n){3,}`)
-		content = reg.ReplaceAllString(content, "\n\n")
-		if len(content) < 10 || len(content) > 500 || HasControlCharacters(content) || CheckEmptyString(content) {
+		content.Comment = reg.ReplaceAllString(content.Comment, "\n\n")
+		if len(content.Comment) < 10 || len(content.Comment) > 500 || HasControlCharacters(content.Comment) || CheckEmptyString(content.Comment) {
 			ReportError(c, errors.New("invalid comment"), "error", http.StatusBadRequest)
 			return
 		}
 
 		err = queries.UpdateComment(ctx, db.UpdateCommentParams{
 			ID:      int32(commentId64),
-			Content: content,
+			Content: content.Comment,
 		})
 
 		if err != nil {
