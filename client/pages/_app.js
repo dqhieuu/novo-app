@@ -1,10 +1,15 @@
-import Layout from '../components/layout';
+import Layout from '../components/layout/layout';
 import '../styles/globals.css';
 // import "../components/searchBar/searchBar.css";
+import NextNProgress from 'nextjs-progressbar';
+import '@yaireo/tagify/dist/tagify.css'; // Tagify CSS
+import { ToastContainer, toast } from 'react-toastify';
+
+import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useEffect } from 'react';
-import MangaContextProvider from '../Context/MangaContext';
-import UserContextProvider from '../Context/UserContext';
+import MangaContextProvider from '../context/manga-Context';
+import UserContextProvider from '../context/user-Context';
 import AOS from 'aos';
 import 'aos/dist/aos.css'; // You can also use <link> for styles
 // ..
@@ -17,6 +22,8 @@ function MyApp({ Component, pageProps }) {
     <MangaContextProvider>
       <UserContextProvider>
         <Layout>
+          <ToastContainer />
+          <NextNProgress />
           <Component {...pageProps} />
         </Layout>
       </UserContextProvider>

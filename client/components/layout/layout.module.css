@@ -1,0 +1,13 @@
+.genreContainer {
+  width: 500px;
+}
+.item:hover {
+  cursor: pointer;
+  color: '#2ecc71';
+}
+
+@media screen and (max-width: 560px) {
+  .genreContainer {
+    width: 100%;
+  }
+}
