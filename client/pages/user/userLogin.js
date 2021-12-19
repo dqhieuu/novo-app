@@ -1,8 +1,23 @@
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import { FaArrowLeft, FaGooglePlusG } from 'react-icons/fa';
+import { UserContext } from '../../context/user-Context';
+import { useForm } from 'react-hook-form';
+import WEB_CONSTANTS from '../../utilities/constants';
 export default function Login() {
   const router = useRouter();
+  const { update } = useContext(UserContext);
+  const server = WEB_CONSTANTS.SERVER;
+  const [formData, setFormData] = useState({
+    userNameOrEmail: '',
+    password: '',
+  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
   return (
     <div
       className="offset-md-4 col-lg-4 col-12 mt-5 p-3"
@@ -28,6 +43,16 @@ export default function Login() {
             id="email"
             placeholder="Enter email"
             name="email"
+            {...register('email', {
+              required: true,
+              minLength: 6,
+            })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                userNameOrEmail: e.target.value,
+              })
+            }
           ></input>
         </div>
         <div className="mb-3">
@@ -76,7 +101,7 @@ export default function Login() {
         </button>
         <button
           className="btn btn-light mt-3"
-          onClick={() => router.replace('/')}
+          onClick={() => router.replace('/user/userSignup')}
         >
           Chưa có tài khoản? Đăng ký ngay!
         </button>
