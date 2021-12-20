@@ -582,10 +582,10 @@ func GetLatestCommentsHandler(c *gin.Context) {
 				tempComment.ChapterId = comment.Chapterid.Int32
 			}
 			if comment.Chaptername.Valid {
-				tempComment.ChapterName = comment.Chaptername
+				tempComment.ChapterName = comment.Chaptername.String
 			}
 			if comment.ChapterNumber.Valid {
-				tempComment.ChapterNumber = comment.ChapterNumber
+				tempComment.ChapterNumber = comment.ChapterNumber.Float64
 			}
 			responseObj = append(responseObj, tempComment)
 		}
