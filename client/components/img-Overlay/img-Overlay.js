@@ -13,14 +13,14 @@ export default function ImgOverlay({
         style={{
           borderRadius: '0.75rem',
           overflow: 'hidden',
+          height: '300px',
+          aspectRatio: '3/4',
         }}
       >
         <Image
           src={srcImg}
           alt=""
-          layout="responsive"
-          height="200"
-          width="400"
+          layout="fill"
           objectFit="cover"
         />
       </div>

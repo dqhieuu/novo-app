@@ -64,7 +64,10 @@ export default function EditManga({ manga, id }) {
           role="tabpanel"
           aria-labelledby="week-tab"
         >
-          <EditDetail manga={manga}></EditDetail>
+          <EditDetail
+            manga={manga}
+            bookGroupId={id}
+          ></EditDetail>
         </div>
         <div
           className="tab-pane "

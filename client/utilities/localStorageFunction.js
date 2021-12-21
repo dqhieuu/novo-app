@@ -1,17 +1,32 @@
-export const addElement = (object, id) => {
-  if (localStorage.getItem('data') == null) {
-    localStorage.setItem('data', '[]');
+export const addToFavorite = (
+  bookGroupId,
+  chapter = null,
+  manga
+) => {
+  const newObject = {
+    name: manga.name,
+    id: bookGroupId,
+    latestChapter: chapter && chapter.chapterNumber,
+    image: manga.primaryCoverArt,
+    chapterId: chapter && chapter.id,
+  };
+  if (localStorage.getItem('favorite') == null) {
+    localStorage.setItem('favorite', '[]');
   }
   let checkExisted = false;
-  const oldData = JSON.parse(localStorage.getItem('data'));
+  const oldData = JSON.parse(
+    localStorage.getItem('favorite')
+  );
 
-  oldData.forEach((ele) => {
-    if (ele.id === id) {
+  oldData.forEach((ele, index) => {
+    if (ele.id === bookGroupId) {
       checkExisted = true;
+      oldData.splice(index, 1);
+      oldData.unshift(newObject);
     }
   });
-  if (checkExisted === false) oldData.push(object);
-  localStorage.setItem('data', JSON.stringify(oldData));
+  if (checkExisted === false) oldData.unshift(newObject);
+  localStorage.setItem('favorite', JSON.stringify(oldData));
 };
 export const removeElement = (id) => {
   let data = JSON.parse(localStorage.getItem('data'));
@@ -33,6 +48,9 @@ export const addToHistory = (
     latestChapter: chapter.chapterNumber,
     image: manga.primaryCoverArt,
     chapterId: chapter.id,
+    views: manga.views,
+    alias: manga.alias,
+    likeCount: manga.likeCount,
   };
   if (localStorage.getItem('history') == null) {
     localStorage.setItem('history', '[]');
@@ -45,9 +63,10 @@ export const addToHistory = (
   oldData.forEach((ele, index) => {
     if (ele.id === bookGroupId) {
       checkExisted = true;
-      oldData.splice(index, 1, newObject);
+      oldData.splice(index, 1);
+      oldData.unshift(newObject);
     }
   });
-  if (checkExisted === false) oldData.push(newObject);
+  if (checkExisted === false) oldData.unshift(newObject);
   localStorage.setItem('history', JSON.stringify(oldData));
 };
