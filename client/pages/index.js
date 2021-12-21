@@ -32,6 +32,10 @@ export default function Home() {
     typeof window !== 'undefined'
       ? JSON.parse(localStorage.getItem('history'))
       : [];
+  const favoriteBooks =
+    typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('favorite'))
+      : [];
 
   return (
     <div
@@ -123,7 +127,6 @@ export default function Home() {
         ) : (
           ''
         )}
-
         <div className="row">
           <div className="col-sm-8">
             <h5
@@ -196,81 +199,6 @@ export default function Home() {
             className="col-12 col-sm-4 mt-4"
             data-aos="fade-up"
           >
-            {historyBook && (
-              <div>
-                <h5
-                  style={{
-                    borderLeft: '5px solid #8e44ad',
-                    color: '#8e44ad',
-                  }}
-                  className="ps-2 mt-3"
-                >
-                  LỊCH SỬ ĐỌC
-                </h5>
-                <div
-                  style={{
-                    height: '500px',
-                    overflowY: 'auto',
-                    borderRadius: '0.75rem',
-                    border: '1px solid lightgray',
-                  }}
-                >
-                  {historyBook &&
-                    historyBook.slice(0, 5).map((book) => (
-                      <div
-                        key={book.id}
-                        className={`mb-2 row pb-2 `}
-                        style={{
-                          borderBottom:
-                            '1px solid lightgrey',
-                        }}
-                      >
-                        <div className={`col-3 ms-2 mt-2 `}>
-                          <Link
-                            href={`/manga/${book.id}`}
-                            passHref
-                          >
-                            <div
-                              style={{
-                                width: '80px',
-                                aspectRatio: '1/1',
-                                position: 'relative',
-                              }}
-                            >
-                              <Image
-                                src={`${server}/image/${book.image}`}
-                                alt="Book Cover Art"
-                                layout="fill"
-                                objectFit="cover"
-                              ></Image>
-                            </div>
-                          </Link>
-                        </div>
-                        <div className="col-8 mt-2">
-                          <Link
-                            href={`/manga/${book.id}`}
-                            passHref
-                          >
-                            <h5 className={styles.object}>
-                              {book.name}
-                            </h5>
-                          </Link>
-
-                          <Link
-                            href={`/chapter/${book.chapterId}`}
-                            passHref
-                          >
-                            <p
-                              className={styles.object}
-                              style={{ color: '#bdc3c7' }}
-                            >{`Đọc tiếp chapter ${book.latestChapter}`}</p>
-                          </Link>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
             <h5
               style={{
                 borderLeft: '5px solid green',
@@ -355,6 +283,175 @@ export default function Home() {
                 <ByMonth></ByMonth>
               </div>
             </div>
+            {Object.keys(userInfo).length > 0 &&
+              historyBook && (
+                <div>
+                  <h5
+                    style={{
+                      borderLeft: '5px solid #8e44ad',
+                      color: '#8e44ad',
+                    }}
+                    className="ps-2 mt-3"
+                  >
+                    LỊCH SỬ ĐỌC
+                  </h5>
+                  <div
+                    style={{
+                      height: '500px',
+                      overflowY: 'auto',
+                      borderRadius: '0.75rem',
+                      border: '1px solid lightgray',
+                    }}
+                  >
+                    {historyBook &&
+                      historyBook
+                        .slice(0, 5)
+                        .map((book) => (
+                          <div
+                            key={book.id}
+                            className={`mb-2 row pb-2 `}
+                            style={{
+                              borderBottom:
+                                '1px solid lightgrey',
+                            }}
+                          >
+                            <div
+                              className={`col-3 ms-2 mt-2 `}
+                            >
+                              <Link
+                                href={`/manga/${book.id}`}
+                                passHref
+                              >
+                                <div
+                                  style={{
+                                    width: '80px',
+                                    aspectRatio: '1/1',
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <Image
+                                    src={`${server}/image/${book.image}`}
+                                    alt="Book Cover Art"
+                                    layout="fill"
+                                    objectFit="cover"
+                                  ></Image>
+                                </div>
+                              </Link>
+                            </div>
+                            <div className="col-8 mt-2">
+                              <Link
+                                href={`/manga/${book.id}`}
+                                passHref
+                              >
+                                <h5
+                                  className={styles.object}
+                                >
+                                  {book.name}
+                                </h5>
+                              </Link>
+
+                              <Link
+                                href={`/chapter/${book.chapterId}`}
+                                passHref
+                              >
+                                <p
+                                  className={styles.object}
+                                  style={{
+                                    color: '#bdc3c7',
+                                  }}
+                                >{`Đọc tiếp chapter ${book.latestChapter}`}</p>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                  </div>
+                </div>
+              )}
+            {Object.keys(userInfo).length > 0 &&
+              favoriteBooks && (
+                <div>
+                  <h5
+                    style={{
+                      borderLeft: '5px solid #e74c3c',
+                      color: '#e74c3c',
+                    }}
+                    className="ps-2 mt-3"
+                  >
+                    TRUYỆN YÊU THÍCH
+                  </h5>
+                  <div
+                    style={{
+                      height: '500px',
+                      overflowY: 'auto',
+                      borderRadius: '0.75rem',
+                      border: '1px solid lightgray',
+                    }}
+                  >
+                    {favoriteBooks &&
+                      favoriteBooks
+                        .slice(0, 5)
+                        .map((book) => (
+                          <div
+                            key={book.id}
+                            className={`mb-2 row pb-2 `}
+                            style={{
+                              borderBottom:
+                                '1px solid lightgrey',
+                            }}
+                          >
+                            <div
+                              className={`col-3 ms-2 mt-2 `}
+                            >
+                              <Link
+                                href={`/manga/${book.id}`}
+                                passHref
+                              >
+                                <div
+                                  style={{
+                                    width: '80px',
+                                    aspectRatio: '1/1',
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <Image
+                                    src={`${server}/image/${book.image}`}
+                                    alt="Book Cover Art"
+                                    layout="fill"
+                                    objectFit="cover"
+                                  ></Image>
+                                </div>
+                              </Link>
+                            </div>
+                            <div className="col-8 mt-2">
+                              <Link
+                                href={`/manga/${book.id}`}
+                                passHref
+                              >
+                                <h5
+                                  className={styles.object}
+                                >
+                                  {book.name}
+                                </h5>
+                              </Link>
+
+                              <Link
+                                href={`/chapter/${book.chapterId}`}
+                                passHref
+                              >
+                                <p
+                                  className={styles.object}
+                                  style={{
+                                    color: '#bdc3c7',
+                                  }}
+                                >{`Đọc tiếp chapter ${book.latestChapter}`}</p>
+                              </Link>
+                            </div>
+                          </div>
+                        ))}
+                  </div>
+                </div>
+              )}
+
             <h5
               style={{
                 borderLeft: '5px solid #3498db',
@@ -366,13 +463,74 @@ export default function Home() {
             </h5>
             <div
               className="border"
-              style={{ height: '500px', overflowY: 'auto' }}
+              style={{
+                height: '500px',
+                overflowY: 'auto',
+                borderRadius: '0.75rem',
+              }}
             >
               {latestComment &&
                 latestComment.map((comment) => (
-                  <div key={comment.commentId}>
-                    <div className="d-flex justify-content-between">
-                      <h5>{comment.bookName}</h5>
+                  <div
+                    key={comment.commentId}
+                    className="border-bottom"
+                  >
+                    <div className="d-flex justify-content-between ps-2 pe-2 pt-2">
+                      <Link
+                        href={'/manga/' + comment.bookId}
+                        passHref
+                      >
+                        <p className={styles.object}>
+                          {comment.bookName}
+                        </p>
+                      </Link>
+                      <Link
+                        href={
+                          'chapter/' + comment.chapterId
+                        }
+                        passHref
+                      >
+                        <p className={styles.object}>
+                          {comment.chapterNumber
+                            ? 'Chap ' +
+                              comment.chapterNumber
+                            : ' '}
+                        </p>
+                      </Link>
+                    </div>
+                    <div className="d-flex  p-2">
+                      <div
+                        style={{
+                          width: '80px',
+                          aspectRatio: '1/1',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          borderRadius: '0.75rem',
+                        }}
+                      >
+                        <Link
+                          href={'/user/' + comment.userId}
+                          passHref
+                        >
+                          <Image
+                            src={`${server}/image/${comment.userAvatar}`}
+                            alt="Describe"
+                            objectFit="cover"
+                            layout="fill"
+                          ></Image>
+                        </Link>
+                      </div>
+                      <div className="ms-4 d-flex flex-column justify-content-between">
+                        <Link
+                          href={'/user/' + comment.userId}
+                          passHref
+                        >
+                          <h5 className={styles.object}>
+                            {comment.userName}
+                          </h5>
+                        </Link>
+                        <p>{comment.comment}</p>
+                      </div>
                     </div>
                   </div>
                 ))}

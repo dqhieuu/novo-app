@@ -21,7 +21,6 @@ export default function Layout({ children }) {
   const { update, userInfo } = useContext(UserContext);
   const router = useRouter();
   const server = WEB_CONSTANTS.SERVER;
-  console.log(genres);
 
   useEffect(() => {
     const { provider, code } = router.query;
@@ -50,11 +49,6 @@ export default function Layout({ children }) {
           })();
           break;
       }
-      // chắc đc rồi
-      // có hàm gì bị lỗi kìa
-      // còn gì nữa ko nhỉ
-      // tạm thời chưa nghĩ ra, để tôi làm đã
-      // à để tét cái
     } else if (isValidToken) {
       (async () => {
         update(
@@ -80,7 +74,22 @@ export default function Layout({ children }) {
       <nav className="navbar navbar-expand-sm navbar-dark bg-dark sticky-top ">
         <div className="container">
           <Link href="/" passHref>
-            <a className="navbar-brand">Logo</a>
+            <div
+              className="navbar-brand"
+              style={{
+                width: '80px',
+                aspectRatio: '4/3',
+                overflow: 'hidden',
+                position: 'relative',
+              }}
+            >
+              <Image
+                src={'/images/logoWhite.png'}
+                alt="logo"
+                layout="fill"
+                objectFit="cover"
+              ></Image>
+            </div>
           </Link>
 
           <button
@@ -140,12 +149,6 @@ export default function Layout({ children }) {
                   <a className="nav-link">BXH</a>
                 </Link>
               </li>
-
-              <li className="nav-item">
-                <a className="nav-link" href="#">
-                  Donate
-                </a>
-              </li>
             </ul>
             <Link href="/upload-Manga/upload-Manga">
               {Object.keys(userInfo).length !== 0 ? (
@@ -185,10 +188,6 @@ export default function Layout({ children }) {
                 />
               </div>
             ) : (
-              // còn k thì hiện 1 cái modal có 2 option, signin of singup
-              //hiện tại nó đang ở trạng thái đã đăng nhập ấy :
-              // object rỗng đúng ko?
-
               <div
                 className=" ms-2"
                 style={{

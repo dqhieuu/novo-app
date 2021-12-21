@@ -9,6 +9,7 @@ import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { validToken } from '../../utilities/fetchAuth';
+import { toast } from 'react-toastify';
 
 export default function SignUp() {
   const router = useRouter();
@@ -31,11 +32,21 @@ export default function SignUp() {
         email: formData.email,
       })
       .then((res) => {
-        alert('Đăng ký thành công');
-        console.log(res);
+        toast.success('Đăng ký thành công', {
+          position: 'bottom-left',
+          autoClose: 3000,
+        });
         router.replace('/');
       })
-      .catch((error) => alert('Người dùng đã tồn tại'));
+      .catch((error) =>
+        toast.error(
+          'Đăng ký thất bại! Người dùng đã tồn tại',
+          {
+            position: 'bottom-left',
+            autoClose: 3000,
+          }
+        )
+      );
   };
   useEffect(() => {
     if (validToken()) {

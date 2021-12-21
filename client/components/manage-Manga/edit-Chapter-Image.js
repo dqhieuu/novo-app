@@ -6,32 +6,130 @@ import {
 } from 'react-sortable-hoc';
 import { arrayMove } from 'react-sortable-hoc';
 import Image from 'next/image';
-export default function EditChapterImage({ chapter }) {
+import { useRouter } from 'next/router';
+import uploadImages from '../../utilities/upload-Images';
+import { fetchAuth } from '../../utilities/fetchAuth';
+import { toast } from 'react-toastify';
+export default function EditChapterImage({ chapter, id }) {
   const { server } = useContext(MangaContext);
   const [images, setImages] = useState([]);
+  const [chapterEdit, setChapterEdit] = useState({
+    name: chapter.name,
+    chapterNumber: chapter.chapterNumber,
+    images: chapter.images.map((image) => {
+      return image.id;
+    }),
+  });
+  const router = useRouter();
+  useEffect(() => {
+    const coverLinks = chapter.images.map((image) => {
+      return {
+        status: 'finished',
+        fileURL: `${server}/image/${image.path}`,
+        id: image.id,
+      };
+    });
+    setImages(coverLinks);
+  }, []);
+  const handleSubmit = () => {
+    const imagesUploaded = images
+      .filter((image) => image.status === 'finished')
+      .map((image) => image.id);
+
+    fetchAuth({
+      url: `${server}/auth/chapter/images/${id}`,
+      method: `PATCH`,
+      data: {
+        name: chapterEdit.name,
+        chapterNumber: chapterEdit.chapterNumber,
+
+        images: imagesUploaded ?? null,
+      },
+    }).then((res) => {
+      toast.success(`Cập nhật thành công`, {
+        position: 'bottom-left',
+        autoClose: 2000,
+      });
+
+      router.push(`/chapter/${id}`);
+    });
+  };
+  const handlePreviewChapterImage = (e) => {
+    const files = e.target.files;
+
+    const arrayFiles = Object.entries(files);
+    const preview = [...images];
+
+    const preUploadImageCount = preview.length;
+    arrayFiles.map((file) => {
+      const fileURL = URL.createObjectURL(file[1]);
+      preview.push({
+        status: 'uploading',
+        fileURL,
+        id: 0,
+      });
+    });
+
+    setImages(preview);
+
+    arrayFiles.map((file, uploadIndex) => {
+      uploadImages('chapter-image', file[1], (id) => {
+        const updated = [...preview];
+        const index = uploadIndex + preUploadImageCount;
+        if (id) {
+          updated[index].status = 'finished';
+          updated[index].id = id.id;
+        } else {
+          updated[index].status = 'failed';
+        }
+        setImages(updated);
+      });
+    });
+  };
+
   const onSortEnd = ({ oldIndex, newIndex }) => {
     setImages(arrayMove(images, oldIndex, newIndex));
   };
-  useEffect(() => {
-    const arr = chapter.images.map(
-      (image) => (image = `${server}/image/${image}`)
-    );
-    setImages(arr);
-  }, []);
   const SortableListItem = SortableElement(
     ({ image, stt }) => {
+  
+
       return (
         <div>
-          <div>
-            <div className="card m-3">
+          {image.status === 'uploading' && (
+            <div className="spinner-border"></div>
+          )}
+          {image.status === 'failed' && (
+            <div
+              style={{ width: '100px', aspectRatio: '3/4' }}
+            >
               <Image
-                src={image}
-                className={{
-                  objectFit: 'cover',
-                  aspectRatio: '3/4',
-                  width: '150px',
-                }}
-                alt="Book image"
+                width={100}
+                height={100}
+                layout="responsive"
+                src={
+                  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Crystal_128_error.svg/1024px-Crystal_128_error.svg.png'
+                }
+                alt=""
+              ></Image>
+            </div>
+          )}
+          <div>
+            <div
+              className="card m-3"
+              style={{
+                aspectRatio: '3/4',
+                width: '150px',
+                border: '0.5rem solid white',
+              }}
+            >
+              <Image
+                src={image.fileURL}
+                objectFit="cover"
+                layout="responsive"
+                width={'150'}
+                height={'200'}
+                alt=""
               />
               <div className="card-img-overlay">
                 <div className="d-flex justify-content-between mt-1">
@@ -62,8 +160,12 @@ export default function EditChapterImage({ chapter }) {
   );
 
   const SortableList = SortableContainer(({ images }) => {
+    console.log(images);
     return (
-      <div className="d-flex flex-wrap border mt-3">
+      <div
+        className="d-flex flex-wrap border mt-3"
+        style={{ borderRadius: '0.75rem' }}
+      >
         {images.length > 0 &&
           images.map((image, index) => {
             return (
@@ -79,45 +181,79 @@ export default function EditChapterImage({ chapter }) {
       </div>
     );
   });
-
   return (
     <div className="p-3" data-aos="flip-left">
-      <form>
-        <div className="mb-3 mt-3">
-          <label
-            htmlFor="chapterName"
-            className="form-label"
-          >
-            01. Nhập tên Chapter:
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="chapterName"
-            placeholder="Nhập tên Chap ở đây"
-            name="chapterName"
-            value={chapter.name}
-          />
-        </div>
+      <div className="mb-3 mt-3">
+        <label htmlFor="chapterName" className="form-label">
+          01. Nhập tên Chapter:
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          id="chapterName"
+          placeholder="Nhập tên Chap ở đây"
+          name="chapterName"
+          value={chapterEdit.name}
+          onChange={(e) =>
+            setChapterEdit({
+              ...chapterEdit,
+              name: e.target.value,
+            })
+          }
+        />
+      </div>
+      <div className="mb-3 mt-3">
+        <label htmlFor="chapterName" className="form-label">
+          02. STT:
+        </label>
+        <input
+          type="text"
+          className="form-control"
+          id="chapterName"
+          placeholder="Nhập STT chap"
+          name="chapterNumber"
+          value={chapterEdit.chapterNumber}
+          onChange={(e) =>
+            setChapterEdit({
+              ...chapterEdit,
+              chapterNumber: e.target.value,
+            })
+          }
+        />
+      </div>
 
-        <div className="mb-3 mt-3">
-          <label
-            htmlFor="chapterImages"
-            className="form-label"
-          >
-            02. Chọn Ảnh:
-          </label>
+      <div className="mb-3 mt-3">
+        <label
+          htmlFor="chapterImages"
+          className="form-label"
+        >
+          03. Chọn Ảnh:
+        </label>
+        <input
+          type="file"
+          className="form-control"
+          id="mangaCover"
+          multiple
+          onChange={handlePreviewChapterImage}
+        />
 
+        <div className="d-flex justify-content-center mt-3">
           <SortableList
             axis={'xy'}
             images={images}
             onSortEnd={onSortEnd}
           ></SortableList>
         </div>
-        <div className="mt-3 d-flex justify-content-center">
-          <button className="btn btn-dark"> Update</button>
-        </div>
-      </form>
+      </div>
+      <div className="mt-3 d-flex justify-content-center">
+        <button
+          className="btn btn-dark"
+          onClick={() => handleSubmit()}
+        >
+          {' '}
+          Update
+        </button>
+      </div>
     </div>
   );
 }

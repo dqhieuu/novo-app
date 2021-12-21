@@ -43,7 +43,7 @@ export default function MangaContextProvider({ children }) {
       .then((data) => setMostViewedWeek(data.books));
     fetch(`${server}/comment/latest`)
       .then((res) => res.json())
-      .then((data) => setGenre(data));
+      .then((data) => setLatestComment(data));
     fetch(`${server}/genre/all`)
       .then((res) => res.json())
       .then((data) => setGenre(data));

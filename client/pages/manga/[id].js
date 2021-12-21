@@ -28,7 +28,10 @@ import {
 } from '../../utilities/fetchAuth';
 import Router, { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
-import { addToHistory } from '../../utilities/localStorageFunction';
+import {
+  addToHistory,
+  addToFavorite,
+} from '../../utilities/localStorageFunction';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -68,43 +71,49 @@ export default function Details({
   const changePage = ({ selected }) => {
     setPageNumber(selected);
   };
+  const [likeState, setLikeState] = useState('unlike');
+  function likeOperation(likeState) {
+    fetchAuth({
+      url: `${server}/auth/like/${bookGroupId}/${likeState}`,
+      method: 'POST',
+      data: {
+        bookGroupId: bookGroupId,
+        operation: likeState,
+      },
+    });
+  }
+  // const [mangaLikeCount, setMangaLikeCount] = useState({
+  //   likeCount: manga.likeCount,
+  //   dislikeCount: manga.dislikeCount,
+  // });
 
+  const actualLikeCount =
+    manga.likeCount + (likeState === 'like' ? 1 : 0);
+
+  const actualDislikeCount =
+    manga.dislikeCount + (likeState === 'dislike' ? 1 : 0);
+
+  function likeStateButton() {
+    const nextLikeState =
+      likeState === 'like' ? 'unlike' : 'like';
+    setLikeState(nextLikeState);
+    likeOperation(nextLikeState);
+  }
+  function dislikeStateButton() {
+    const nextLikeState =
+      likeState === 'dislike' ? 'unlike' : 'dislike';
+    setLikeState(nextLikeState);
+    likeOperation(nextLikeState);
+  }
   const [currentEditedComment, setCurrentEditedComment] =
     useState(-1);
   const [
     currentEditedCommentContent,
     setCurrentEditedCommentContent,
   ] = useState('');
-  const addToFavourite = (bookGroupId) => {
-    const newObject = {
-      name: manga.name,
-      id: bookGroupId,
-      image: manga.primaryCoverArt,
-    };
-    if (localStorage.getItem('favourite') == null) {
-      localStorage.setItem('favourite', '[]');
-    }
-    let checkExisted = false;
-    const oldData = JSON.parse(
-      localStorage.getItem('favourite')
-    );
-
-    oldData.forEach((ele) => {
-      if (ele.id === bookGroupId) {
-        checkExisted = true;
-      }
-    });
-    if (checkExisted === false) oldData.push(newObject);
-    localStorage.setItem(
-      'favourite',
-      JSON.stringify(oldData)
-    );
-  };
 
   const submit = (text) => {
     fetchAuth({
-      // dùng sẽ như này
-      // hàm này nó inject header sẵn cho ông r, và nó tự refresh token luôn
       url: `${server}/auth/comment?bookGroupId=${bookGroupId}`,
       method: `POST`,
       data: {
@@ -112,7 +121,10 @@ export default function Details({
       },
     })
       .then((res) => {
-        alert('Comment thành công');
+        toast.success('Comment thành công!', {
+          position: 'bottom-left',
+          autoClose: 3000,
+        });
         setComment('');
 
         router.replace(
@@ -120,7 +132,13 @@ export default function Details({
         );
       })
       .catch((err) => {
-        alert(err);
+        toast.error(
+          'Comment thất bại! Comment phải có ít nhất 10 ký tự và không nhiều hơn 500 ký tự',
+          {
+            position: 'bottom-left',
+            autoClose: 3000,
+          }
+        );
       });
   };
 
@@ -166,6 +184,7 @@ export default function Details({
                 style={{ fontSize: '20px' }}
               >
                 {comment.userName}
+                {console.log(comment)}
                 <span
                   style={{
                     fontSize: '12px',
@@ -196,7 +215,7 @@ export default function Details({
                     className="btn btn-link"
                     onClick={() =>
                       fetchAuth({
-                        url: `${server}/auth/comment/${comment.id}`,
+                        url: `${server}/auth/comment/${comment.commentId}`,
                         method: 'PATCH',
                         data: {
                           comment:
@@ -252,12 +271,23 @@ export default function Details({
       >
         <div className="row">
           <div className="col-lg-8 col-12 mt-3">
-            <h3
-              className="d-flex justify-content-center"
-              style={{ color: '#27ae60' }}
-            >
-              {manga.name}
-            </h3>
+            <div>
+              <h3
+                className="d-flex justify-content-center"
+                style={{ color: '#27ae60' }}
+              >
+                {manga.name}
+              </h3>
+              {manga.alias && (
+                <h5
+                  className="d-flex justify-content-center"
+                  style={{ fontStyle: 'italic' }}
+                >
+                  {manga.alias}
+                </h5>
+              )}
+            </div>
+
             <div className="row mt-3">
               <div
                 className="col-lg-3 col-12"
@@ -312,7 +342,7 @@ export default function Details({
                                   style={{
                                     background: '#bdc3c7',
                                     borderRadius: '0.5rem',
-                                    padding: '0.5rem',
+                                    padding: '0.25rem',
                                     marginRight: '0.5rem',
                                   }}
                                 >
@@ -344,7 +374,7 @@ export default function Details({
                               style={{
                                 background: '#bdc3c7',
                                 borderRadius: '0.5rem',
-                                padding: '0.5rem',
+                                padding: '0.25rem',
                                 marginRight: '0.5rem',
                               }}
                             >
@@ -358,32 +388,64 @@ export default function Details({
                 <div className="button-utilities col-12">
                   <button
                     type="button"
+                    onClick={() => {
+                      likeStateButton();
+                    }}
                     className="btn btn-outline-dark  me-2"
                   >
                     <BiLike></BiLike>
                     <span className="badge bg-danger">
-                      {' ' + manga.likeCount}
+                      {' ' + actualLikeCount}
                     </span>
                   </button>
                   <button
                     type="button"
                     className="btn  btn-outline-dark me-2"
+                    onClick={() => {
+                      dislikeStateButton();
+                    }}
                   >
                     <BiDislike></BiDislike>
                     <span className="badge bg-primary">
-                      {manga.likeCount}
+                      {actualDislikeCount}
                     </span>
+                  </button>
+                  <button className="btn" disabled>
+                    {(actualLikeCount /
+                      (actualLikeCount +
+                        actualDislikeCount)) *
+                      10 +
+                      ' / ' +
+                      '10'}
                   </button>
                   <button
                     type="button"
                     className="btn btn-success  "
                     onClick={() => {
-                      addToFavourite(bookGroupId);
+                      addToFavorite(
+                        bookGroupId,
+                        null,
+                        manga
+                      );
                     }}
                   >
                     <FaHeart></FaHeart>
                     {' Yêu Thích'}
                   </button>
+                  {console.log(userInfo)}
+                  {userInfo.permission &&
+                    userInfo.permission.includes(
+                      'chapter.post'
+                    ) && (
+                      <Link
+                        href={`/upload-Chapter/${bookGroupId}`}
+                        passHref
+                      >
+                        <button className="btn btn-light ms-2">
+                          <FaEdit></FaEdit>
+                        </button>
+                      </Link>
+                    )}
                   {manga.chapters.length != 0 && (
                     <Link
                       passHref
@@ -395,7 +457,7 @@ export default function Details({
                     >
                       <button
                         type="button"
-                        className={`btn btn-dark ms-2 ${styles.readButton}`}
+                        className={`btn btn-dark mt-2`}
                       >
                         Đọc từ đầu
                       </button>
@@ -453,7 +515,7 @@ export default function Details({
                       style={{ aspectRatio: '16/9' }}
                     >
                       <Image
-                        src={`${server}/image/${manga.coverArts[0]}`}
+                        src={`${server}/image/${manga.coverArts[0].path}`}
                         objectFit="cover"
                         alt=""
                         layout="fill"
@@ -469,7 +531,7 @@ export default function Details({
                             style={{ aspectRatio: '16/9' }}
                           >
                             <Image
-                              src={`${server}/image/${coverArt}`}
+                              src={`${server}/image/${coverArt.path}`}
                               alt="Describe"
                               objectFit="cover"
                               layout="fill"

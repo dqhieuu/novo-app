@@ -37,18 +37,13 @@ export default function UserLogin() {
             {' Trang cá nhân'}
           </p>
         </Link>
-
-        <p>
-          <FaUserCog></FaUserCog>Đổi mật khẩu
-        </p>
+        <Link href={`/user/userChangePassword`} passHref>
+          <p data-bs-dismiss="offcanvas">
+            <FaUserCog></FaUserCog>Đổi mật khẩu
+          </p>
+        </Link>
         <hr />
-        <p>
-          <FaHistory></FaHistory>Truyện đã đọc
-        </p>
-        <p>
-          <FaRegKissWinkHeart></FaRegKissWinkHeart>Truyện đã
-          thích
-        </p>
+
         <Link href={`/user/${userInfo.id}#upload`} passHref>
           <p data-bs-dismiss="offcanvas">
             <FaFileUpload></FaFileUpload>Truyện đã đăng

@@ -3,6 +3,7 @@ import { MangaContext } from '../../context/manga-Context';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
+import { toast } from 'react-toastify';
 export default function UserSignUp() {
   const { server } = useContext(MangaContext);
   const router = useRouter();
@@ -24,9 +25,20 @@ export default function UserSignUp() {
         email: formData.email,
       })
       .then((res) => {
-        alert('Đăng ký thành công');
-        console.log(res);
+        toast.success('Đăng ký thành công!', {
+          position: 'bottom-left',
+          autoClose: 3000,
+        });
         router.replace('/');
+      })
+      .catch((err) => {
+        toast.error(
+          'Đăng ký thất bại! Vui lòng thử lại sau',
+          {
+            position: 'bottom-left',
+            autoClose: 3000,
+          }
+        );
       });
   };
 

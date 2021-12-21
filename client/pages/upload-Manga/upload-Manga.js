@@ -38,6 +38,7 @@ export default function UploadManga() {
     description: '',
     coverArts: [],
     genres: [],
+    authors: [],
   });
 
   useEffect(() => {
@@ -53,6 +54,9 @@ export default function UploadManga() {
         );
       });
   }, []);
+  const updateAuthor = (authorList) => {
+    setnewBook({ ...newBook, authors: authorList });
+  };
   const handlePreviewAvatar = (e) => {
     const file = e.target.files[0];
     const fileURL = URL.createObjectURL(file);
@@ -85,7 +89,6 @@ export default function UploadManga() {
       },
     })
       .then((res) => {
-        console.log(res);
         toast.success('Upload thành công', {
           position: 'bottom-left',
           autoClose: 2000,
@@ -345,7 +348,9 @@ export default function UploadManga() {
                 >
                   Tác giả:
                 </label>
-                <TagInput></TagInput>
+                <TagInput
+                  updateAuthor={updateAuthor}
+                ></TagInput>
                 <div>
                   <button
                     className="btn btn-dark mt-2"

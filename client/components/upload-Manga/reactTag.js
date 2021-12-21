@@ -7,7 +7,6 @@ import {
 } from 'react';
 
 import { WithContext as ReactTags } from 'react-tag-input';
-import { UserContext } from '../../context/user-Context';
 import WEB_CONSTANTS from '../../utilities/constants';
 import Tags from '@yaireo/tagify/dist/react.tagify';
 import { set } from 'react-hook-form';
@@ -15,7 +14,7 @@ import { set } from 'react-hook-form';
 const baseTagifySettings = {
   tagTextProp: 'name',
   dropdown: {
-    searchKeys: ['value'],
+    searchKeys: ['value', 'alias'],
     enabled: 0, // show the dropdown immediately on focus
     maxItems: 5,
     closeOnSelect: true, // keep the dropdown open after selecting a suggestion
@@ -27,12 +26,13 @@ const baseTagifySettings = {
   enforceWhitelist: true,
 };
 
-export default function TagInput({ authors }) {
-  // const [listAuthors, setListAuthors] = useState([]);
+export default function TagInput({
+  authors,
+  updateAuthor,
+}) {
   const [tagifyProps, setTagifyProps] = useState({});
   const [tagifySettings, setTagifySettings] = useState({});
-  const { getAuthorId, listAuthorsId } =
-    useContext(UserContext);
+
   const server = WEB_CONSTANTS.SERVER;
   const tagify = useRef();
 
@@ -43,13 +43,11 @@ export default function TagInput({ authors }) {
 
   useEffect(() => {
     if (authors) {
-      // alert('abc');
-      // sao set xong nos ko doi trang thai nhi
-      // setTagifySettings({ enforceWhitelist: true });
       tagify.current.settings.enforceWhitelist = false;
       tagify.current.addTags(
         authors.map((author) => ({
           value: author.name,
+          alias: author.alias,
           id: author.id,
         }))
       );
@@ -60,6 +58,7 @@ export default function TagInput({ authors }) {
   const handleAuthor = (e) => {
     let inputSearch = e.detail.value;
     if (inputSearch) {
+      console.log(tagify.current.value);
       setTagifyProps({ loading: true });
       fetch(
         `${server}/search-author/${encodeURIComponent(
@@ -76,6 +75,7 @@ export default function TagInput({ authors }) {
                 whitelist: datas.map((data) => ({
                   value: data.name,
                   id: data.id,
+                  alias: data?.alias,
                 })),
                 loading: false,
               }),
@@ -102,11 +102,11 @@ export default function TagInput({ authors }) {
         {...tagifyProps}
         settings={settings}
         onInput={handleAuthor}
-        onChange={() =>
-          getAuthorId(
+        onChange={() => {
+          updateAuthor(
             tagify.current.value.map((value) => value.id)
-          )
-        }
+          );
+        }}
       />
     </div>
   );

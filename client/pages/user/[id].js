@@ -43,6 +43,11 @@ export async function getServerSideProps(context) {
 
 export default function User({ user, id }) {
   const { server } = useContext(MangaContext);
+  const favoriteBooks =
+    typeof window !== 'undefined'
+      ? JSON.parse(localStorage.getItem('favorite'))
+      : [];
+
   const { userInfo } = useContext(UserContext);
   const [userAvatar, setUserAvatar] = useState({});
 
@@ -190,7 +195,10 @@ export default function User({ user, id }) {
           </div>
           {userInfo.id == id && (
             <div className="col-lg-3 col-md-3 col-3">
-              <Link href={`/manage-Manga/${listObject.id}`}>
+              <Link
+                href={`/manage-Manga/${listObject.id}`}
+                passHref
+              >
                 <button className="btn ">
                   <FaEdit></FaEdit>
                 </button>
@@ -304,7 +312,7 @@ export default function User({ user, id }) {
                   aria-controls="favorite"
                   aria-selected="false"
                 >
-                  DANH SÁCH YÊU THÍCH
+                  YÊU THÍCH
                 </button>
               </li>
             </ul>
@@ -355,13 +363,11 @@ export default function User({ user, id }) {
                 </div>
               </div>
               <div
-                className="tab-pane "
+                className="tab-pane"
                 id="favorite"
                 role="tabpanel"
                 aria-labelledby="favorite-tab"
-              >
-                Hi
-              </div>
+              ></div>
             </div>
           </div>
         </div>
