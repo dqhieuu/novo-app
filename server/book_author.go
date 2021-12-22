@@ -222,9 +222,9 @@ func CreateAuthorHandler(c *gin.Context) {
 		}
 	}
 
-	if len(a.Description) > 500 {
+	if len(a.Description) > 1000 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "description must be less than or equal to 50 characters",
+			"error": "description must be less than or equal to 100 characters",
 		})
 		return
 	}
@@ -354,9 +354,9 @@ func UpdateAuthorHandler(c *gin.Context) {
 			}
 		}
 
-		if len(a.Description) > 500 {
+		if len(a.Description) > 1000 {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "description must be less than or equal to 50 characters",
+				"error": "description must be less than or equal to 100 characters",
 			})
 			return
 		}

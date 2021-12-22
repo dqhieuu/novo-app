@@ -531,8 +531,8 @@ func ValidDescription(description *string) error {
 	if description == nil {
 		return nil
 	}
-	if len(*description) > 500 {
-		*description = (*description)[0:500]
+	if len(*description) > 1000 {
+		*description = (*description)[0:1000]
 	}
 	for i := 0; i < len(*description); i++ {
 		c := (*description)[i]
