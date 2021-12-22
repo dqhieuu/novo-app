@@ -222,11 +222,12 @@ func CreateAuthorHandler(c *gin.Context) {
 		}
 	}
 
-	if len(a.Description) > 500 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "description must be less than or equal to 50 characters",
-		})
-		return
+	if len(a.Description) > 1000 {
+		a.Description = a.Description[0:1000]
+		//c.JSON(http.StatusBadRequest, gin.H{
+		//	"error": "description must be less than or equal to 100 characters",
+		//})
+		//return
 	}
 	//for i := 0; i < len(a.Description); i++ {
 	//	ch := a.Description[i]
@@ -354,11 +355,12 @@ func UpdateAuthorHandler(c *gin.Context) {
 			}
 		}
 
-		if len(a.Description) > 500 {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "description must be less than or equal to 50 characters",
-			})
-			return
+		if len(a.Description) > 1000 {
+			a.Description = a.Description[0:1000]
+			//c.JSON(http.StatusBadRequest, gin.H{
+			//	"error": "description must be less than or equal to 100 characters",
+			//})
+			//return
 		}
 
 		exist, err := queries.CheckAuthorExistByName(ctx, a.Name)
