@@ -10,7 +10,7 @@ import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
 import { validToken } from '../../utilities/fetchAuth';
 import { toast } from 'react-toastify';
-
+import { FaGooglePlusG } from 'react-icons/fa';
 export default function SignUp() {
   const router = useRouter();
   const { server } = useContext(MangaContext);
@@ -137,11 +137,25 @@ export default function SignUp() {
             }
           ></input>
         </div>
-
-        <button type="submit" className="btn btn-dark">
-          Đăng ký
-        </button>
+        <div className="d-grid">
+          <button
+            className="btn btn-secondary mt-3"
+            style={{ background: '#c23321' }}
+            onClick={() =>
+              (window.location.href = `${server}/oauth/google`)
+            }
+          >
+            <FaGooglePlusG></FaGooglePlusG> Đăng nhập bằng
+            Gmail
+          </button>
+        </div>
+        <div className="mt-3 d-flex justify-content-center">
+          <button type="submit" className="btn btn-dark ">
+            Đăng ký
+          </button>
+        </div>
       </form>
+
       {Object.keys(errors).length !== 0 && (
         <ul
           className="error mt-3"

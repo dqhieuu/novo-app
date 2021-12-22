@@ -100,16 +100,14 @@ export default function UploadManga() {
           position: toast.POSITION.TOP_LEFT,
           autoClose: 3000,
         });
-        //đẹp phết nhỉ
-        // router.replace('/upload-Manga/upload-Manga');
       });
   }
   const handlePreviewCover = (e) => {
     const files = e.target.files;
 
     const arrayFiles = Object.entries(files);
-    const preview = [];
-
+    const preview = [...images];
+    const preUploadImageCount = preview.length;
     arrayFiles.map((file) => {
       const fileURL = URL.createObjectURL(file[1]);
       preview.push({
@@ -121,9 +119,10 @@ export default function UploadManga() {
 
     setImages(preview);
 
-    arrayFiles.map((file, index) => {
+    arrayFiles.map((file, uploadIndex) => {
       uploadImages('cover-art', file[1], (id) => {
         const updated = [...preview];
+        const index = uploadIndex + preUploadImageCount;
 
         if (id) {
           updated[index].status = 'finished';
@@ -185,12 +184,14 @@ export default function UploadManga() {
 
       return (
         <div>
-          {image.status === 'uploading' && (
+          {image.status === 'uploading' ? (
             <div className="spinner-border"></div>
-          )}
-          {image.status === 'failed' && (
+          ) : image.status === 'failed' ? (
             <div
-              style={{ width: '100px', aspectRatio: '3/4' }}
+              style={{
+                width: '100px',
+                aspectRatio: '3/4',
+              }}
             >
               <Image
                 width={100}
@@ -202,43 +203,47 @@ export default function UploadManga() {
                 alt=""
               ></Image>
             </div>
-          )}
-          <div>
-            <div
-              className="card m-3"
-              style={{ aspectRatio: '3/4', width: '150px' }}
-            >
-              <Image
-                src={image.fileURL}
-                objectFit="cover"
-                layout="responsive"
-                width={'150'}
-                height={'200'}
-                alt=""
-              />
-              <div className="card-img-overlay">
-                <div className="d-flex justify-content-between mt-1">
-                  <p className="card-title">
-                    <span className="badge bg-primary">
-                      {stt + 1}
-                    </span>
-                  </p>
-                  <div>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        let updated = [...images];
-                        updated.splice(stt, 1);
-                        setImages(updated);
-                      }}
-                    >
-                      X
-                    </button>
+          ) : (
+            <div>
+              <div
+                className="card m-3"
+                style={{
+                  aspectRatio: '3/4',
+                  width: '150px',
+                }}
+              >
+                <Image
+                  src={image.fileURL}
+                  objectFit="cover"
+                  layout="responsive"
+                  width={'150'}
+                  height={'200'}
+                  alt=""
+                />
+                <div className="card-img-overlay">
+                  <div className="d-flex justify-content-between mt-1">
+                    <p className="card-title">
+                      <span className="badge bg-primary">
+                        {stt + 1}
+                      </span>
+                    </p>
+                    <div>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => {
+                          let updated = [...images];
+                          updated.splice(stt, 1);
+                          setImages(updated);
+                        }}
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       );
     }
@@ -426,29 +431,32 @@ export default function UploadManga() {
                     onSortEnd={onSortEnd}
                   ></SortableList>
                 </div>
-                <div
-                  className="col-3"
-                  style={{
-                    border: '1px solid lightgrey',
-                    aspectRatio: '3/4',
-                    overflow: 'hidden',
-                    borderRadius: '0.75rem',
-                    position: 'relative',
-                  }}
-                >
-                  <Image
-                    src={
-                      images.length != 0
-                        ? `${
-                            images[images.length - 1]
-                              .fileURL
-                          }`
-                        : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                    }
-                    alt=""
-                    layout="fill"
-                    objectFit="cover"
-                  />
+                <div className="col-3">
+                  <div
+                    style={{
+                      border: '1px solid lightgrey',
+                      width: '100%',
+                      aspectRatio: '3/4',
+                      overflow: 'hidden',
+                      borderRadius: '0.75rem',
+                      position: 'relative',
+                    }}
+                  >
+                    {' '}
+                    <Image
+                      src={
+                        images.length != 0
+                          ? `${
+                              images[images.length - 1]
+                                .fileURL
+                            }`
+                          : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                      }
+                      alt=""
+                      layout="fill"
+                      objectFit="cover"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

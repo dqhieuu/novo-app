@@ -61,6 +61,7 @@ export default function Layout({ children }) {
       })();
     }
   }, [router.query]);
+
   return (
     <div>
       <Head>
@@ -127,7 +128,7 @@ export default function Layout({ children }) {
                       {genres &&
                         genres.map((genre) => (
                           <div
-                            className={`col-2 col-lg-3 `}
+                            className={`col-2 col-lg-3`}
                             key={genre.id}
                           >
                             <Link

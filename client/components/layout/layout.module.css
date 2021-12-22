@@ -1,9 +1,12 @@
 .genreContainer {
   width: 500px;
 }
+.item {
+  padding: 0.5rem;
+}
 .item:hover {
   cursor: pointer;
-  color: '#2ecc71';
+  color: #2ecc71 !important;
 }
 
 @media screen and (max-width: 560px) {

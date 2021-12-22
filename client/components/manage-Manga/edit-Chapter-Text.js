@@ -29,16 +29,12 @@ export default function EditChapterText({ chapter, id }) {
     setText(text);
   }
   function submitEdited() {
-    // console.log(chapterInfo);
-    // console.log(text);
     fetchAuth({
       url: `${server}/auth/chapter/hypertext/${id}`,
       method: 'PATCH',
       data: {
         name: chapterInfo.chapterName,
-        chapterNumber: parseFloat(
-          chapterInfo.chapterNumber
-        ),
+        chapterNumber: parseInt(chapterInfo.chapterNumber),
         textContent: text,
       },
     }).then((res) => {

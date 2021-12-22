@@ -32,18 +32,26 @@ export default function ByWeek() {
           </div>
           <Link href={`/manga/${manga.id}`} passHref>
             <div className="col-3">
-              <Image
-                src={
-                  manga.image
-                    ? `${server}/image/${manga.image}`
-                    : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                }
-                alt={manga.name}
-                height="80"
-                width="100"
-                objectFit="cover"
-                layout="responsive"
-              />
+              <div
+                style={{
+                  position: 'relative',
+                  borderRadius: '0.75rem',
+                  overflow: 'hidden',
+                }}
+              >
+                <Image
+                  src={
+                    manga.image
+                      ? `${server}/image/${manga.image}`
+                      : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                  }
+                  alt={manga.name}
+                  height="80"
+                  width="100"
+                  objectFit="cover"
+                  layout="responsive"
+                />
+              </div>
             </div>
           </Link>
           <Link href={`/manga/${manga.id}`} passHref>

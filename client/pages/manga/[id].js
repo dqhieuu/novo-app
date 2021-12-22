@@ -15,6 +15,7 @@ import {
   FaTags,
   FaUser,
   FaWifi,
+  FaWindowClose,
 } from 'react-icons/fa';
 import { BiDislike, BiLike } from 'react-icons/bi';
 import ByWeek from '../../components/ranking-In-Manga-Page/by-Week';
@@ -82,10 +83,6 @@ export default function Details({
       },
     });
   }
-  // const [mangaLikeCount, setMangaLikeCount] = useState({
-  //   likeCount: manga.likeCount,
-  //   dislikeCount: manga.dislikeCount,
-  // });
 
   const actualLikeCount =
     manga.likeCount + (likeState === 'like' ? 1 : 0);
@@ -142,30 +139,44 @@ export default function Details({
       });
   };
 
+  const deleteComment = (id) => {
+    fetchAuth({
+      url: `${server}/auth/comment/${id}`,
+      method: 'DELETE',
+    }).then(() => {
+      toast.success('Xoá thành công!', {
+        position: 'bottom-left',
+        autoClose: 3000,
+      });
+      router.push('/manga/' + bookGroupId);
+    });
+  };
+
   const displayDatas = comments ? (
     comments
       .slice(pageVisited, pageVisited + cmtPerPage)
       .map((comment, index) => (
         <div className="row mb-3" key={index}>
-          <div
-            className="col-lg-2 col-2 py-2"
-            style={{
-              overflow: 'hidden',
-              borderRadius: '0.75rem',
-              width: '80px',
-            }}
-          >
-            <Image
-              src={
-                comment.userAvatar
-                  ? `${server}/image/${comment.userAvatar}`
-                  : NULL_CONSTANTS.AVATAR
-              }
-              width="50"
-              height="50"
-              alt=""
-              layout="responsive"
-            />
+          <div className="col-lg-2 col-2 ">
+            <div
+              style={{
+                borderRadius: '50%',
+                width: '70%',
+                overflow: 'hidden',
+                position: 'relative',
+                aspectRatio: '1/1',
+              }}
+            >
+              <Image
+                src={
+                  comment.userAvatar
+                    ? `${server}/image/${comment.userAvatar}`
+                    : NULL_CONSTANTS.AVATAR
+                }
+                alt=""
+                layout="fill"
+              />
+            </div>
           </div>
           <div
             className="col-8"
@@ -184,7 +195,6 @@ export default function Details({
                 style={{ fontSize: '20px' }}
               >
                 {comment.userName}
-                {console.log(comment)}
                 <span
                   style={{
                     fontSize: '12px',
@@ -240,9 +250,13 @@ export default function Details({
                 </div>
               )}
             </div>
-            <div>
+            <div className="d-flex">
               {userInfo.id === comment.userId &&
-                currentEditedComment !== index && (
+                currentEditedComment !== index &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'comment.modifySelf'
+                ) && (
                   <button
                     className="btn"
                     onClick={() => {
@@ -255,6 +269,20 @@ export default function Details({
                     <FaEdit></FaEdit>
                   </button>
                 )}
+              {userInfo.id === comment.userId &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'comment.deleteSelf'
+                ) && (
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      deleteComment(comment.commentId);
+                    }}
+                  >
+                    <FaWindowClose></FaWindowClose>
+                  </button>
+                )}
             </div>
           </div>
         </div>
@@ -262,13 +290,22 @@ export default function Details({
   ) : (
     <div>Không có comment nào</div>
   );
-
+  const sortByChapterNumber = () => {
+    let arr = manga.chapters && manga.chapters.slice(0);
+    arr &&
+      arr.sort(function (a, b) {
+        return b.chapterNumber - a.chapterNumber;
+      });
+    manga.chapters = arr;
+  };
   return (
     <div style={{ background: '#EBEBEB' }}>
       <div
         className="container"
         style={{ background: '#f9f9f9' }}
       >
+        {sortByChapterNumber()}
+
         <div className="row">
           <div className="col-lg-8 col-12 mt-3">
             <div>
@@ -387,6 +424,9 @@ export default function Details({
                 </div>
                 <div className="button-utilities col-12">
                   <button
+                    disabled={
+                      Object.keys(userInfo).length === 0
+                    }
                     type="button"
                     onClick={() => {
                       likeStateButton();
@@ -400,6 +440,9 @@ export default function Details({
                   </button>
                   <button
                     type="button"
+                    disabled={
+                      Object.keys(userInfo).length === 0
+                    }
                     className="btn  btn-outline-dark me-2"
                     onClick={() => {
                       dislikeStateButton();
@@ -411,41 +454,25 @@ export default function Details({
                     </span>
                   </button>
                   <button className="btn" disabled>
-                    {(actualLikeCount /
-                      (actualLikeCount +
-                        actualDislikeCount)) *
-                      10 +
-                      ' / ' +
-                      '10'}
+                    {actualDislikeCount + actualLikeCount >
+                      3 &&
+                      (actualLikeCount /
+                        (actualLikeCount +
+                          actualDislikeCount)) *
+                        100 +
+                        '%'}
                   </button>
                   <button
                     type="button"
                     className="btn btn-success  "
                     onClick={() => {
-                      addToFavorite(
-                        bookGroupId,
-                        null,
-                        manga
-                      );
+                      addToFavorite(bookGroupId, manga);
                     }}
                   >
                     <FaHeart></FaHeart>
                     {' Yêu Thích'}
                   </button>
-                  {console.log(userInfo)}
-                  {userInfo.permission &&
-                    userInfo.permission.includes(
-                      'chapter.post'
-                    ) && (
-                      <Link
-                        href={`/upload-Chapter/${bookGroupId}`}
-                        passHref
-                      >
-                        <button className="btn btn-light ms-2">
-                          <FaEdit></FaEdit>
-                        </button>
-                      </Link>
-                    )}
+
                   {manga.chapters.length != 0 && (
                     <Link
                       passHref
@@ -457,7 +484,13 @@ export default function Details({
                     >
                       <button
                         type="button"
-                        className={`btn btn-dark mt-2`}
+                        className={
+                          actualDislikeCount +
+                            actualLikeCount >
+                          3
+                            ? `btn btn-dark mt-2`
+                            : `btn btn-dark ms-2`
+                        }
                       >
                         Đọc từ đầu
                       </button>
@@ -597,16 +630,19 @@ export default function Details({
                 className="row"
                 style={{ borderBottom: '1px solid grey' }}
               >
+                <div className="col-2">
+                  <p>STT</p>
+                </div>
                 <div className="col-3">
                   <p>Tên chap</p>
                 </div>
-                <div className="col-3">
+                <div className="col-2">
                   <p>Cập nhật</p>
                 </div>
                 <div className="col-3">
                   <p>Người đăng</p>
                 </div>
-                <div className="col-3">
+                <div className="col-2">
                   <p>Lượt xem</p>
                 </div>
               </div>
@@ -624,7 +660,7 @@ export default function Details({
                       href={`/chapter/${chapter.id}`}
                       passHref
                     >
-                      <div className="col-3">
+                      <div className="col-2">
                         <p
                           className={styles.object}
                           onClick={() => {
@@ -641,6 +677,9 @@ export default function Details({
                       </div>
                     </Link>
                     <div className="col-3">
+                      <p> {chapter.name && chapter.name}</p>
+                    </div>
+                    <div className="col-2">
                       <p>
                         <RelativeTimestamp>
                           {chapter.timePosted}
@@ -657,7 +696,7 @@ export default function Details({
                         </p>
                       </div>
                     </Link>
-                    <div className="col-3">
+                    <div className="col-2">
                       <p>
                         {chapter.views
                           ? chapter.views
@@ -666,6 +705,24 @@ export default function Details({
                     </div>
                   </div>
                 ))}
+                {console.log(userInfo)}
+                {userInfo.permission &&
+                  userInfo.permission.includes(
+                    'chapter.post'
+                  ) && (
+                    <Link
+                      href={
+                        '/upload-Chapter/' + bookGroupId
+                      }
+                      passHref
+                    >
+                      <div className="d-flex justify-content-end  mt-3">
+                        <button className="btn btn-dark ">
+                          Upload truyện
+                        </button>
+                      </div>
+                    </Link>
+                  )}
               </div>
             </div>
           </div>
