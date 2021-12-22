@@ -512,13 +512,13 @@ func UpdateHypertextChapter(c *gin.Context) {
 		})
 		return
 	}
-	err = ValidDescription(&newChapter.TextContent)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//err = ValidDescription(&newChapter.TextContent)
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 	err = UpdateBookChapter(newChapter)
 
 	if err != nil {
@@ -580,13 +580,13 @@ func UpdateImagesChapterHandler(c *gin.Context) {
 		})
 		return
 	}
-	err = ValidDescription(&newChapter.TextContent)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//err = ValidDescription(&newChapter.TextContent)
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 	ValidCoverArt(&newChapter.Images)
 
 	err = UpdateBookChapter(newChapter)
