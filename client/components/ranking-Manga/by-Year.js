@@ -16,7 +16,7 @@ function ByYear() {
     .slice(pageVisited, pageVisited + bookPerPage)
     .map((listObject, index) => (
       <Link
-        href={`/mangas/${listObject.id}`}
+        href={`/manga/${listObject.id}`}
         key={index}
         passHref
       >

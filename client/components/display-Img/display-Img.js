@@ -11,9 +11,11 @@ export default function DisplayImg({
       <div
         className={` ${styles.container} mb-2`}
         style={{
+          width: '100%',
           aspectRatio: '3/4',
           borderRadius: '0.75rem',
           overflow: 'hidden',
+          position: 'relative',
         }}
       >
         <Image

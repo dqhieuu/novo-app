@@ -17,7 +17,6 @@ import { UserContext } from '../../context/user-Context';
 function EditDetail({ manga, bookGroupId }) {
   const { server } = useContext(MangaContext);
 
-  const [genres, setGenres] = useState([]);
   const [images, setImages] = useState([]);
   const [bookEdit, setBookEdit] = useState({
     name: manga.name,
@@ -29,7 +28,6 @@ function EditDetail({ manga, bookGroupId }) {
     }),
   });
   const router = useRouter();
-  const { userInfo } = useContext(UserContext);
   const updateAuthor = (authorList) => {
     setBookEdit({ ...bookEdit, authors: authorList });
   };
@@ -214,12 +212,12 @@ function EditDetail({ manga, bookGroupId }) {
           : null,
       },
     }).then((res) => {
-      toast.success(`${res}`, {
+      toast.success(`Cập nhật thành công!`, {
         position: 'bottom-left',
         autoClose: 2000,
       });
 
-      router.push(`/manage-Manga/${bookGroupId}`);
+      router.push(`/manga/${bookGroupId}`);
     });
   };
   return (

@@ -13,6 +13,8 @@ import {
   FaBookReader,
   FaEdit,
   FaNewspaper,
+  FaQuoteLeft,
+  FaQuoteRight,
   FaReadme,
   FaRegEdit,
   FaWindowClose,
@@ -221,6 +223,7 @@ export default function User({ user, id }) {
   const changePage = ({ selected }) => {
     setPageNumber(selected);
   };
+
   return (
     <div>
       <div
@@ -257,6 +260,19 @@ export default function User({ user, id }) {
           <div className="col-lg-8 col-12 ps-5 pt-2">
             <div className="d-flex justify-content-start">
               <h3>{user.name}</h3>
+              <p
+                className="ms-2 mt-2"
+                style={{
+                  border: '1px solid #1abc9c',
+                  padding: '0.25rem',
+                  borderRadius: '0.75rem',
+                  color: '#1abc9c',
+                  fontWeight: 'bold',
+                  fontSize: '0.75rem',
+                }}
+              >
+                {user.role}
+              </p>
               {userInfo.id == id && (
                 <button
                   className="btn btn-light mb-3 ms-3"
@@ -301,20 +317,6 @@ export default function User({ user, id }) {
                   UPLOAD
                 </button>
               </li>
-              <li className="nav-item" role="presentation">
-                <button
-                  className="nav-link"
-                  id="favorite-tab"
-                  data-bs-toggle="tab"
-                  data-bs-target="#favorite"
-                  type="button"
-                  role="tab"
-                  aria-controls="favorite"
-                  aria-selected="false"
-                >
-                  YÊU THÍCH
-                </button>
-              </li>
             </ul>
             <div className="tab-content  ">
               <div
@@ -323,14 +325,31 @@ export default function User({ user, id }) {
                 role="tabpanel"
                 aria-labelledby="personalInfo-tab"
               >
+                <h5 className="mt-3">Mô tả</h5>
                 <p>
-                  {user.description
-                    ? user.description
-                    : 'Chưa có mô tả'}
+                  {user.description ? (
+                    <div
+                      className="d-flex justify-content-center p-5"
+                      style={{
+                        background: '#ecf0f1',
+                        borderRadius: '0.75rem',
+                      }}
+                    >
+                      <h3
+                        style={{
+                          fontStyle: 'italic',
+                          textAlign: 'center',
+                        }}
+                      >
+                        <FaQuoteLeft></FaQuoteLeft>
+                        {user.description}{' '}
+                        <FaQuoteRight></FaQuoteRight>
+                      </h3>
+                    </div>
+                  ) : (
+                    'Chưa có mô tả'
+                  )}
                 </p>
-
-                <h5>Role</h5>
-                <p>{user.role}</p>
               </div>
               <div
                 className="tab-pane "
@@ -362,12 +381,6 @@ export default function User({ user, id }) {
                   )}
                 </div>
               </div>
-              <div
-                className="tab-pane"
-                id="favorite"
-                role="tabpanel"
-                aria-labelledby="favorite-tab"
-              ></div>
             </div>
           </div>
         </div>

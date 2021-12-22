@@ -15,6 +15,7 @@ import {
   FaQuoteLeft,
   FaQuoteRight,
   FaEdit,
+  FaWindowClose,
 } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
 import ReactMarkdown from 'react-markdown';
@@ -100,6 +101,25 @@ export default function ChapterContent({
           autoClose: 3000,
         });
       });
+  };
+  const checkUploader = () => {
+    let checked = false;
+    let res = book.chapters.filter(
+      (chapter) => chapter.id == id
+    );
+    if (res[0].userPosted.id == userInfo.id) checked = true;
+    return checked;
+  };
+  const deleteComment = (id) => {
+    fetchAuth({
+      url: `${server}/auth/comment/${id}`,
+      method: 'DELETE',
+    }).then(() => {
+      toast.success('Xoá thành công!', {
+        position: 'bottom-left',
+        autoClose: 3000,
+      });
+    });
   };
 
   const displayDatas = comments ? (
@@ -216,6 +236,20 @@ export default function ChapterContent({
                     <FaEdit></FaEdit>
                   </button>
                 )}
+              {userInfo.id === comment.userId &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'comment.deleteSelf'
+                ) && (
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      deleteComment(comment.commentId);
+                    }}
+                  >
+                    <FaWindowClose></FaWindowClose>
+                  </button>
+                )}
             </div>
           </div>
         </div>
@@ -249,9 +283,28 @@ export default function ChapterContent({
     else return null;
   }
   const nextPage = getNextChapter(parseInt(id));
-
+  const sortByChapterNumber = () => {
+    let arr = book.chapters && book.chapters.slice(0);
+    arr.sort(function (a, b) {
+      return b.chapterNumber - a.chapterNumber;
+    });
+    book.chapters = arr;
+  };
+  const deleteChapter = () => {
+    fetchAuth({
+      url: `${server}/auth/chapter/${id}`,
+      method: 'DELETE',
+    }).then(() => {
+      toast.success('Xoá thành công', {
+        position: 'bottom-left',
+        autoClose: 3000,
+      });
+      router.replace(`/manga/${chapter.bookGroupId}`);
+    });
+  };
   return (
     <div style={{ background: '#2c3e50' }}>
+      {sortByChapterNumber()}
       <div
         className="container"
         style={{ background: '#ecf0f1' }}
@@ -360,6 +413,34 @@ export default function ChapterContent({
                 <FaQuoteRight></FaQuoteRight>
               </p>
             )}
+            <div className="d-flex">
+              {checkUploader() === true &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'chapter.modifySelf'
+                ) && (
+                  <Link
+                    href={'/edit-Chapter/' + id}
+                    passHref
+                  >
+                    <button className="btn btn-dark">
+                      <FaEdit></FaEdit>
+                    </button>
+                  </Link>
+                )}
+              {checkUploader() === true &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'chapter.deleteSelf'
+                ) && (
+                  <button
+                    className="btn btn-danger ms-2"
+                    onClick={() => deleteChapter()}
+                  >
+                    <FaWindowClose></FaWindowClose>
+                  </button>
+                )}
+            </div>
           </div>
         </div>
         <hr />
@@ -409,15 +490,6 @@ export default function ChapterContent({
           >
             <FaAngleRight></FaAngleRight>
           </button>
-          <button
-            type="button"
-            className="btn btn-outline-success me-2 mt-3"
-          >
-            {'Thích '}
-            <span className="badge bg-danger">
-              {+book.likeCount}
-            </span>
-          </button>
         </div>
         <div>
           {chapter.type === 'images' ? (
@@ -429,7 +501,12 @@ export default function ChapterContent({
                 <div
                   className="mb-3"
                   key={index}
-                  style={{}}
+                  style={{
+                    height: '100%',
+                    aspectRatio: '3/4',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
                 >
                   <Image
                     src={
@@ -438,10 +515,8 @@ export default function ChapterContent({
                         : NULL_CONSTANTS.BOOK_GROUP_IMAGE
                     }
                     alt=""
-                    width={'700'}
-                    layout="responsive"
-                    height={'1000'}
-                    objectFit="cover"
+                    layout="fill"
+                    objectFit="contain"
                   />
                 </div>
               ))}
@@ -495,15 +570,6 @@ export default function ChapterContent({
               }
             >
               <FaAngleRight></FaAngleRight>
-            </button>
-            <button
-              type="button"
-              className="btn btn-outline-success ms-2"
-            >
-              {'Thích '}
-              <span className="badge bg-danger">
-                {book.likeCount}
-              </span>
             </button>
           </div>
         </div>

@@ -1,14 +1,17 @@
-export const addToFavorite = (
-  bookGroupId,
-  chapter = null,
-  manga
-) => {
+export const addToFavorite = (bookGroupId, manga) => {
   const newObject = {
     name: manga.name,
     id: bookGroupId,
-    latestChapter: chapter && chapter.chapterNumber,
+    latestChapter: manga.chapters && manga.chapters[0],
     image: manga.primaryCoverArt,
-    chapterId: chapter && chapter.id,
+    view: manga.views,
+    alias: manga.alias,
+    likeCount: manga.likeCount,
+    dislikeCount: manga.dislikeCount,
+    genres: manga.genres,
+    authors: manga.authors,
+    listChapters:
+      manga.chapters && manga.chapters.slice(0, 3),
   };
   if (localStorage.getItem('favorite') == null) {
     localStorage.setItem('favorite', '[]');

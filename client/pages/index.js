@@ -14,6 +14,11 @@ import ByMonth from '../components/ranking-In-Manga-Page/by-Month';
 import '../public/images/null-Book.png';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import RelativeTimestamp from '../utilities/to-Relative-Time-stamp';
+import {
+  FaArrowCircleRight,
+  FaArrowRight,
+} from 'react-icons/fa';
 export default function Home() {
   const {
     latestManga,
@@ -43,7 +48,6 @@ export default function Home() {
       style={{ background: '#EBEBEB' }}
     >
       {checkComplete()}
-      {console.log(userInfo)}
       <div
         className="container pt-4"
         style={{ background: '#f9f9f9' }}
@@ -139,60 +143,69 @@ export default function Home() {
               ĐỪNG BỎ LỠ
             </h5>
             <div className="row">
-              {randomBooks.slice(0, 8).map((randomBook) => (
-                <Link
-                  href={`manga/${randomBook.id}`}
-                  key={randomBook.id}
-                  passHref
-                >
-                  <div className="col-sm-6 mt-2">
-                    <div
-                      className="row"
-                      data-aos="fade-right"
-                    >
-                      <div className="col-6">
-                        <DisplayImg
-                          srcImg={
-                            randomBook.image
-                              ? `${server}/image/${randomBook.image}`
-                              : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-                          }
-                          text={`${randomBook.likes} lượt thích`}
-                          bgColor="#ff7043"
-                        ></DisplayImg>
-                      </div>
-                      <div className="col-6 mt-2">
-                        <p
-                          style={{ color: '#ff7043' }}
-                          className={styles.object}
-                        >
-                          {randomBook.title}
-                        </p>
-                        <p>{randomBook.views} lượt đọc</p>
-                        <div className="list-chapter">
-                          <p className="border-bottom">
-                            Chap mới nhất
+              {randomBooks
+                .slice(0, 10)
+                .map((randomBook) => (
+                  <Link
+                    href={`manga/${randomBook.id}`}
+                    key={randomBook.id}
+                    passHref
+                  >
+                    <div className="col-sm-6 mt-2">
+                      <div
+                        className="row"
+                        data-aos="fade-right"
+                      >
+                        <div className="col-6">
+                          <DisplayImg
+                            srcImg={
+                              randomBook.image
+                                ? `${server}/image/${randomBook.image}`
+                                : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                            }
+                            text={`${randomBook.likes} lượt thích`}
+                            bgColor="#ff7043"
+                          ></DisplayImg>
+                        </div>
+                        <div className="col-6 mt-2">
+                          <p
+                            style={{ color: '#ff7043' }}
+                            className={styles.object}
+                          >
+                            {randomBook.title}
                           </p>
-
-                          <Link href="/" passHref>
-                            <p
-                              className={styles.object}
-                              style={{
-                                listStyleType: 'none',
-                              }}
-                            >
-                              {randomBook.latestChapter ==
-                              null
-                                ? 'Chưa có chap nào'
-                                : `Chap ${randomBook.latestChapter}`}
+                          <p>{randomBook.views} lượt đọc</p>
+                          <div className="list-chapter">
+                            <p className="border-bottom">
+                              Chap mới nhất
                             </p>
-                          </Link>
+                            <div>
+                              <Link
+                                href={
+                                  '/chapter/' +
+                                  randomBook.latestChapter
+                                }
+                                passHref
+                              >
+                                <p
+                                  className={styles.object}
+                                  style={{
+                                    listStyleType: 'none',
+                                  }}
+                                >
+                                  {randomBook.latestChapter ==
+                                  null
+                                    ? 'Chưa có chap nào'
+                                    : `Chap ${randomBook.latestChapter}`}
+                                </p>
+                              </Link>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))}
             </div>
           </div>
           <div
@@ -327,10 +340,16 @@ export default function Home() {
                                     width: '80px',
                                     aspectRatio: '1/1',
                                     position: 'relative',
+                                    borderRadius: '0.75rem',
+                                    overflow: 'hidden',
                                   }}
                                 >
                                   <Image
-                                    src={`${server}/image/${book.image}`}
+                                    src={
+                                      book.image
+                                        ? `${server}/image/${book.image}`
+                                        : NULL_CONSTANTS.BOOK_GROUP_IMAGE
+                                    }
                                     alt="Book Cover Art"
                                     layout="fill"
                                     objectFit="cover"
@@ -359,7 +378,7 @@ export default function Home() {
                                   style={{
                                     color: '#bdc3c7',
                                   }}
-                                >{`Đọc tiếp chapter ${book.latestChapter}`}</p>
+                                >{`Đọc tiếp chapter ${book.chapterId}`}</p>
                               </Link>
                             </div>
                           </div>
@@ -370,15 +389,27 @@ export default function Home() {
             {Object.keys(userInfo).length > 0 &&
               favoriteBooks && (
                 <div>
-                  <h5
-                    style={{
-                      borderLeft: '5px solid #e74c3c',
-                      color: '#e74c3c',
-                    }}
-                    className="ps-2 mt-3"
-                  >
-                    TRUYỆN YÊU THÍCH
-                  </h5>
+                  <div className="d-flex justify-content-between">
+                    <h5
+                      style={{
+                        borderLeft: '5px solid #e74c3c',
+                        color: '#e74c3c',
+                      }}
+                      className="ps-2 mt-3"
+                    >
+                      TRUYỆN YÊU THÍCH
+                    </h5>
+                    <Link
+                      href={'/favourite-List/favoriteList'}
+                      passHref
+                    >
+                      <div className="mt-3">
+                        {'Xem thêm '}
+                        <FaArrowRight></FaArrowRight>
+                      </div>
+                    </Link>
+                  </div>
+
                   <div
                     style={{
                       height: '500px',
@@ -411,6 +442,8 @@ export default function Home() {
                                     width: '80px',
                                     aspectRatio: '1/1',
                                     position: 'relative',
+                                    borderRadius: '0.75rem',
+                                    overflow: 'hidden',
                                   }}
                                 >
                                   <Image
@@ -433,18 +466,17 @@ export default function Home() {
                                   {book.name}
                                 </h5>
                               </Link>
-
-                              <Link
-                                href={`/chapter/${book.chapterId}`}
-                                passHref
-                              >
+                              {book.latestChapter && (
                                 <p
-                                  className={styles.object}
                                   style={{
-                                    color: '#bdc3c7',
+                                    fontStyle: 'italic',
+                                    color: '#95a5a6',
                                   }}
-                                >{`Đọc tiếp chapter ${book.latestChapter}`}</p>
-                              </Link>
+                                >
+                                  {'Chap mới nhất: ' +
+                                    book.latestChapter.id}
+                                </p>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -480,9 +512,9 @@ export default function Home() {
                         href={'/manga/' + comment.bookId}
                         passHref
                       >
-                        <p className={styles.object}>
+                        <h5 className={styles.object}>
                           {comment.bookName}
-                        </p>
+                        </h5>
                       </Link>
                       <Link
                         href={
@@ -501,11 +533,11 @@ export default function Home() {
                     <div className="d-flex  p-2">
                       <div
                         style={{
-                          width: '80px',
-                          aspectRatio: '1/1',
                           position: 'relative',
                           overflow: 'hidden',
                           borderRadius: '0.75rem',
+                          width: '80px',
+                          aspectRatio: '1/1',
                         }}
                       >
                         <Link
@@ -513,7 +545,11 @@ export default function Home() {
                           passHref
                         >
                           <Image
-                            src={`${server}/image/${comment.userAvatar}`}
+                            src={
+                              comment.userAvatar
+                                ? `${server}/image/${comment.userAvatar}`
+                                : NULL_CONSTANTS.AVATAR
+                            }
                             alt="Describe"
                             objectFit="cover"
                             layout="fill"
@@ -525,7 +561,10 @@ export default function Home() {
                           href={'/user/' + comment.userId}
                           passHref
                         >
-                          <h5 className={styles.object}>
+                          <h5
+                            className={styles.object}
+                            style={{ color: '#e74c3c' }}
+                          >
                             {comment.userName}
                           </h5>
                         </Link>

@@ -69,13 +69,15 @@ function EditChapter({ manga, bookGroupId }) {
 
                 <td>
                   <div className="d-flex justify-content-around">
-                    <Link
-                      href={`/edit-Chapter/${chapter.id}`}
-                      passHref
-                    >
-                      <FaPen></FaPen>
-                    </Link>
-
+                    {chapter.userPosted.id ===
+                      userInfo.id && (
+                      <Link
+                        href={`/edit-Chapter/${chapter.id}`}
+                        passHref
+                      >
+                        <FaPen></FaPen>
+                      </Link>
+                    )}
                     <Link
                       href={`/chapter/${chapter.id}`}
                       passHref
