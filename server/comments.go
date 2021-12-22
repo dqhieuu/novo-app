@@ -453,7 +453,7 @@ func EditCommentHandler(c *gin.Context) {
 		}
 
 		var content PostComment
-		err = c.ShouldBindJSON(content)
+		err = c.ShouldBindJSON(&content)
 		if err != nil {
 			ReportError(c, err, "error parsing json", http.StatusBadRequest)
 			return
