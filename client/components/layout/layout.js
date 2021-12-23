@@ -9,6 +9,7 @@ import NULL_CONSTANTS from '../../utilities/null-Constants';
 import WEB_CONSTANTS from '../../utilities/constants';
 import styles from './layout.module.css';
 import { useRouter } from 'next/router';
+import ScrollButton from '../../utilities/scrollButton';
 import axios from 'axios';
 import {
   fetchAuth,
@@ -249,7 +250,9 @@ export default function Layout({ children }) {
         </div>
       </div>
       <UserLogin></UserLogin>
-      <div>{children}</div>
+      <div>
+        {children} <ScrollButton></ScrollButton>
+      </div>
     </div>
   );
 }

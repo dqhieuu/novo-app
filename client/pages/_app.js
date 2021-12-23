@@ -26,7 +26,6 @@ function MyApp({ Component, pageProps }) {
           <ToastContainer />
           <NextNProgress />
           <Component {...pageProps} />
-          <ScrollButton></ScrollButton>
         </Layout>
       </UserContextProvider>
     </MangaContextProvider>
