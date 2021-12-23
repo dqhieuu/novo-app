@@ -224,18 +224,24 @@ export default function Details({
             }}
           >
             <div>
-              <Link
-                href={'/user/' + comment.userId}
-                passHref
-              >
-                <p
-                  className={
-                    'display-6 text-primary ' +
-                    styles.object
-                  }
-                  style={{ fontSize: '20px' }}
-                >
-                  {comment.userName}
+              <div className="d-flex">
+                <div>
+                  <Link
+                    href={'/user/' + comment.userId}
+                    passHref
+                  >
+                    <p
+                      className={
+                        'display-6 text-primary  ' +
+                        styles.object
+                      }
+                      style={{ fontSize: '20px' }}
+                    >
+                      {comment.userName}
+                    </p>
+                  </Link>
+                </div>
+                <div>
                   <span
                     className="ms-3"
                     style={{
@@ -248,8 +254,84 @@ export default function Details({
                       {comment.timePosted}
                     </RelativeTimestamp>
                   </span>
-                </p>
-              </Link>
+                </div>
+                <div className={styles.object}>
+                  <Link
+                    href={'/chapter/' + comment.chapterId}
+                    passHref
+                  >
+                    <p className="ms-2">
+                      {comment.chapterNumber
+                        ? 'Chap ' + comment.chapterNumber
+                        : ''}
+                    </p>
+                  </Link>
+                </div>
+                {userInfo.id === comment.userId &&
+                currentEditedComment !== index &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'comment.modifySelf'
+                ) ? (
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setCurrentEditedComment(index);
+                      setCurrentEditedCommentContent(
+                        comment.comment
+                      );
+                    }}
+                  >
+                    <FaEdit></FaEdit>
+                  </button>
+                ) : (
+                  userInfo.permission &&
+                  userInfo.permission.includes(
+                    'comment.modify'
+                  ) && (
+                    <button
+                      className="btn"
+                      onClick={() => {
+                        setCurrentEditedComment(index);
+                        setCurrentEditedCommentContent(
+                          comment.comment
+                        );
+                      }}
+                    >
+                      <FaEdit></FaEdit>
+                    </button>
+                  )
+                )}
+                {userInfo.id === comment.userId &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'comment.deleteSelf'
+                ) ? (
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      deleteComment(comment.commentId);
+                    }}
+                  >
+                    <FaWindowClose></FaWindowClose>
+                  </button>
+                ) : (
+                  userInfo.permission &&
+                  userInfo.permission.includes(
+                    'comment.delete'
+                  ) && (
+                    <button
+                      className="btn"
+                      onClick={() => {
+                        deleteComment(comment.commentId);
+                      }}
+                    >
+                      <FaWindowClose></FaWindowClose>
+                    </button>
+                  )
+                )}
+              </div>
+
               {currentEditedComment !== index ? (
                 <p className="m-3 text-break">
                   {comment.comment}
@@ -292,40 +374,6 @@ export default function Details({
                   </button>
                 </div>
               )}
-            </div>
-            <div className="d-flex justify-content-end">
-              {userInfo.id === comment.userId &&
-                currentEditedComment !== index &&
-                userInfo.permission &&
-                userInfo.permission.includes(
-                  'comment.modifySelf'
-                ) && (
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      setCurrentEditedComment(index);
-                      setCurrentEditedCommentContent(
-                        comment.comment
-                      );
-                    }}
-                  >
-                    <FaEdit></FaEdit>
-                  </button>
-                )}
-              {userInfo.id === comment.userId &&
-                userInfo.permission &&
-                userInfo.permission.includes(
-                  'comment.deleteSelf'
-                ) && (
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      deleteComment(comment.commentId);
-                    }}
-                  >
-                    <FaWindowClose></FaWindowClose>
-                  </button>
-                )}
             </div>
           </div>
         </div>
@@ -741,7 +789,7 @@ export default function Details({
                 className="row"
                 style={{ borderBottom: '1px solid grey' }}
               >
-                <div className="col-5">
+                <div className="col-4">
                   <p>Chapter</p>
                 </div>
 
@@ -751,9 +799,10 @@ export default function Details({
                 <div className="col-3">
                   <p>Người đăng</p>
                 </div>
-                <div className="col-2">
-                  <p>Lượt xem</p>
+                <div className="col-1">
+                  <p>Views:</p>
                 </div>
+                <div className="col-2"></div>
               </div>
 
               <div className="list-chapter">
@@ -769,7 +818,7 @@ export default function Details({
                       href={`/chapter/${chapter.id}`}
                       passHref
                     >
-                      <div className="col-5">
+                      <div className="col-4">
                         <p
                           className={styles.object}
                           onClick={() => {
@@ -808,12 +857,52 @@ export default function Details({
                         </p>
                       </div>
                     </Link>
-                    <div className="col-2">
+                    <div className="col-1">
                       <p>
                         {chapter.views
                           ? chapter.views
-                          : 'Chưa có lượt xem'}
+                          : '0'}
                       </p>
+                    </div>
+                    <div className="col-2">
+                      <div className="d-flex">
+                        {userInfo.permission &&
+                        userInfo.permission.includes(
+                          'chapter.modifySelf'
+                        ) &&
+                        userInfo.id == manga.ownerId ? (
+                          <button className="btn btn-dark me-2">
+                            <FaEdit></FaEdit>
+                          </button>
+                        ) : (
+                          userInfo.permission &&
+                          userInfo.permission.includes(
+                            'chapter.modify'
+                          ) && (
+                            <button className="btn btn-dark me-2">
+                              <FaEdit></FaEdit>
+                            </button>
+                          )
+                        )}
+                        {userInfo.permission &&
+                        userInfo.permission.includes(
+                          'chapter.deleteSelf'
+                        ) &&
+                        userInfo.id == manga.ownerId ? (
+                          <button className="btn btn-danger ">
+                            <FaWindowClose></FaWindowClose>
+                          </button>
+                        ) : (
+                          userInfo.permission &&
+                          userInfo.permission.includes(
+                            'chapter.delete'
+                          ) && (
+                            <button className="btn btn-danger ">
+                              <FaWindowClose></FaWindowClose>
+                            </button>
+                          )
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
