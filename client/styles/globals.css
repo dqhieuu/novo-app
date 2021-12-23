@@ -111,6 +111,12 @@ a {
 .modal-backdrop.show {
   z-index: 10;
 }
+.signInComponent:hover {
+  cursor: pointer;
+  background: #bdc3c7;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+}
 @media screen and (max-width: 560px) {
   .author-gradient img {
     bottom: 0;

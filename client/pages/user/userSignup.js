@@ -168,13 +168,13 @@ export default function SignUp() {
       <div className="d-flex justify-content-center mt-4">
         <h1
           className="blockquote-footer"
-          style={{ fontSize: '1.5rem' }}
+          style={{ fontSize: '1.25rem' }}
         >
-          OR
+          Hoặc
         </h1>
         <h1
           className="blockquote-footer ms-2"
-          style={{ fontSize: '1.5rem' }}
+          style={{ fontSize: '1.25rem' }}
         ></h1>
       </div>
       <div className="d-grid">

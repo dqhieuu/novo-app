@@ -6,6 +6,7 @@ import DisplayImg from '../../components/display-Img/display-Img';
 import WEB_CONSTANTS from '../../utilities/constants';
 import ReactPaginate from 'react-paginate';
 import Image from 'next/image';
+import ScrollButton from '../../utilities/scrollButton';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -125,6 +126,7 @@ export default function Author({ author }) {
           </div>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

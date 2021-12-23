@@ -64,7 +64,7 @@ export default function ChangePassWord() {
         <FaArrowLeft
           onClick={() => router.replace('/')}
         ></FaArrowLeft>
-        {'Đổi mật khẩu'}
+        {' Đổi mật khẩu'}
       </h3>
       <form onSubmit={handleSubmit(submit)}>
         <div className="mb-3 mt-3">
@@ -115,6 +115,29 @@ export default function ChangePassWord() {
             }
           />
         </div>
+        <div className="mb-3">
+          <label htmlFor="pwd" className="form-label">
+            Nhập lại mật khẩu mới:
+          </label>
+          <input
+            type="password"
+            name="repassword"
+            id="repassword"
+            placeholder="Nhập mật khẩu mới"
+            className="form-control"
+            {...register('repassword', {
+              required: true,
+
+              minLength: 8,
+            })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                newPassword: e.target.value,
+              })
+            }
+          />
+        </div>
 
         <div className="d-grid">
           <button
@@ -146,6 +169,9 @@ export default function ChangePassWord() {
           )}
           {errors.newPassword?.type === 'maxLength' && (
             <li>Mật khẩu có ít nhât 8 ký tự</li>
+          )}
+          {errors.repassword?.type === 'required' && (
+            <li>Mật khẩu chưa khớp</li>
           )}
         </ul>
       )}

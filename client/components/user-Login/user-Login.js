@@ -11,7 +11,6 @@ import {
   FaUserCog,
   FaUserEdit,
 } from 'react-icons/fa';
-
 export default function UserLogin() {
   const { userInfo, update } = useContext(UserContext);
   const router = useRouter();
@@ -33,20 +32,29 @@ export default function UserLogin() {
       </div>
       <div className="offcanvas-body">
         <Link href={`/user/${userInfo.id}`} passHref>
-          <p data-bs-dismiss="offcanvas">
+          <p
+            data-bs-dismiss="offcanvas"
+            className="signInComponent"
+          >
             <FaUserAlt></FaUserAlt>
             {' Trang cá nhân'}
           </p>
         </Link>
         <Link href={`/user/userChangePassword`} passHref>
-          <p data-bs-dismiss="offcanvas">
+          <p
+            data-bs-dismiss="offcanvas"
+            className="signInComponent"
+          >
             <FaUserCog></FaUserCog>Đổi mật khẩu
           </p>
         </Link>
         <hr />
 
         <Link href={`/user/${userInfo.id}#upload`} passHref>
-          <p data-bs-dismiss="offcanvas">
+          <p
+            data-bs-dismiss="offcanvas"
+            className="signInComponent"
+          >
             <FaFileUpload></FaFileUpload>Truyện đã đăng
           </p>
         </Link>

@@ -1,6 +1,6 @@
 import DisplayImg from '../../components/display-Img/display-Img';
 import Link from 'next/link';
-import { useContext, useState } from 'react';
+import { useContext, useState, useEffect } from 'react';
 import { MangaContext } from '../../context/manga-Context';
 import ReactPaginate from 'react-paginate';
 import { UserContext } from '../../context/user-Context';
@@ -20,7 +20,7 @@ import {
   FaWifi,
   FaWindowClose,
 } from 'react-icons/fa';
-import { BiDislike, BiLike } from 'react-icons/bi';
+import { BiDislike, BiLike, BiTime } from 'react-icons/bi';
 import ByWeek from '../../components/ranking-In-Manga-Page/by-Week';
 import ByMonth from '../../components/ranking-In-Manga-Page/by-Month';
 import ByYear from '../../components/ranking-In-Manga-Page/by-Year';
@@ -35,7 +35,9 @@ import { toast } from 'react-toastify';
 import {
   addToHistory,
   addToFavorite,
+  removeElementFavorite,
 } from '../../utilities/localStorageFunction';
+import ScrollButton from '../../utilities/scrollButton';
 
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
@@ -62,11 +64,16 @@ export default function Details({
   comments,
   bookGroupId,
 }) {
+  const [arr, setArr] = useState([]);
   const { userInfo } = useContext(UserContext);
   const [pageNumber, setPageNumber] = useState(0);
   const cmtPerPage = 5;
   const pageVisited = pageNumber * cmtPerPage;
+  useEffect(() => {
+    let arr = JSON.parse(localStorage.getItem('favorite'));
 
+    setArr(arr.filter((book) => book.id == bookGroupId));
+  }, []);
   const [comment, setComment] = useState('');
   const router = useRouter();
   const { server, randomBooks } = useContext(MangaContext);
@@ -91,6 +98,7 @@ export default function Details({
   const handleInputChange = (text) => {
     setComment(text);
   };
+
   const actualLikeCount =
     manga.likeCount + (likeState === 'like' ? 1 : 0);
 
@@ -199,24 +207,20 @@ export default function Details({
               >
                 {comment.userName}
                 <span
+                  className="ms-3"
                   style={{
                     fontSize: '12px',
                     color: 'black',
                   }}
                 >
-                  {' '}
+                  <BiTime></BiTime>
                   <RelativeTimestamp>
                     {comment.timePosted}
                   </RelativeTimestamp>
                 </span>
               </p>
               {currentEditedComment !== index ? (
-                <p
-                  className="m-3 text-break"
-                  style={{
-                    fontStyle: 'italic',
-                  }}
-                >
+                <p className="m-3 text-break">
                   {comment.comment}
                 </p>
               ) : (
@@ -305,6 +309,16 @@ export default function Details({
         return b.chapterNumber - a.chapterNumber;
       });
     manga.chapters = arr;
+  };
+  const triggerFavorite = () => {
+    if (arr.length > 0) {
+      setArr([]);
+      removeElementFavorite(bookGroupId);
+    } else {
+      addToFavorite(bookGroupId, manga);
+
+      setArr(JSON.parse(localStorage.getItem('favorite')));
+    }
   };
   return (
     <div style={{ background: '#EBEBEB' }}>
@@ -484,18 +498,7 @@ export default function Details({
                       </span>
                     </button>
                   </div>
-
                   <div className=" d-flex">
-                    <button
-                      type="button"
-                      className="btn btn-success me-2 "
-                      onClick={() => {
-                        addToFavorite(bookGroupId, manga);
-                      }}
-                    >
-                      <FaHeart></FaHeart>
-                      {' Yêu Thích'}
-                    </button>
                     {manga.chapters.length != 0 && (
                       <Link
                         passHref
@@ -513,9 +516,22 @@ export default function Details({
                         </button>
                       </Link>
                     )}
+
+                    <button
+                      type="button"
+                      className="btn btn-success ms-2 "
+                      onClick={() => triggerFavorite()}
+                      disabled={
+                        Object.keys(userInfo).length === 0
+                      }
+                    >
+                      <FaHeart></FaHeart>
+                      {arr.length > 0
+                        ? ' Bỏ Yêu Thích'
+                        : 'Yêu Thích'}
+                    </button>
                   </div>
                 </div>
-                {console.log(userInfo)}
                 <div className="d-flex mt-3">
                   {userInfo.permission &&
                     (userInfo.permission.includes(
@@ -678,17 +694,17 @@ export default function Details({
                 className="row"
                 style={{ borderBottom: '1px solid grey' }}
               >
-                <div className="col-3">
+                <div className="col-5">
                   <p>Chapter</p>
                 </div>
 
-                <div className="col-3">
+                <div className="col-2">
                   <p>Cập nhật</p>
                 </div>
                 <div className="col-3">
                   <p>Người đăng</p>
                 </div>
-                <div className="col-3">
+                <div className="col-2">
                   <p>Lượt xem</p>
                 </div>
               </div>
@@ -706,7 +722,7 @@ export default function Details({
                       href={`/chapter/${chapter.id}`}
                       passHref
                     >
-                      <div className="col-3">
+                      <div className="col-5">
                         <p
                           className={styles.object}
                           onClick={() => {
@@ -720,13 +736,15 @@ export default function Details({
                           Chapter
                           {' ' +
                             chapter.chapterNumber +
-                            ' : ' +
-                            (chapter.name && chapter.name)}
+                            ': ' +
+                            (chapter.name
+                              ? chapter.name
+                              : '')}
                         </p>
                       </div>
                     </Link>
 
-                    <div className="col-3">
+                    <div className="col-2">
                       <p>
                         <RelativeTimestamp>
                           {chapter.timePosted}
@@ -743,7 +761,7 @@ export default function Details({
                         </p>
                       </div>
                     </Link>
-                    <div className="col-3">
+                    <div className="col-2">
                       <p>
                         {chapter.views
                           ? chapter.views
@@ -923,7 +941,7 @@ export default function Details({
                         comment.length < 10 ||
                         comment.length > 500
                       }
-                      className="btn btn-dark me-5"
+                      className="btn btn-dark "
                       onClick={() => submit(comment)}
                     >
                       Submit
@@ -1039,6 +1057,7 @@ export default function Details({
           ))}
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

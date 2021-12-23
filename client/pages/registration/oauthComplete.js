@@ -15,6 +15,7 @@ import WEB_CONSTANTS from '../../utilities/constants';
 import uploadImages from '../../utilities/upload-Images';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ScrollButton from '../../utilities/scrollButton';
 export default function OauthComplete() {
   const { update } = useContext(UserContext);
   const router = useRouter();
@@ -177,6 +178,7 @@ export default function OauthComplete() {
           )}
         </ul>
       )}
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { MangaContext } from '../../context/manga-Context';
 import NULL_CONSTANTS from '../../utilities/null-Constants';
 import DisplayImg from '../../components/display-Img/display-Img';
 import WEB_CONSTANTS from '../../utilities/constants';
+import ScrollButton from '../../utilities/scrollButton';
 
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
@@ -100,6 +101,7 @@ export default function SearchResult({
           </p>
         </div>
       )}
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

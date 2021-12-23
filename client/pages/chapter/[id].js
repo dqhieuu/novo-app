@@ -185,12 +185,7 @@ export default function ChapterContent({
                 </span>
               </p>
               {currentEditedComment !== index ? (
-                <p
-                  className="m-3 text-break"
-                  style={{
-                    fontStyle: 'italic',
-                  }}
-                >
+                <p className="m-3 text-break">
                   {comment.comment}
                 </p>
               ) : (
@@ -391,18 +386,26 @@ export default function ChapterContent({
                 </p>
               </div>
               <div>
-                <p
-                  style={{ color: '#27ae60' }}
-                  className={styles.object}
-                >
+                <p>
                   {book.authors.length > 0
-                    ? book.authors.map((author) => (
+                    ? book.authors.map((author, index) => (
                         <Link
                           href={`/author/${author.id}`}
-                          key={author.id}
                           passHref
+                          key={index}
                         >
-                          <span>{author.name + ', '}</span>
+                          <span
+                            className={styles.object}
+                            style={{
+                              background: '#dfe6e9',
+                              borderRadius: '0.5rem',
+                              padding: '0.25rem',
+                              fontWeight: '600',
+                              marginRight: '0.5rem',
+                            }}
+                          >
+                            {author.name}
+                          </span>
                         </Link>
                       ))
                     : 'Đang cập nhật'}
@@ -686,7 +689,7 @@ export default function ChapterContent({
                         comment.length < 10 ||
                         comment.length > 500
                       }
-                      className="btn btn-dark me-5"
+                      className="btn btn-dark"
                       onClick={() => submit(comment)}
                     >
                       Submit
@@ -795,6 +798,7 @@ export default function ChapterContent({
           </div>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }
