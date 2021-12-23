@@ -1,6 +1,7 @@
 import EditChapter from '../../components/manage-Manga/edit-Chapter';
 import EditDetail from '../../components/manage-Manga/edit-Detail';
 import WEB_CONSTANTS from '../../utilities/constants';
+import ScrollButton from '../../utilities/scrollButton';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -81,6 +82,7 @@ export default function EditManga({ manga, id }) {
           ></EditChapter>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

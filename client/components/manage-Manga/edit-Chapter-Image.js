@@ -183,7 +183,7 @@ export default function EditChapterImage({ chapter, id }) {
             htmlFor="chapterName"
             className="form-label"
           >
-            01. Nhập tên Chapter:
+            Nhập tên Chapter:
           </label>
           <input
             type="text"
@@ -205,7 +205,7 @@ export default function EditChapterImage({ chapter, id }) {
             htmlFor="chapterName"
             className="form-label"
           >
-            02. STT:
+            STT:
           </label>
           <input
             type="text"

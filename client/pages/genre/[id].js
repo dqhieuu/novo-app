@@ -5,6 +5,7 @@ import NULL_CONSTANTS from '../../utilities/null-Constants';
 import DisplayImg from '../../components/display-Img/display-Img';
 import WEB_CONSTANTS from '../../utilities/constants';
 import ReactPaginate from 'react-paginate';
+import ScrollButton from '../../utilities/scrollButton';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -86,6 +87,7 @@ export default function GenreManga({ manga, id }) {
           ></ReactPaginate>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

@@ -15,6 +15,7 @@ import ByWeek from '../../components/ranking-In-Manga-Page/by-Week';
 import ByMonth from '../../components/ranking-In-Manga-Page/by-Month';
 import ByYear from '../../components/ranking-In-Manga-Page/by-Year';
 import ReactPaginate from 'react-paginate';
+import ScrollButton from '../../utilities/scrollButton';
 export default function FavoriteList() {
   const server = WEB_CONSTANTS.SERVER;
   const favoriteBooks =
@@ -266,6 +267,7 @@ export default function FavoriteList() {
           </div>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

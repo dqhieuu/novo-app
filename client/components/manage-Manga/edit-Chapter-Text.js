@@ -50,7 +50,7 @@ export default function EditChapterText({ chapter, id }) {
     <div className="p-3" data-aos="flip-left">
       <div className="mb-3 mt-3">
         <label htmlFor="chapterName" className="form-label">
-          01. Nhập tên Chapter:
+          Nhập tên Chapter:
         </label>
         <input
           type="text"
@@ -69,7 +69,7 @@ export default function EditChapterText({ chapter, id }) {
       </div>
       <div className="mb-3 mt-3">
         <label htmlFor="chapterName" className="form-label">
-          02. Nhập STT Chap:
+          Nhập STT Chap:
         </label>
         <input
           type="number"

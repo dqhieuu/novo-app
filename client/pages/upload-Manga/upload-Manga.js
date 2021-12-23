@@ -19,6 +19,7 @@ import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { FaAngry, FaSpinner } from 'react-icons/fa';
+import ScrollButton from '../../utilities/scrollButton';
 export default function UploadManga() {
   const { server } = useContext(MangaContext);
   const { listAuthorsId } = useContext(UserContext);
@@ -323,7 +324,6 @@ export default function UploadManga() {
                       alias: e.target.value,
                     })
                   }
-                  required
                 />
                 <label
                   htmlFor=""
@@ -374,8 +374,12 @@ export default function UploadManga() {
                   checked={genre.checked}
                   onChange={handleCheckbox}
                   value={index}
+                  name={genre.name}
                 />
-                <label className="form-check-label">
+                <label
+                  className="form-check-label"
+                  name={genre.name}
+                >
                   {genre.name}
                 </label>
               </div>
@@ -610,6 +614,7 @@ export default function UploadManga() {
           </div>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

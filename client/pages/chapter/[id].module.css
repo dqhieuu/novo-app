@@ -5,4 +5,5 @@
 
 .object:hover {
   cursor: pointer;
+  color: #27ae60;
 }

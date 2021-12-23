@@ -17,6 +17,7 @@ import {
   validToken,
 } from '../../utilities/fetchAuth';
 import UserLogin from '../user-Login/user-Login';
+import { toast } from 'react-toastify';
 export default function Layout({ children }) {
   const { genres } = useContext(MangaContext);
   const { update, userInfo } = useContext(UserContext);
@@ -46,6 +47,10 @@ export default function Layout({ children }) {
                   })
                 ).data
               );
+              toast.success('Đăng nhập thành công', {
+                position: 'bottom-left',
+                autoClose: 3000,
+              });
             }
           })();
           break;
@@ -76,7 +81,24 @@ export default function Layout({ children }) {
       <nav className="navbar navbar-expand-sm navbar-dark bg-dark sticky-top ">
         <div className="container">
           <Link href="/" passHref>
-            <div className="navbar-brand">NOVOReader</div>
+            <div className="navbar-brand">
+              <div
+                className={styles.differentitem}
+                style={{
+                  position: 'relative',
+                  overflow: 'hidden',
+                  width: '100px',
+                  aspectRatio: '2/1',
+                }}
+              >
+                <Image
+                  src="/images/logo.png"
+                  alt="logo"
+                  layout="fill"
+                  objectFit="contain"
+                ></Image>
+              </div>
+            </div>
           </Link>
 
           <button
@@ -94,7 +116,7 @@ export default function Layout({ children }) {
             className="collapse navbar-collapse"
             id="navbarSupportedContent"
           >
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul className="navbar-nav me-auto ">
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -117,7 +139,7 @@ export default function Layout({ children }) {
                             className={`col-2 col-lg-3`}
                             key={genre.id}
                           >
-                            <div className="d-flex justify-content-center">
+                            <div className="d-flex justify-content-center p-1">
                               <Link
                                 href={`/genre/${genre.id}`}
                                 passHref
@@ -159,6 +181,7 @@ export default function Layout({ children }) {
                   background: 'white',
                   width: '50px',
                   height: '50px',
+                  position: 'relative',
                 }}
                 data-bs-toggle="offcanvas"
                 data-bs-target="#demo"
@@ -170,9 +193,7 @@ export default function Layout({ children }) {
                       : NULL_CONSTANTS.AVATAR
                   }
                   alt=""
-                  width="50"
-                  height="50"
-                  layout="responsive"
+                  layout="fill"
                   objectFit="cover"
                 />
               </div>
@@ -250,9 +271,7 @@ export default function Layout({ children }) {
         </div>
       </div>
       <UserLogin></UserLogin>
-      <div>
-        {children} <ScrollButton></ScrollButton>
-      </div>
+      <div>{children}</div>
     </div>
   );
 }

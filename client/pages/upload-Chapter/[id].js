@@ -9,6 +9,7 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import UploadChapterImg from '../../components/upload-Manga/uploadChapterImg';
 import UploadChapterNovel from '../../components/upload-Manga/uploadChapterNovel';
+import ScrollButton from '../../utilities/scrollButton';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -54,7 +55,7 @@ export default function UploadNewChapter({
             htmlFor="chapterName"
             className="form-label"
           >
-            01. Số Chap:
+            Số Chap:
           </label>
           <input
             type="text"
@@ -76,7 +77,7 @@ export default function UploadNewChapter({
             htmlFor="chapterName"
             className="form-label"
           >
-            02. Tên Chap:
+            Tên Chap:
           </label>
           <input
             type="text"
@@ -116,6 +117,7 @@ export default function UploadNewChapter({
           ></UploadChapterNovel>
         )}
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

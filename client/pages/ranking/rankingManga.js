@@ -1,6 +1,7 @@
 import ByWeek from '../../components/ranking-Manga/by-Week';
 import ByMonth from '../../components/ranking-Manga/by-Month';
 import ByYear from '../../components/ranking-Manga/by-Year';
+import ScrollButton from '../../utilities/scrollButton';
 export default function RankingManga() {
   return (
     <div>
@@ -111,6 +112,7 @@ export default function RankingManga() {
           </div>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

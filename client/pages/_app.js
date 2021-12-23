@@ -13,6 +13,7 @@ import UserContextProvider from '../context/user-Context';
 import AOS from 'aos';
 import 'aos/dist/aos.css'; // You can also use <link> for styles
 import ScrollButton from '../utilities/scrollButton';
+
 // ..
 function MyApp({ Component, pageProps }) {
   useEffect(() => {

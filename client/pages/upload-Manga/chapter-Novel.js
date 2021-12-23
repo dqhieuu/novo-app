@@ -4,6 +4,7 @@ import MarkdownIt from 'markdown-it';
 import MdEditor from 'react-markdown-editor-lite';
 // import style manually
 import 'react-markdown-editor-lite/lib/index.css';
+import ScrollButton from '../../utilities/scrollButton';
 // import Editor from 'rich-markdown-editor';
 // Initialize a markdown parser
 const mdParser = new MarkdownIt(/* Markdown-it options */);
@@ -30,6 +31,7 @@ export default function ChapterNovel({ chapter }) {
       <div className="d-flex justify-content-center mt-3">
         <button className="btn btn-dark">Update</button>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

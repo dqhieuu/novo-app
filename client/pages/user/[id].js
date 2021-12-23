@@ -28,6 +28,7 @@ import { useRouter } from 'next/router';
 import RelativeTimestamp from '../../utilities/to-Relative-Time-stamp';
 import { BiLike } from 'react-icons/bi';
 import uploadImages from '../../utilities/upload-Images';
+import ScrollButton from '../../utilities/scrollButton';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -533,6 +534,7 @@ export default function User({ user, id }) {
           </div>
         </div>
       </div>
+      <ScrollButton></ScrollButton>
     </div>
   );
 }

@@ -31,14 +31,24 @@ export const addToFavorite = (bookGroupId, manga) => {
   if (checkExisted === false) oldData.unshift(newObject);
   localStorage.setItem('favorite', JSON.stringify(oldData));
 };
+
 export const removeElement = (id) => {
-  let data = JSON.parse(localStorage.getItem('data'));
+  let data = JSON.parse(localStorage.getItem('history'));
   data.forEach((item, index) => {
     if (id === item.id) {
       data.splice(index, 1);
     }
   });
-  localStorage.setItem('data', JSON.stringify(data));
+  localStorage.setItem('history', JSON.stringify(data));
+};
+export const removeElementFavorite = (id) => {
+  let data = JSON.parse(localStorage.getItem('favorite'));
+  data.forEach((item, index) => {
+    if (id == item.id) {
+      data.splice(index, 1);
+    }
+  });
+  localStorage.setItem('favorite', JSON.stringify(data));
 };
 export const addToHistory = (
   bookGroupId,
