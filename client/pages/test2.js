@@ -1,73 +1,86 @@
-import { useState } from 'react';
-import { useContext } from 'react';
-import { MangaContext } from '../Context/MangaContext';
-import DisplayImg from '../components/displayImg';
-import NULL_CONSTANTS from '../utilities/nullConstants';
-import ReactPaginate from 'react-paginate';
-
-import Link from 'next/link';
-function ByAll() {
-  const { mostViewedAll, server } =
-    useContext(MangaContext);
-  const [pageNumber, setPageNumber] = useState(0);
-  const bookPerPage = 12;
-  const pageVisited = pageNumber * bookPerPage;
-  const displayDatas = mostViewedAll
-    .slice(pageVisited, pageVisited + bookPerPage)
-    .map((listObject) => (
-      <Link
-        href={`/mangas/${listObject.id}`}
-        passHref
-        key={listObject.id}
-      >
-        <div
-          className="col-6 col-lg-3 col-md-4 col-xl-2"
-          data-aos="fade-up"
-        >
-          <DisplayImg
-            bgColor="green"
-            srcImg={
-              listObject.image
-                ? `${server}/image/${listObject.image}`
-                : NULL_CONSTANTS.BOOK_GROUP_IMAGE
-            }
-            text={listObject.views + ' lượt đọc'}
-            title={listObject.title}
-            height="282px"
-          ></DisplayImg>
-        </div>
-      </Link>
-    ));
-  const pageCount = Math.ceil(
-    mostViewedAll.length / bookPerPage
-  );
-  const changePage = ({ selected }) => {
-    setPageNumber(selected);
-  };
-
+import { useRouter } from 'next/router';
+import React from 'react';
+import { FaArrowLeft, FaGooglePlusG } from 'react-icons/fa';
+export default function Login() {
+  const router = useRouter();
   return (
-    <div>
-      <div className="row">{displayDatas}</div>
-      <ReactPaginate
-        breakLabel="..."
-        previousLabel="Trước"
-        nextLabel="Sau"
-        pageCount={pageCount}
-        onPageChange={changePage}
-        pageClassName="page-item"
-        pageLinkClassName="page-link"
-        previousClassName="page-item"
-        previousLinkClassName="page-link"
-        nextClassName="page-item"
-        nextLinkClassName="page-link"
-        breakClassName="page-item"
-        breakLinkClassName="page-link"
-        containerClassName="pagination"
-        activeClassName="active"
-        renderOnZeroPageCount={null}
-      ></ReactPaginate>
+    <div
+      className="offset-md-4 col-lg-4 col-12 mt-5 p-3"
+      style={{
+        borderRadius: '0.75rem',
+        background: '#f3f3f3',
+      }}
+    >
+      <h3>
+        <FaArrowLeft
+          onClick={() => router.replace('/')}
+        ></FaArrowLeft>
+        {' Đăng nhập'}
+      </h3>
+      <form>
+        <div className="mb-3 mt-3">
+          <label htmlFor="email" className="form-label">
+            Email:
+          </label>
+          <input
+            type="email"
+            className="form-control"
+            id="email"
+            placeholder="Enter email"
+            name="email"
+          ></input>
+        </div>
+        <div className="mb-3">
+          <label htmlFor="pwd" className="form-label">
+            Mật khẩu:
+          </label>
+          <input
+            type="password"
+            name="pswd"
+            id="pwd"
+            placeholder="Enter password"
+            className="form-control"
+          />
+        </div>
+        <div className="form-check mb-3">
+          <label htmlFor="" className="form-check-label">
+            <input
+              type="checkbox"
+              className="form-check-input"
+              name="remember"
+            />
+            Remember me
+          </label>
+        </div>
+        <i className="bi bi-meta"></i>
+        <div className="d-grid">
+          <button
+            type="submit"
+            className="btn btn-secondary"
+          >
+            Đăng nhập
+          </button>
+          <hr />
+        </div>
+      </form>
+      <div className="d-grid">
+        <button
+          className="btn btn-secondary mt-3"
+          style={{ background: '#c23321' }}
+          onClick={() =>
+            (window.location.href = `${server}/oauth/google`)
+          }
+        >
+          <FaGooglePlusG></FaGooglePlusG> Đăng nhập bằng
+          Gmail
+        </button>
+        <button
+          className="btn btn-light mt-3"
+          onClick={() => router.replace('/')}
+        >
+          Chưa có tài khoản? Đăng ký ngay!
+        </button>
+      </div>
     </div>
   );
 }
-
-export default ByAll;

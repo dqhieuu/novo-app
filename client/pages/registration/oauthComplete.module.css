@@ -1,0 +1,8 @@
+.avatarContainer {
+  width: 200px;
+  aspect-ratio: 3/4;
+
+  margin-top: 1.5rem;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}

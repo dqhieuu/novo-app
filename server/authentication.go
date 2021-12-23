@@ -33,7 +33,7 @@ func AuthMiddleware() *jwt.GinJWTMiddleware {
 	authMiddleware, err := jwt.New(&jwt.GinJWTMiddleware{
 		Realm:       "my novo app",
 		Key:         []byte("U3M9B6BdNrWOxnar6P0HSqskxjec7DkG"),
-		Timeout:     time.Hour,
+		Timeout:     24 * 7 * time.Hour,
 		MaxRefresh:  24 * 7 * time.Hour,
 		IdentityKey: UserIdClaimKey,
 

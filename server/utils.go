@@ -13,17 +13,17 @@ import (
 )
 
 const (
-	BookGroupModule = "book"
+	BookGroupModule   = "book"
 	BookChapterModule = "chapter"
-	CommentModule = "comment"
-	AuthorModule = "author"
-	LikeModule = "like"
-	PostAction = "post"
-	ReadAction = "read"
-	ModifyAction = "modify"
-	DeleteAction = "delete"
-	ModifySelfAction = "modifySelf"
-	DeleteSelfAction = "deleteSelf"
+	CommentModule     = "comment"
+	AuthorModule      = "author"
+	LikeModule        = "like"
+	PostAction        = "post"
+	ReadAction        = "read"
+	ModifyAction      = "modify"
+	DeleteAction      = "delete"
+	ModifySelfAction  = "modifySelf"
+	DeleteSelfAction  = "deleteSelf"
 )
 
 func CreateImage(width int, height int) (*os.File, int64, string, string, error) {
@@ -71,6 +71,7 @@ func CreateImage(width int, height int) (*os.File, int64, string, string, error)
 }
 
 func HasControlCharacters(content string) bool {
+	return false
 	hasInvalidChars, _ := regexp.MatchString(`[\x00-\x07\x0E-\x1F\x7F]`, content)
 	return hasInvalidChars
 }

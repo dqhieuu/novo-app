@@ -1,0 +1,29 @@
+/* Container needed to position the overlay. Adjust the width as needed */
+.container {
+  position: relative;
+}
+
+/* The overlay effect - lays on top of the container and over the image */
+.overlay {
+  position: absolute;
+  bottom: 0;
+  background: rgb(0, 0, 0);
+  background: rgba(0, 0, 0, 0.5); /* Black see-through */
+  color: #f1f1f1;
+  width: 80%;
+  transition: 0.5s ease;
+  opacity: 0;
+  color: white;
+  padding: 0.25rem;
+}
+
+/* When you mouse over the container, fade in the overlay title */
+.container:hover .overlay,
+.container:hover {
+  opacity: 1;
+  cursor: pointer;
+}
+.chapter:hover {
+  color: #e67e22;
+  cursor: pointer;
+}

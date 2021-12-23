@@ -1,11 +1,6 @@
-Run db.json on port 3300 for fake server
-
-json-server --port=3300 db.jon
-npm run dev
-
 
 missing features:
-+ login / signup components
-+ Ranking mangas
-+ responsive design
-+ working with real API
++ update bookgroup or update chapter image
++ login by password
++ like / dislike
++ show favourite password (chua nghi ra desgin nen chua implement)

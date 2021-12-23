@@ -1,0 +1,11 @@
+.object:hover {
+  color: #1abc9c;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 600px) {
+  .readButton {
+    margin-top: 0.5rem;
+    margin-left: 0px;
+  }
+}

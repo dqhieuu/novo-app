@@ -1,0 +1,4 @@
+.item:hover {
+  color: #2ecc71 !important;
+  cursor: pointer;
+}
