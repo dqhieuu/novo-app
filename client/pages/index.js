@@ -383,7 +383,7 @@ export default function Home() {
                                   style={{
                                     color: '#bdc3c7',
                                   }}
-                                >{`Đọc tiếp chapter ${book.chapterId}`}</p>
+                                >{`Đọc tiếp chapter ${book.latestChapter}`}</p>
                               </Link>
                             </div>
                           </div>
@@ -423,6 +423,7 @@ export default function Home() {
                       border: '1px solid lightgray',
                     }}
                   >
+                    {console.log(favoriteBooks)}
                     {favoriteBooks &&
                       favoriteBooks
                         .slice(0, 5)
@@ -479,7 +480,8 @@ export default function Home() {
                                   }}
                                 >
                                   {'Chap mới nhất: ' +
-                                    book.latestChapter.id}
+                                    book.latestChapter
+                                      .chapterNumber}
                                 </p>
                               )}
                             </div>
@@ -540,7 +542,7 @@ export default function Home() {
                         <div
                           style={{
                             borderRadius: '0.75rem',
-                            width: '100%',
+                            width: '80%',
                             aspectRatio: '1/1',
                             position: 'relative',
                             overflow: 'hidden',
@@ -569,12 +571,12 @@ export default function Home() {
                             href={'/user/' + comment.userId}
                             passHref
                           >
-                            <h5
+                            <p
                               className={styles.object}
                               style={{ color: '#e74c3c' }}
                             >
                               {comment.userName}
-                            </h5>
+                            </p>
                           </Link>
                           <p className="text-break">
                             {comment.comment}

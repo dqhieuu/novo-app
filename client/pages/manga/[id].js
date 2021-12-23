@@ -43,7 +43,16 @@ export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
   const { id } = params;
-  const response = await fetch(`${server}/book/${id}`);
+  const response = await fetch(
+    `${server}/book/${id}`
+  ).catch((err) => {
+    toast.error('Có lỗi xảy ra! Vui lòng thử lại sau', {
+      position: 'bottom-left',
+      autoClose: 3000,
+    });
+    Router.replace('/');
+    removeElementFavorite(id);
+  });
   const data = await response.json();
   const responseComment = await fetch(
     `${server}/comment/?bookGroupId=${id}`
@@ -150,7 +159,18 @@ export default function Details({
         );
       });
   };
-
+  const deleteBookGroup = () => {
+    fetchAuth({
+      url: `${server}/auth/book/${bookGroupId}`,
+      method: 'DELETE',
+    }).then(() => {
+      toast.success('Xoá thành công', {
+        position: 'bottom-left',
+        autoClose: 2000,
+      });
+      router.replace('/');
+    });
+  };
   const deleteComment = (id) => {
     fetchAuth({
       url: `${server}/auth/comment/${id}`,
@@ -179,15 +199,20 @@ export default function Details({
                 aspectRatio: '1/1',
               }}
             >
-              <Image
-                src={
-                  comment.userAvatar
-                    ? `${server}/image/${comment.userAvatar}`
-                    : NULL_CONSTANTS.AVATAR
-                }
-                alt=""
-                layout="fill"
-              />
+              <Link
+                href={'/user/' + comment.userId}
+                passHref
+              >
+                <Image
+                  src={
+                    comment.userAvatar
+                      ? `${server}/image/${comment.userAvatar}`
+                      : NULL_CONSTANTS.AVATAR
+                  }
+                  alt=""
+                  layout="fill"
+                />
+              </Link>
             </div>
           </div>
           <div
@@ -199,26 +224,32 @@ export default function Details({
             }}
           >
             <div>
-              <p
-                className={
-                  'display-6 text-primary ' + styles.object
-                }
-                style={{ fontSize: '20px' }}
+              <Link
+                href={'/user/' + comment.userId}
+                passHref
               >
-                {comment.userName}
-                <span
-                  className="ms-3"
-                  style={{
-                    fontSize: '12px',
-                    color: 'black',
-                  }}
+                <p
+                  className={
+                    'display-6 text-primary ' +
+                    styles.object
+                  }
+                  style={{ fontSize: '20px' }}
                 >
-                  <BiTime></BiTime>
-                  <RelativeTimestamp>
-                    {comment.timePosted}
-                  </RelativeTimestamp>
-                </span>
-              </p>
+                  {comment.userName}
+                  <span
+                    className="ms-3"
+                    style={{
+                      fontSize: '12px',
+                      color: 'black',
+                    }}
+                  >
+                    <BiTime></BiTime>
+                    <RelativeTimestamp>
+                      {comment.timePosted}
+                    </RelativeTimestamp>
+                  </span>
+                </p>
+              </Link>
               {currentEditedComment !== index ? (
                 <p className="m-3 text-break">
                   {comment.comment}
@@ -236,7 +267,7 @@ export default function Details({
                     }
                   />
                   <button
-                    className="btn btn-link"
+                    className="btn btn-light"
                     onClick={() =>
                       fetchAuth({
                         url: `${server}/auth/comment/${comment.commentId}`,
@@ -532,15 +563,26 @@ export default function Details({
                     </button>
                   </div>
                 </div>
+
                 <div className="d-flex mt-3">
                   {userInfo.permission &&
-                    (userInfo.permission.includes(
+                  userInfo.permission.includes(
+                    'book.modifySelf'
+                  ) &&
+                  userInfo.id == manga.ownerId ? (
+                    <Link
+                      href={'/manage-Manga/' + bookGroupId}
+                      passHref
+                    >
+                      <button className="btn btn-dark me-2">
+                        <FaEdit></FaEdit>
+                      </button>
+                    </Link>
+                  ) : (
+                    userInfo.permission &&
+                    userInfo.permission.includes(
                       'book.modify'
-                    ) ||
-                      userInfo.permission.includes(
-                        'book.modifySelf'
-                      )) &&
-                    userInfo.id == manga.ownerId && (
+                    ) && (
                       <Link
                         href={
                           '/manage-Manga/' + bookGroupId
@@ -551,12 +593,17 @@ export default function Details({
                           <FaEdit></FaEdit>
                         </button>
                       </Link>
-                    )}
+                    )
+                  )}
                   {userInfo.permission &&
                     userInfo.permission.includes(
                       'book.delete'
                     ) && (
-                      <button className="btn btn-danger">
+                      <button
+                        className="btn btn-danger"
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteModal"
+                      >
                         <FaWindowClose></FaWindowClose>
                       </button>
                     )}
@@ -1055,6 +1102,40 @@ export default function Details({
               </div>
             </Link>
           ))}
+        </div>
+      </div>
+      <div className="modal fade" id="deleteModal">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h4 className="modal-title">
+                Bạn có muốn xoá không?
+              </h4>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <div className="modal-body d-flex justify-content-around">
+              <button
+                type="button"
+                className="btn btn-dark"
+                onClick={() => deleteBookGroup()}
+                data-bs-dismiss="modal"
+              >
+                Có
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                data-bs-dismiss="modal"
+              >
+                Không
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <ScrollButton></ScrollButton>
