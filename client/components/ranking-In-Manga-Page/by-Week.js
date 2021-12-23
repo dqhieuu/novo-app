@@ -67,7 +67,9 @@ export default function ByWeek() {
               <p className={styles.object}>{manga.title}</p>
               <div className="d-flex justify-content-between">
                 <p className={styles.object}>
-                  {'Chapter ' + manga.latestChapter}
+                  {manga.latestChapter
+                    ? 'Chapter ' + manga.latestChapter
+                    : 'Chưa có chapter'}
                 </p>
                 <p>
                   <FaEye></FaEye>

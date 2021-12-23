@@ -432,9 +432,20 @@ export default function ChapterContent({
             )}
             <div className="d-flex">
               {checkUploader() === true &&
+              userInfo.permission &&
+              userInfo.permission.includes(
+                'chapter.modifySelf'
+              ) ? (
+                <Link href={'/edit-Chapter/' + id} passHref>
+                  <button className="btn btn-dark">
+                    <FaEdit></FaEdit>
+                    {' Sửa Chap'}
+                  </button>
+                </Link>
+              ) : (
                 userInfo.permission &&
                 userInfo.permission.includes(
-                  'chapter.modifySelf'
+                  'chapter.modify'
                 ) && (
                   <Link
                     href={'/edit-Chapter/' + id}
@@ -445,11 +456,25 @@ export default function ChapterContent({
                       {' Sửa Chap'}
                     </button>
                   </Link>
-                )}
+                )
+              )}
               {checkUploader() === true &&
+              userInfo.permission &&
+              userInfo.permission.includes(
+                'chapter.deleteSelf'
+              ) ? (
+                <button
+                  className="btn btn-danger ms-2"
+                  data-bs-toggle="modal"
+                  data-bs-target="#deleteModal"
+                >
+                  <FaWindowClose></FaWindowClose>
+                  {' Xoá Chap'}
+                </button>
+              ) : (
                 userInfo.permission &&
                 userInfo.permission.includes(
-                  'chapter.deleteSelf'
+                  'chapter.delete'
                 ) && (
                   <button
                     className="btn btn-danger ms-2"
@@ -459,7 +484,8 @@ export default function ChapterContent({
                     <FaWindowClose></FaWindowClose>
                     {' Xoá Chap'}
                   </button>
-                )}
+                )
+              )}
             </div>
           </div>
         </div>

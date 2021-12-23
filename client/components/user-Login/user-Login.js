@@ -35,6 +35,7 @@ export default function UserLogin() {
           <p
             data-bs-dismiss="offcanvas"
             className="signInComponent"
+            style={{ padding: '0.5rem' }}
           >
             <FaUserAlt></FaUserAlt>
             {' Trang cá nhân'}
@@ -44,6 +45,7 @@ export default function UserLogin() {
           <p
             data-bs-dismiss="offcanvas"
             className="signInComponent"
+            style={{ padding: '0.5rem' }}
           >
             <FaUserCog></FaUserCog>Đổi mật khẩu
           </p>
@@ -54,6 +56,7 @@ export default function UserLogin() {
           <p
             data-bs-dismiss="offcanvas"
             className="signInComponent"
+            style={{ padding: '0.5rem' }}
           >
             <FaFileUpload></FaFileUpload>Truyện đã đăng
           </p>
