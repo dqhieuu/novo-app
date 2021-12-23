@@ -21,6 +21,12 @@ import (
 
 const LimitUserBookGroups = 20
 
+const (
+	MemberRole    = "member"
+	ModeratorRole = "moderator"
+	BannedRole    = "banned"
+)
+
 type UserInfo struct {
 	Role       string      `json:"role" binding:"required"`
 	Permission []string    `json:"permission" binding:"required"`
@@ -563,4 +569,74 @@ func ChangeCurrentUserInfoHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"message": "update info successful",
 	})
+}
+
+type SetRoleInput struct {
+	UserId int32  `json:"userId"`
+	Role   string `json:"role"`
+}
+
+func SetRole(adminId int32, userId int32, role string) error {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	if userId == adminId {
+		return errors.New("can not set role of admin")
+	}
+
+	switch role {
+	case MemberRole, ModeratorRole, BannedRole:
+		roleId, err := queries.GetRoleId(ctx, role)
+		if err != nil {
+			return err
+		}
+		err = queries.SetRole(ctx, db.SetRoleParams{
+			ID:     userId,
+			RoleID: roleId,
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	default:
+		return errors.New("invalid role")
+	}
+}
+
+func SetRoleHandler(c *gin.Context) {
+	ctx := context.Background()
+	queries := db.New(db.Pool())
+
+	claims := jwt.ExtractClaims(c)
+	adminId := int32(claims[UserIdClaimKey].(float64))
+
+	check, err := queries.CheckPermissionOnUserId(ctx, db.CheckPermissionOnUserIdParams{
+		Module: "role",
+		Action: "modify",
+		ID:     adminId,
+	})
+	if err != nil {
+		ReportError(c, err, "error", 500)
+		return
+	}
+	if !check {
+		ReportError(c, errors.New("unauthorized"), "error",403)
+		return
+	} else {
+		var input SetRoleInput
+		err = c.ShouldBindJSON(&input)
+		if err != nil {
+			ReportError(c, err, "error", 400)
+			return
+		}
+
+		err = SetRole(adminId, input.UserId, input.Role)
+		if err != nil {
+			ReportError(c, err, "error", 400)
+			return
+		}
+		c.JSON(200, gin.H{
+			"message": "set role successful",
+		})
+	}
 }

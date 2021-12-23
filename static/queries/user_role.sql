@@ -18,3 +18,6 @@ GROUP BY r.name;
 
 -- name: GetRoleId :one
 SELECT id FROM roles WHERE name = $1;
+
+-- name: SetRole :exec
+UPDATE users SET role_id = $2 where id = $1;
