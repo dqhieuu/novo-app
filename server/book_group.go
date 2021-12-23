@@ -512,10 +512,10 @@ func CreateBookGroupHandler(c *gin.Context) {
 
 func ValidTitle(title *string) error {
 	*title = strings.TrimSpace(*title)
-	if len(*title) < 1 {
-		stringErr := fmt.Sprintf("Name must be more than 1 character")
-		return errors.New(stringErr)
-	}
+	//if len(*title) < 1 {
+	//	stringErr := fmt.Sprintf("Name must be more than 1 character")
+	//	return errors.New(stringErr)
+	//}
 	//for i := 0; i < len(*title); i++ {
 	//	c := (*title)[i]
 	//	if unicode.IsControl(rune(c)) {

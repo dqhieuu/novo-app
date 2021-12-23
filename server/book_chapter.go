@@ -42,7 +42,7 @@ type ImageChapter struct {
 type UpdateChapterParams struct {
 	Id            int32   `json:"id"`
 	ChapterNumber float64 `json:"chapterNumber"`
-	Name          string  `json:"name"`
+	Name          interface{}  `json:"name"`
 	TextContent   string  `json:"textContent"`
 	Images        []int32 `json:"images"`
 }
@@ -98,14 +98,21 @@ func UpdateBookChapter(chapter UpdateChapterParams) error {
 	queries := db.New(db.Pool())
 
 	nameSql := sql.NullString{}
-	err := nameSql.Scan(chapter.Name)
-	if err != nil {
-		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
-		return errors.New(stringErr)
+
+	if chapter.Name != nil {
+		switch chapter.Name.(type) {
+		case string:
+			nameSql.String = chapter.Name.(string)
+			nameSql.Valid = true
+		case sql.NullString:
+			nameSql = chapter.Name.(sql.NullString)
+		}
+	} else {
+		nameSql.Valid = false
 	}
 
 	textContextSql := sql.NullString{}
-	err = textContextSql.Scan(chapter.TextContent)
+	err := textContextSql.Scan(chapter.TextContent)
 	if err != nil {
 		stringErr := fmt.Sprintf("Update book chapter  failed: %s", err)
 		return errors.New(stringErr)
@@ -504,21 +511,34 @@ func UpdateHypertextChapter(c *gin.Context) {
 	if newChapter.ChapterNumber == 0 {
 		newChapter.ChapterNumber = oldChapter.ChapterNumber
 	}
-	if newChapter.Name == "" {
-		newChapter.Name = oldChapter.Name.String
+	if newChapter.Name != nil {
+		_, ok := newChapter.Name.(string)
+		if !ok {
+			ReportError(c, errors.New("chapter name is not a string"), "error", 400)
+			return
+		}
+		if newChapter.Name.(string) == "" {
+			newChapter.Name = nil
+		}
+		if len(newChapter.Name.(string)) > 200 {
+			newChapter.Name = newChapter.Name.(string)[0:200]
+		}
+	} else {
+		newChapter.Name = oldChapter.Name
 	}
+
 	if newChapter.TextContent == "" {
 		newChapter.TextContent = oldChapter.TextContent.String
 	}
 	newChapter.Images = nil
 
-	err = ValidTitle(&newChapter.Name)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//err = ValidTitle(&newChapter.Name)
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 	//err = ValidDescription(&newChapter.TextContent)
 	//if err != nil {
 	//	c.JSON(http.StatusBadRequest, gin.H{
@@ -575,18 +595,32 @@ func UpdateImagesChapterHandler(c *gin.Context) {
 	if newChapter.ChapterNumber == 0 {
 		newChapter.ChapterNumber = oldChapter.ChapterNumber
 	}
-	if newChapter.Name == "" {
-		newChapter.Name = oldChapter.Name.String
+
+	if newChapter.Name != nil {
+		_, ok := newChapter.Name.(string)
+		if !ok {
+			ReportError(c, errors.New("chapter name is not a string"), "error", 400)
+			return
+		}
+		if newChapter.Name.(string) == "" {
+			newChapter.Name = nil
+		}
+		if len(newChapter.Name.(string)) > 200 {
+			newChapter.Name = newChapter.Name.(string)[0:200]
+		}
+	} else {
+		newChapter.Name = oldChapter.Name
 	}
+
 	newChapter.TextContent = oldChapter.TextContent.String
 
-	err = ValidTitle(&newChapter.Name)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	//err = ValidTitle(&newChapter.Name)
+	//if err != nil {
+	//	c.JSON(http.StatusBadRequest, gin.H{
+	//		"error": err.Error(),
+	//	})
+	//	return
+	//}
 	//err = ValidDescription(&newChapter.TextContent)
 	//if err != nil {
 	//	c.JSON(http.StatusBadRequest, gin.H{
