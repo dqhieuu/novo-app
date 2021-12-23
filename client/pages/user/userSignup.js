@@ -19,6 +19,7 @@ export default function SignUp() {
     password: '',
     email: '',
   });
+  const [repassWord, setRePassword] = useState('');
   const {
     register,
     handleSubmit,
@@ -58,8 +59,9 @@ export default function SignUp() {
     <div
       className="offset-md-4 col-lg-4 col-12 mt-5 p-3"
       style={{
-        borderRadius: '0.75rem',
         background: '#f3f3f3',
+        borderRadius: '0.75rem',
+        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
       }}
     >
       <h3>
@@ -77,7 +79,7 @@ export default function SignUp() {
             type="text"
             className="form-control"
             id="uname"
-            placeholder="Nhập tên đăng nhập"
+            placeholder="Nhập tên đăng ký"
             name="username"
             {...register('username', {
               required: true,
@@ -113,6 +115,25 @@ export default function SignUp() {
             }
           ></input>
         </div>
+        <div className="mb-3 mt-3">
+          <label htmlFor="password" className="form-label">
+            Nhập lại mật khẩu:
+          </label>
+          <input
+            type="password"
+            className="form-control"
+            id="repassword"
+            placeholder="Nhập mật khẩu"
+            name="repassword"
+            {...register('repassword', {
+              required: true,
+              minLength: 8,
+              validate: (value) =>
+                value === formData.password,
+            })}
+            onChange={(e) => setRePassword(e.target.value)}
+          ></input>
+        </div>
 
         <div className="mb-3 mt-3">
           <label htmlFor="email" className="form-label">
@@ -137,24 +158,37 @@ export default function SignUp() {
             }
           ></input>
         </div>
-        <div className="d-grid">
-          <button
-            className="btn btn-secondary mt-3"
-            style={{ background: '#c23321' }}
-            onClick={() =>
-              (window.location.href = `${server}/oauth/google`)
-            }
-          >
-            <FaGooglePlusG></FaGooglePlusG> Đăng nhập bằng
-            Gmail
-          </button>
-        </div>
+
         <div className="mt-3 d-flex justify-content-center">
           <button type="submit" className="btn btn-dark ">
             Đăng ký
           </button>
         </div>
       </form>
+      <div className="d-flex justify-content-center mt-4">
+        <h1
+          className="blockquote-footer"
+          style={{ fontSize: '1.5rem' }}
+        >
+          OR
+        </h1>
+        <h1
+          className="blockquote-footer ms-2"
+          style={{ fontSize: '1.5rem' }}
+        ></h1>
+      </div>
+      <div className="d-grid">
+        <button
+          className="btn btn-secondary "
+          style={{ background: '#c23321' }}
+          onClick={() =>
+            (window.location.href = `${server}/oauth/google`)
+          }
+        >
+          <FaGooglePlusG></FaGooglePlusG> Đăng nhập bằng
+          Gmail
+        </button>
+      </div>
 
       {Object.keys(errors).length !== 0 && (
         <ul
@@ -173,6 +207,12 @@ export default function SignUp() {
           )}
           {errors.password?.type === 'required' && (
             <li>Bạn cần nhập mật khẩu</li>
+          )}
+          {errors.repassword?.type === 'required' && (
+            <li>Bạn cần nhập mật khẩu</li>
+          )}
+          {errors.repassword?.type === 'validate' && (
+            <li>Mật khẩu không khớp</li>
           )}
           {errors.password?.type === 'minLength' && (
             <li>Mật khẩu có ít nhất 8 ký tự</li>

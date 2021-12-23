@@ -1,8 +1,9 @@
 .genreContainer {
-  width: 500px;
+  width: 40rem;
+  border-radius: 0.75rem;
 }
 .item {
-  padding: 0.5rem;
+  padding: 0.25rem;
 }
 .item:hover {
   cursor: pointer;

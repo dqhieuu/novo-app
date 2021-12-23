@@ -19,6 +19,7 @@ import {
   FaArrowCircleRight,
   FaArrowRight,
 } from 'react-icons/fa';
+import ScrollButton from '../utilities/scrollButton';
 export default function Home() {
   const {
     latestManga,
@@ -144,7 +145,7 @@ export default function Home() {
             </h5>
             <div className="row">
               {randomBooks
-                .slice(0, 10)
+                .slice(2, 10)
                 .map((randomBook) => (
                   <Link
                     href={`manga/${randomBook.id}`}
@@ -163,7 +164,11 @@ export default function Home() {
                                 ? `${server}/image/${randomBook.image}`
                                 : NULL_CONSTANTS.BOOK_GROUP_IMAGE
                             }
-                            text={`${randomBook.likes} lượt thích`}
+                            text={
+                              randomBook.likes > 0
+                                ? `${randomBook.likes} lượt thích`
+                                : `0 lượt thích`
+                            }
                             bgColor="#ff7043"
                           ></DisplayImg>
                         </div>
@@ -530,45 +535,51 @@ export default function Home() {
                         </p>
                       </Link>
                     </div>
-                    <div className="d-flex  p-2">
-                      <div
-                        style={{
-                          position: 'relative',
-                          overflow: 'hidden',
-                          borderRadius: '0.75rem',
-                          width: '80px',
-                          aspectRatio: '1/1',
-                        }}
-                      >
-                        <Link
-                          href={'/user/' + comment.userId}
-                          passHref
+                    <div className="row">
+                      <div className="col-3">
+                        <div
+                          style={{
+                            borderRadius: '0.75rem',
+                            width: '100%',
+                            aspectRatio: '1/1',
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
                         >
-                          <Image
-                            src={
-                              comment.userAvatar
-                                ? `${server}/image/${comment.userAvatar}`
-                                : NULL_CONSTANTS.AVATAR
-                            }
-                            alt="Describe"
-                            objectFit="cover"
-                            layout="fill"
-                          ></Image>
-                        </Link>
-                      </div>
-                      <div className="ms-4 d-flex flex-column justify-content-between">
-                        <Link
-                          href={'/user/' + comment.userId}
-                          passHref
-                        >
-                          <h5
-                            className={styles.object}
-                            style={{ color: '#e74c3c' }}
+                          <Link
+                            href={'/user/' + comment.userId}
+                            passHref
                           >
-                            {comment.userName}
-                          </h5>
-                        </Link>
-                        <p>{comment.comment}</p>
+                            <Image
+                              src={
+                                comment.userAvatar
+                                  ? `${server}/image/${comment.userAvatar}`
+                                  : NULL_CONSTANTS.AVATAR
+                              }
+                              alt="Describe"
+                              objectFit="cover"
+                              layout="fill"
+                            ></Image>
+                          </Link>
+                        </div>
+                      </div>
+                      <div className="col-9">
+                        <div className="d-flex flex-column justify-content-between">
+                          <Link
+                            href={'/user/' + comment.userId}
+                            passHref
+                          >
+                            <h5
+                              className={styles.object}
+                              style={{ color: '#e74c3c' }}
+                            >
+                              {comment.userName}
+                            </h5>
+                          </Link>
+                          <p className="text-break">
+                            {comment.comment}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>

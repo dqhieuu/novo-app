@@ -45,46 +45,56 @@ export default function UploadNewChapter({
       style={{
         background: '#f3f3f3',
         borderRadius: '0.75rem',
+        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
       }}
     >
-      <div className="mb-3 mt-3">
-        <label htmlFor="chapterName" className="form-label">
-          01. Nhập tên Chapter:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="chapterName"
-          placeholder="Nhập tên Chap ở đây"
-          name="chapterName"
-          value={data.chapterName}
-          onChange={(e) =>
-            setData({
-              ...data,
-              chapterName: e.target.value,
-            })
-          }
-        />
+      <div className="row">
+        <div className="mb-3 mt-3 col-6">
+          <label
+            htmlFor="chapterName"
+            className="form-label"
+          >
+            01. Số Chap:
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="chapterNumber"
+            placeholder="Nhập STT"
+            name="chapterNumber"
+            value={data.chapterNumber}
+            onChange={(e) =>
+              setData({
+                ...data,
+                chapterNumber: e.target.value,
+              })
+            }
+          />
+        </div>
+        <div className="mb-3 mt-3 col-6">
+          <label
+            htmlFor="chapterName"
+            className="form-label"
+          >
+            02. Tên Chap:
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="chapterName"
+            placeholder="Không bắt buộc"
+            name="chapterName"
+            value={data.chapterName}
+            onChange={(e) =>
+              setData({
+                ...data,
+                chapterName: e.target.value,
+              })
+            }
+          />
+        </div>
       </div>
-      <div className="mb-3 mt-3">
-        <label htmlFor="chapterName" className="form-label">
-          02. STT:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="chapterNumber"
-          placeholder="Nhập STT"
-          name="chapterNumber"
-          value={data.chapterNumber}
-          onChange={(e) =>
-            setData({
-              ...data,
-              chapterNumber: e.target.value,
-            })
-          }
-        />
-      </div>
+
       <div className="mb-3 mt-3">
         <label className="form-label">Thể loại</label>
         <select

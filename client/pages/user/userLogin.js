@@ -54,6 +54,7 @@ export default function Login() {
       style={{
         borderRadius: '0.75rem',
         background: '#f3f3f3',
+        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
       }}
     >
       <h3>
@@ -65,10 +66,10 @@ export default function Login() {
       <form onSubmit={handleSubmit(submit)}>
         <div className="mb-3 mt-3">
           <label htmlFor="email" className="form-label">
-            Email :
+            Tên người dùng hoặc email :
           </label>
           <input
-            type="email"
+            type="text"
             className="form-control"
             id="email"
             placeholder="Nhập email"
@@ -76,8 +77,6 @@ export default function Login() {
             {...register('username', {
               required: true,
               minLength: 6,
-              pattern:
-                /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
             })}
             onChange={(e) =>
               setFormData({
@@ -157,11 +156,12 @@ export default function Login() {
           }}
         >
           {errors.username?.type === 'required' && (
-            <li>Bạn cần nhập email</li>
+            <li>Bạn cần nhập email hoặc tên người dùng</li>
           )}
-          {errors.username?.type === 'pattern' && (
-            <li>Email không hợp lệ</li>
+          {errors.username?.type === 'minLength' && (
+            <li>email hoặc tên người dùng không hợp lệ</li>
           )}
+
           {errors.password?.type === 'maxLength' && (
             <li>
               Mật khẩu có ít nhât 8 ký tự và tối đa 50 ký

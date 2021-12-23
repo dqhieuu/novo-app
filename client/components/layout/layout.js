@@ -75,22 +75,7 @@ export default function Layout({ children }) {
       <nav className="navbar navbar-expand-sm navbar-dark bg-dark sticky-top ">
         <div className="container">
           <Link href="/" passHref>
-            <div
-              className="navbar-brand"
-              style={{
-                width: '80px',
-                aspectRatio: '4/3',
-                overflow: 'hidden',
-                position: 'relative',
-              }}
-            >
-              <Image
-                src={'/images/logoWhite.png'}
-                alt="logo"
-                layout="fill"
-                objectFit="cover"
-              ></Image>
-            </div>
+            <div className="navbar-brand">NOVOReader</div>
           </Link>
 
           <button
@@ -117,7 +102,7 @@ export default function Layout({ children }) {
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  Danh sách
+                  Thể loại
                 </a>
                 <ul
                   className="dropdown-menu"
@@ -131,14 +116,16 @@ export default function Layout({ children }) {
                             className={`col-2 col-lg-3`}
                             key={genre.id}
                           >
-                            <Link
-                              href={`/genre/${genre.id}`}
-                              passHref
-                            >
-                              <p className={styles.item}>
-                                {genre.name}
-                              </p>
-                            </Link>
+                            <div className="d-flex justify-content-center">
+                              <Link
+                                href={`/genre/${genre.id}`}
+                                passHref
+                              >
+                                <p className={styles.item}>
+                                  {genre.name}
+                                </p>
+                              </Link>
+                            </div>
                           </div>
                         ))}
                     </div>
@@ -151,20 +138,20 @@ export default function Layout({ children }) {
                 </Link>
               </li>
             </ul>
+
+            <SearchBar></SearchBar>
             <Link href="/upload-Manga/upload-Manga">
               {Object.keys(userInfo).length !== 0 ? (
-                <button className="nav-item btn btn-light me-2">
-                  Upload truyện
+                <button className="nav-item btn btn-light m-2">
+                  Thêm truyện mới
                 </button>
               ) : (
                 ''
               )}
             </Link>
-
-            <SearchBar></SearchBar>
             {userInfo && Object.keys(userInfo).length ? ( //nếu đã đăng nhập thì hiện 1 cái offcanvas
               <div
-                className=" ms-2"
+                className=" m-2"
                 style={{
                   overflow: 'hidden',
                   borderRadius: '50%',
@@ -190,7 +177,7 @@ export default function Layout({ children }) {
               </div>
             ) : (
               <div
-                className=" ms-2"
+                className=" m-2"
                 style={{
                   overflow: 'hidden',
                   borderRadius: '50%',

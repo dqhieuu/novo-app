@@ -10,6 +10,7 @@ import { toast } from 'react-toastify';
 
 import uploadImages from '../../utilities/upload-Images';
 import WEB_CONSTANTS from '../../utilities/constants';
+import { FaSpinner, FaAngry } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 export default function UploadChapterImg({ data }) {
   const router = useRouter();
@@ -56,64 +57,59 @@ export default function UploadChapterImg({ data }) {
 
       return (
         <div>
-          {image.status === 'uploading' && (
-            <div className="spinner-border"></div>
-          )}
-          {image.status === 'failed' && (
-            <div
-              style={{ width: '100px', aspectRatio: '3/4' }}
-            >
-              <Image
-                width={100}
-                height={100}
-                layout="responsive"
-                src={
-                  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Crystal_128_error.svg/1024px-Crystal_128_error.svg.png'
-                }
-                alt=""
-              ></Image>
+          {image.status === 'uploading' ? (
+            <div className="m-2">
+              <button className="btn btn-dark">
+                <FaSpinner></FaSpinner>Loading
+              </button>
             </div>
-          )}
-          <div>
-            <div
-              className="card m-3"
-              style={{
-                aspectRatio: '3/4',
-                width: '150px',
-                border: '0.5rem solid white',
-              }}
-            >
-              <Image
-                src={image.fileURL}
-                objectFit="cover"
-                layout="responsive"
-                width={'150'}
-                height={'200'}
-                alt=""
-              />
-              <div className="card-img-overlay">
-                <div className="d-flex justify-content-between mt-1">
-                  <p className="card-title">
-                    <span className="badge bg-primary">
-                      {stt + 1}
-                    </span>
-                  </p>
-                  <div>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        let updated = [...images];
-                        updated.splice(stt, 1);
-                        setImages(updated);
-                      }}
-                    >
-                      X
-                    </button>
+          ) : image.status === 'failed' ? (
+            <div className="m-2">
+              <button className="btn btn-danger">
+                <FaAngry></FaAngry>Error
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div
+                className="card m-3"
+                style={{
+                  aspectRatio: '3/4',
+                  width: '150px',
+                }}
+              >
+                <Image
+                  src={image.fileURL}
+                  objectFit="cover"
+                  layout="responsive"
+                  width={'150'}
+                  height={'200'}
+                  alt=""
+                />
+                <div className="card-img-overlay">
+                  <div className="d-flex justify-content-between mt-1">
+                    <p className="card-title">
+                      <span className="badge bg-primary">
+                        {stt + 1}
+                      </span>
+                    </p>
+                    <div>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => {
+                          let updated = [...images];
+                          updated.splice(stt, 1);
+                          setImages(updated);
+                        }}
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       );
     }
@@ -176,6 +172,7 @@ export default function UploadChapterImg({ data }) {
           *Chọn các ảnh chap:
         </label>
         <input
+          accept="image/*"
           type="file"
           className="form-control"
           id="mangaCover"

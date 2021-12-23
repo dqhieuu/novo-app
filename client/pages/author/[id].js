@@ -96,7 +96,9 @@ export default function Author({ author }) {
             <br />
             <h5>Mô tả</h5>
             <p style={{ wordBreak: 'break-all' }}>
-              {author.description}
+              {author.description.length > 0
+                ? author.description
+                : 'Chưa có mô tả'}
             </p>
             <h5>Sáng tác</h5>
             <div className="row">{displayDatas}</div>

@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import uploadImages from '../../utilities/upload-Images';
 import { fetchAuth } from '../../utilities/fetchAuth';
 import { toast } from 'react-toastify';
+import { FaAngry, FaSpinner } from 'react-icons/fa';
 export default function EditChapterImage({ chapter, id }) {
   const { server } = useContext(MangaContext);
   const [images, setImages] = useState([]);
@@ -92,68 +93,61 @@ export default function EditChapterImage({ chapter, id }) {
   };
   const SortableListItem = SortableElement(
     ({ image, stt }) => {
-  
-
       return (
         <div>
-          {image.status === 'uploading' && (
-            <div className="spinner-border"></div>
-          )}
-          {image.status === 'failed' && (
-            <div
-              style={{ width: '100px', aspectRatio: '3/4' }}
-            >
-              <Image
-                width={100}
-                height={100}
-                layout="responsive"
-                src={
-                  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Crystal_128_error.svg/1024px-Crystal_128_error.svg.png'
-                }
-                alt=""
-              ></Image>
+          {image.status === 'uploading' ? (
+            <div className="m-2">
+              <button className="btn btn-dark">
+                <FaSpinner></FaSpinner>Loading
+              </button>
             </div>
-          )}
-          <div>
-            <div
-              className="card m-3"
-              style={{
-                aspectRatio: '3/4',
-                width: '150px',
-                border: '0.5rem solid white',
-              }}
-            >
-              <Image
-                src={image.fileURL}
-                objectFit="cover"
-                layout="responsive"
-                width={'150'}
-                height={'200'}
-                alt=""
-              />
-              <div className="card-img-overlay">
-                <div className="d-flex justify-content-between mt-1">
-                  <p className="card-title">
-                    <span className="badge bg-primary">
-                      {stt + 1}
-                    </span>
-                  </p>
-                  <div>
-                    <button
-                      className="btn btn-danger"
-                      onClick={() => {
-                        let updated = [...images];
-                        updated.splice(stt, 1);
-                        setImages(updated);
-                      }}
-                    >
-                      X
-                    </button>
+          ) : image.status === 'failed' ? (
+            <div className="m-2">
+              <button className="btn btn-danger">
+                <FaAngry></FaAngry>Error
+              </button>
+            </div>
+          ) : (
+            <div>
+              <div
+                className="card m-3"
+                style={{
+                  aspectRatio: '3/4',
+                  width: '150px',
+                }}
+              >
+                <Image
+                  src={image.fileURL}
+                  objectFit="cover"
+                  layout="responsive"
+                  width={'150'}
+                  height={'200'}
+                  alt=""
+                />
+                <div className="card-img-overlay">
+                  <div className="d-flex justify-content-between mt-1">
+                    <p className="card-title">
+                      <span className="badge bg-primary">
+                        {stt + 1}
+                      </span>
+                    </p>
+                    <div>
+                      <button
+                        className="btn btn-danger"
+                        onClick={() => {
+                          let updated = [...images];
+                          updated.splice(stt, 1);
+                          setImages(updated);
+                        }}
+                      >
+                        X
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       );
     }
@@ -183,43 +177,51 @@ export default function EditChapterImage({ chapter, id }) {
   });
   return (
     <div className="p-3" data-aos="flip-left">
-      <div className="mb-3 mt-3">
-        <label htmlFor="chapterName" className="form-label">
-          01. Nhập tên Chapter:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="chapterName"
-          placeholder="Nhập tên Chap ở đây"
-          name="chapterName"
-          value={chapterEdit.name}
-          onChange={(e) =>
-            setChapterEdit({
-              ...chapterEdit,
-              name: e.target.value,
-            })
-          }
-        />
-      </div>
-      <div className="mb-3 mt-3">
-        <label htmlFor="chapterName" className="form-label">
-          02. STT:
-        </label>
-        <input
-          type="text"
-          className="form-control"
-          id="chapterName"
-          placeholder="Nhập STT chap"
-          name="chapterNumber"
-          value={chapterEdit.chapterNumber}
-          onChange={(e) =>
-            setChapterEdit({
-              ...chapterEdit,
-              chapterNumber: e.target.value,
-            })
-          }
-        />
+      <div className="row">
+        <div className="mb-3 mt-3 col-6">
+          <label
+            htmlFor="chapterName"
+            className="form-label"
+          >
+            01. Nhập tên Chapter:
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="chapterName"
+            placeholder="Nhập tên Chap ở đây"
+            name="chapterName"
+            value={chapterEdit.name}
+            onChange={(e) =>
+              setChapterEdit({
+                ...chapterEdit,
+                name: e.target.value,
+              })
+            }
+          />
+        </div>
+        <div className="mb-3 mt-3 col-6">
+          <label
+            htmlFor="chapterName"
+            className="form-label"
+          >
+            02. STT:
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="chapterName"
+            placeholder="Nhập STT chap"
+            name="chapterNumber"
+            value={chapterEdit.chapterNumber}
+            onChange={(e) =>
+              setChapterEdit({
+                ...chapterEdit,
+                chapterNumber: e.target.value,
+              })
+            }
+          />
+        </div>
       </div>
 
       <div className="mb-3 mt-3">
