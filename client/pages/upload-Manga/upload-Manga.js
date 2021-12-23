@@ -14,11 +14,11 @@ import uploadImages from '../../utilities/upload-Images';
 import NULL_CONSTANTS from '../../utilities/null-Constants';
 import Image from 'next/image';
 import TagInput from '../../components/upload-Manga/reactTag';
-import Tags from '@yaireo/tagify/dist/react.tagify';
 import { fetchAuth } from '../../utilities/fetchAuth';
 import { useRouter } from 'next/router';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import { FaAngry, FaSpinner } from 'react-icons/fa';
 export default function UploadManga() {
   const { server } = useContext(MangaContext);
   const { listAuthorsId } = useContext(UserContext);
@@ -180,28 +180,19 @@ export default function UploadManga() {
   };
   const SortableListItem = SortableElement(
     ({ image, stt }) => {
-      console.log(image);
-
       return (
         <div>
           {image.status === 'uploading' ? (
-            <div className="spinner-border"></div>
+            <div className="m-2">
+              <button className="btn btn-dark">
+                <FaSpinner></FaSpinner>Loading
+              </button>
+            </div>
           ) : image.status === 'failed' ? (
-            <div
-              style={{
-                width: '100px',
-                aspectRatio: '3/4',
-              }}
-            >
-              <Image
-                width={100}
-                height={100}
-                layout="responsive"
-                src={
-                  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Crystal_128_error.svg/1024px-Crystal_128_error.svg.png'
-                }
-                alt=""
-              ></Image>
+            <div className="m-2">
+              <button className="btn btn-danger">
+                <FaAngry></FaAngry>Error
+              </button>
             </div>
           ) : (
             <div>
@@ -274,7 +265,8 @@ export default function UploadManga() {
       className="offset-md-2 col-lg-8 col-12 mt-5"
       style={{
         background: '#f3f3f3',
-        borderRadius: '5px',
+        borderRadius: '0.75rem',
+        boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
       }}
     >
       <h3 className="d-flex justify-content-center mt-3">
@@ -362,7 +354,7 @@ export default function UploadManga() {
                     data-bs-toggle="modal"
                     data-bs-target="#addAuthor"
                   >
-                    Thêm tác giả mới
+                    Tạo tác giả mới
                   </button>
                 </div>
               </div>
@@ -421,6 +413,7 @@ export default function UploadManga() {
                 id="mangaCover"
                 multiple
                 onChange={handlePreviewCover}
+                accept="image/*"
               />
 
               <div className="row mt-3">
@@ -579,6 +572,7 @@ export default function UploadManga() {
                     type="file"
                     className="form-control"
                     onChange={handlePreviewAvatar}
+                    accept="image/*"
                   />
                   <div className="mt-3 d-flex justify-content-center">
                     <div

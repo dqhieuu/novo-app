@@ -481,6 +481,7 @@ export default function User({ user, id }) {
                     type="file"
                     className="form-control"
                     onChange={handlePreviewAvatar}
+                    accept="image/*"
                   />
                   <div className="mt-3 d-flex justify-content-center">
                     <div
@@ -496,7 +497,9 @@ export default function User({ user, id }) {
                         src={
                           userAvatar.fileURL
                             ? userAvatar.fileURL
-                            : `${server}/image/${user.avatar}`
+                            : user.avatar
+                            ? `${server}/image/${user.avatar}`
+                            : NULL_CONSTANTS.AVATAR
                         }
                         alt="author Avatar"
                         objectFit="cover"

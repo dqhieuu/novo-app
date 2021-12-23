@@ -27,6 +27,7 @@ import NULL_CONSTANTS from '../../utilities/null-Constants';
 import RelativeTimestamp from '../../utilities/to-Relative-Time-stamp';
 import { UserContext } from '../../context/user-Context';
 import { toast } from 'react-toastify';
+import ScrollButton from '../../utilities/scrollButton';
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -78,12 +79,12 @@ export default function ChapterContent({
     setCurrentEditedCommentContent,
   ] = useState('');
 
-  const submit = (text) => {
+  const submit = () => {
     fetchAuth({
       url: `${server}/auth/comment?bookChapterId=${id}`,
       method: `POST`,
       data: {
-        comment: text,
+        comment: comment,
       },
     })
       .then((res) => {
@@ -93,14 +94,20 @@ export default function ChapterContent({
         });
         setComment('');
 
-        router.replace(`/manga/${id}#comment-section`);
+        router.replace(router.asPath);
       })
       .catch((err) => {
-        toast.error('Comment thất bại', {
-          position: 'bottom-left',
-          autoClose: 3000,
-        });
+        toast.error(
+          'Comment thất bại! Comment phải có ít nhất 10 ký tự và không nhiều hơn 500 ký tự',
+          {
+            position: 'bottom-left',
+            autoClose: 3000,
+          }
+        );
       });
+  };
+  const handleInputChange = (text) => {
+    setComment(text);
   };
   const checkUploader = () => {
     let checked = false;
@@ -119,10 +126,11 @@ export default function ChapterContent({
         position: 'bottom-left',
         autoClose: 3000,
       });
+      router.replace(router.asPath);
     });
   };
 
-  const displayDatas = comments ? (
+  const displayData = comments ? (
     comments
       .slice(pageVisited, pageVisited + cmtPerPage)
       .map((comment, index) => (
@@ -130,11 +138,11 @@ export default function ChapterContent({
           <div className="col-lg-2 col-3 ">
             <div
               style={{
-                width: '80%',
                 borderRadius: '50%',
-                aspectRatio: '1/1',
+                width: '80%',
                 overflow: 'hidden',
                 position: 'relative',
+                aspectRatio: '1/1',
               }}
             >
               <Image
@@ -145,7 +153,6 @@ export default function ChapterContent({
                 }
                 alt=""
                 layout="fill"
-                objectFit="cover"
               />
             </div>
           </div>
@@ -155,7 +162,6 @@ export default function ChapterContent({
               border: '1px solid #bdc3c7',
               borderRadius: '10px',
               background: '#ecf0f1',
-              display: 'flex',
             }}
           >
             <div>
@@ -179,7 +185,14 @@ export default function ChapterContent({
                 </span>
               </p>
               {currentEditedComment !== index ? (
-                <p className="m-3">{comment.comment}</p>
+                <p
+                  className="m-3 text-break"
+                  style={{
+                    fontStyle: 'italic',
+                  }}
+                >
+                  {comment.comment}
+                </p>
               ) : (
                 <div className="d-flex">
                   <input
@@ -210,9 +223,7 @@ export default function ChapterContent({
                             autoClose: 2000,
                           }
                         );
-                        router.replace(
-                          `/chapter/${id}#comment-section`
-                        );
+                        router.replace(router.asPath);
                       })
                     }
                   >
@@ -221,9 +232,13 @@ export default function ChapterContent({
                 </div>
               )}
             </div>
-            <div>
+            <div className="d-flex justify-content-end">
               {userInfo.id === comment.userId &&
-                currentEditedComment !== index && (
+                currentEditedComment !== index &&
+                userInfo.permission &&
+                userInfo.permission.includes(
+                  'comment.modifySelf'
+                ) && (
                   <button
                     className="btn"
                     onClick={() => {
@@ -257,7 +272,6 @@ export default function ChapterContent({
   ) : (
     <div>Không có comment nào</div>
   );
-
   const [comment, setComment] = useState('');
   function getPreviousChapter(chapterId) {
     let prevId;
@@ -425,6 +439,7 @@ export default function ChapterContent({
                   >
                     <button className="btn btn-dark">
                       <FaEdit></FaEdit>
+                      {' Sửa Chap'}
                     </button>
                   </Link>
                 )}
@@ -435,9 +450,11 @@ export default function ChapterContent({
                 ) && (
                   <button
                     className="btn btn-danger ms-2"
-                    onClick={() => deleteChapter()}
+                    data-bs-toggle="modal"
+                    data-bs-target="#deleteModal"
                   >
                     <FaWindowClose></FaWindowClose>
+                    {' Xoá Chap'}
                   </button>
                 )}
             </div>
@@ -602,13 +619,18 @@ export default function ChapterContent({
             </div>
           </div>
         </div>
-        <div className="mt-3 col-lg-8">
+      </div>
+      <div
+        className="container mt-3"
+        style={{ background: '#ecf0f1' }}
+      >
+        <div className="pt-2 col-lg-8">
           <h5
             style={{
               borderLeft: '5px solid #f1c40f',
               color: '#f1c40f',
             }}
-            className="ps-2"
+            className="ps-2 "
           >
             BÌNH LUẬN
           </h5>
@@ -616,55 +638,60 @@ export default function ChapterContent({
           <div className="comment-section mt-3">
             {Object.keys(userInfo).length !== 0 ? (
               <div
-                className="row p-3 m-2"
+                className="row p-3 mb-2 ms-1"
                 style={{
-                  background: 'lightgrey',
+                  background: '#b2bec3',
                   borderRadius: '0.75rem',
                 }}
               >
-                <div
-                  className="col-lg-2 col-6"
-                  style={{
-                    width: '80px',
-                    aspectRatio: '1/1',
-                    overflow: 'hidden',
-                    borderRadius: '50%',
-                    position: 'relative',
-                  }}
-                >
-                  <Image
-                    src={
-                      userInfo.avatar
-                        ? `${server}/image/${userInfo.avatar}`
-                        : NULL_CONSTANTS.AVATAR
-                    }
-                    width={50}
-                    height={50}
-                    objectFit="cover"
-                    alt="Avatar"
-                    layout="fill"
-                  ></Image>
-                </div>
-                <div className="col-lg-10 col-6">
-                  <textarea
-                    name="comments"
-                    id=""
-                    rows="3"
-                    className="form-control"
-                    placeholder="Nhập bình luận..."
-                    value={comment}
-                    onChange={(e) =>
-                      setComment(e.target.value)
-                    }
-                  ></textarea>
-                </div>
-                <div className="d-flex justify-content-end mt-3">
-                  <button
-                    className="btn btn-dark me-5"
-                    onClick={() => submit(comment)}
+                <div className="col-lg-2 col-3">
+                  <div
+                    style={{
+                      width: '80%',
+                      aspectRatio: '1/1',
+                      overflow: 'hidden',
+                      borderRadius: '50%',
+                      position: 'relative',
+                    }}
                   >
-                    Bình luận
-                  </button>
+                    <Image
+                      src={
+                        userInfo.avatar
+                          ? `${server}/image/${userInfo.avatar}`
+                          : NULL_CONSTANTS.AVATAR
+                      }
+                      objectFit="cover"
+                      alt="Avatar"
+                      layout="fill"
+                    ></Image>
+                  </div>
+                </div>
+                <div className="col-lg-10 col-9">
+                  <textarea
+                    type="text"
+                    rows={3}
+                    className="form-control"
+                    name="comment"
+                    placeholder="Bình luận phải có độ dài từ 10 tới 500 ký tự"
+                    onChange={(e) =>
+                      handleInputChange(e.target.value)
+                    }
+                    value={comment}
+                  ></textarea>
+
+                  <div className="d-flex justify-content-end mt-3">
+                    <button
+                      type="submit"
+                      disabled={
+                        comment.length < 10 ||
+                        comment.length > 500
+                      }
+                      className="btn btn-dark me-5"
+                      onClick={() => submit(comment)}
+                    >
+                      Submit
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -675,30 +702,29 @@ export default function ChapterContent({
                   borderRadius: '0.75rem',
                 }}
               >
-                <div
-                  className="col-lg-2 col-6"
-                  style={{
-                    width: '80px',
-                    aspectRatio: '1/1',
-                    overflow: 'hidden',
-                    borderRadius: '50%',
-                    position: 'relative',
-                  }}
-                >
-                  <Image
-                    src={
-                      userInfo.avatar
-                        ? `${server}/image/${userInfo.avatar}`
-                        : NULL_CONSTANTS.AVATAR
-                    }
-                    width={50}
-                    height={50}
-                    objectFit="cover"
-                    alt="Avatar"
-                    layout="fill"
-                  ></Image>
+                <div className="col-lg-2 col-3">
+                  <div
+                    style={{
+                      width: '80%',
+                      aspectRatio: '1/1',
+                      overflow: 'hidden',
+                      borderRadius: '50%',
+                      position: 'relative',
+                    }}
+                  >
+                    <Image
+                      src={
+                        userInfo.avatar
+                          ? `${server}/image/${userInfo.avatar}`
+                          : NULL_CONSTANTS.AVATAR
+                      }
+                      objectFit="cover"
+                      alt="Avatar"
+                      layout="fill"
+                    ></Image>
+                  </div>
                 </div>
-                <div className="col-lg-10 col-6">
+                <div className="col-lg-10 col-9">
                   <textarea
                     name="comments"
                     id=""
@@ -710,8 +736,8 @@ export default function ChapterContent({
                 </div>
               </div>
             )}
-            <div id="comment-section"></div>
-            {displayDatas}
+            <div id="comment-section"> {displayData}</div>
+
             <div className="d-flex justify-content-center">
               <ReactPaginate
                 breakLabel="..."
@@ -731,6 +757,40 @@ export default function ChapterContent({
                 activeClassName="active"
                 renderOnZeroPageCount={null}
               ></ReactPaginate>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="modal fade" id="deleteModal">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h4 className="modal-title">
+                Bạn có muốn xoá không?
+              </h4>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+              ></button>
+            </div>
+
+            <div className="modal-body d-flex justify-content-around">
+              <button
+                type="button"
+                className="btn btn-dark"
+                onClick={() => deleteChapter()}
+                data-bs-dismiss="modal"
+              >
+                Có
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                data-bs-dismiss="modal"
+              >
+                Không
+              </button>
             </div>
           </div>
         </div>
