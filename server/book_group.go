@@ -22,10 +22,11 @@ type BookGroup struct {
 	Views             int64       `json:"views"`
 	LikeCount         int64       `json:"likeCount"`
 	DislikeCount      int64       `json:"dislikeCount"`
+	OwnerId           int32       `json:"ownerId"`
 	Authors           []Author    `json:"authors"`
 	Genres            []Genre     `json:"genres"`
 	Chapters          []Chapter   `json:"chapters"`
-	CoverArts         []Image    `json:"coverArts"`
+	CoverArts         []Image     `json:"coverArts"`
 	PrimaryCoverArt   interface{} `json:"primaryCoverArt"`
 	PrimaryCoverArtId interface{} `json:"primaryCoverArtId"`
 }
@@ -50,8 +51,8 @@ func BookGroupsByTitle(title string, page int32) ([]*db.BookGroupsByTitleRow, er
 	}
 	bookGroups, err := queries.BookGroupsByTitle(ctx, db.BookGroupsByTitleParams{
 		Unaccent: strings.Join(words, "&"),
-		Offset: (page - 1) * limitBookGroup,
-		Limit:  limitBookGroup,
+		Offset:   (page - 1) * limitBookGroup,
+		Limit:    limitBookGroup,
 	})
 	if err != nil {
 		stringErr := fmt.Sprintf("Get bookGroups by title failed: %s", err)
@@ -231,6 +232,7 @@ func GetBookGroupContentHandler(c *gin.Context) {
 	} else {
 		//get name and description
 		responseObject.Name = bookGroup.Title
+		responseObject.OwnerId = bookGroup.OwnerID
 		if bookGroup.Description.Valid {
 			responseObject.Description = bookGroup.Description.String
 		}
@@ -671,7 +673,7 @@ func GetSearchResultHandler(c *gin.Context) {
 	newQuery := strings.Join(words, "&")
 
 	books, err := queries.SearchResult(ctx, db.SearchResultParams{
-		Query: newQuery,
+		Query:  newQuery,
 		Offset: (page - 1) * limitBookGroup,
 		Limit:  limitBookGroup,
 	})
