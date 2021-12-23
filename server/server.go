@@ -91,6 +91,7 @@ func Run() {
 		auth.PATCH("/chapter/images/:chapterId", UpdateImagesChapterHandler)
 		auth.PATCH("/change-user-info", ChangeCurrentUserInfoHandler)
 		auth.PATCH("/change-password", ChangeCurrentUserPasswordHandler)
+		auth.PATCH("/role", SetRoleHandler)
 	}
 	_ = r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

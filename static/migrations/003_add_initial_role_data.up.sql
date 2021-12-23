@@ -2,7 +2,8 @@ INSERT INTO roles (name, description)
 VALUES ('oauth_incomplete', 'User role created by Oauth login automatically, but username is not defined.'),
        ('member', 'Default user role after completing registration.'),
        ('moderator', 'The one who moderates contents.'),
-       ('admin', 'The Supreme Leader.');
+       ('admin', 'The Supreme Leader.'),
+       ('banned', 'Bad behavior user.');
 
 INSERT INTO role_permissions (module, action, role_id)
 VALUES
@@ -24,6 +25,7 @@ VALUES
        ('author', 'delete', (SELECT id FROM roles WHERE name = 'admin')),
        ('like', 'read', (SELECT id FROM roles WHERE name = 'admin')),
        ('like', 'post', (SELECT id FROM roles WHERE name = 'admin')),
+       ('role', 'modify', (SELECT id FROM roles WHERE name = 'admin')),
 
        ('comment', 'read', (SELECT id FROM roles WHERE name = 'member')),
        ('comment', 'post', (SELECT id FROM roles WHERE name = 'member')),

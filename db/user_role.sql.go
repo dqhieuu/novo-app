@@ -68,3 +68,17 @@ func (q *Queries) Role(ctx context.Context, id int32) (RoleRow, error) {
 	err := row.Scan(&i.RoleName, &i.RolePermissions)
 	return i, err
 }
+
+const setRole = `-- name: SetRole :exec
+UPDATE users SET role_id = $2 where id = $1
+`
+
+type SetRoleParams struct {
+	ID     int32 `json:"id"`
+	RoleID int32 `json:"roleID"`
+}
+
+func (q *Queries) SetRole(ctx context.Context, arg SetRoleParams) error {
+	_, err := q.db.Exec(ctx, setRole, arg.ID, arg.RoleID)
+	return err
+}
