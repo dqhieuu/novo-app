@@ -151,14 +151,15 @@ func CreateBookChapter(chapterNumber float64, description, textContext, chapterT
 	queries := db.New(db.Pool())
 
 	descriptionSql := sql.NullString{}
-	err := descriptionSql.Scan(description)
-	if err != nil {
-		stringErr := fmt.Sprintf("Create book chapter  failed: %s", err)
-		return nil, errors.New(stringErr)
+	if description == "" {
+		descriptionSql.Valid = false
+	} else {
+		descriptionSql.String = description
+		descriptionSql.Valid = true
 	}
 
 	textContextSql := sql.NullString{}
-	err = textContextSql.Scan(textContext)
+	err := textContextSql.Scan(textContext)
 	if err != nil {
 		stringErr := fmt.Sprintf("Create book chapter  failed: %s", err)
 		return nil, errors.New(stringErr)
@@ -232,9 +233,12 @@ func CreateHypertextChapterHandler(c *gin.Context) {
 		}
 		chapterName = newHypertextChapter.Name.(string)
 		chapterName = strings.TrimSpace(chapterName)
-		if !checkChapterName(chapterName) || CheckEmptyString(chapterName) {
+		if !checkChapterName(chapterName) {
 			ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
 			return
+		}
+		if CheckEmptyString(chapterName) {
+			chapterName = ""
 		}
 	}
 
@@ -303,9 +307,12 @@ func CreateImagesChapterHandler(c *gin.Context) {
 		}
 		chapterName = newImageChapter.Name.(string)
 		chapterName = strings.TrimSpace(chapterName)
-		if !checkChapterName(chapterName) || CheckEmptyString(chapterName) {
+		if !checkChapterName(chapterName) {
 			ReportError(c, errors.New("invalid chapter name"), "error", http.StatusBadRequest)
 			return
+		}
+		if CheckEmptyString(chapterName) {
+			chapterName = ""
 		}
 	}
 
