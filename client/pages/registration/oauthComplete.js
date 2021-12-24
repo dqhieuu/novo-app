@@ -30,8 +30,7 @@ export default function OauthComplete() {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const submit = (e) => {
-    e.preventDefault();
+  const submit = () => {
     fetchAuth({
       url: `${server}/auth/complete-oauth-register`,
       method: `POST`,
@@ -46,6 +45,7 @@ export default function OauthComplete() {
           autoClose: 3000,
         });
         router.replace('/');
+        console.log(res);
       })
       .catch((err) => {
         refreshToken(true);
@@ -61,7 +61,6 @@ export default function OauthComplete() {
       id: 0,
     };
     setUserAvatar(preview);
-    console.log(file);
     uploadImages('user-avatar', file, (res) => {
       if (res) {
         preview.id = res.id;
@@ -83,7 +82,13 @@ export default function OauthComplete() {
         borderRadius: '5px',
       }}
     >
-      <form className="p-3" onSubmit={handleSubmit(submit)}>
+      <form
+        className="p-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(submit());
+        }}
+      >
         <div className="mb-3 mt-3">
           <label htmlFor="username" className="form-label">
             *Tên người dùng
@@ -179,7 +184,6 @@ export default function OauthComplete() {
           )}
         </ul>
       )}
-      <ScrollButton></ScrollButton>
     </div>
   );
 }
