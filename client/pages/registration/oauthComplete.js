@@ -84,10 +84,7 @@ export default function OauthComplete() {
     >
       <form
         className="p-3"
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(submit());
-        }}
+        onSubmit={handleSubmit(submit())}
       >
         <div className="mb-3 mt-3">
           <label htmlFor="username" className="form-label">
