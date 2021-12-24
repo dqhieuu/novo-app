@@ -34,7 +34,7 @@ export default function UploadNewChapter({
   const [type, setType] = useState('Truyện Tranh');
   const [data, setData] = useState({
     chapterName: '',
-    chapterNumber: 0,
+    chapterNumber: null,
     bookGroupId: mangaId,
   });
 
@@ -61,7 +61,7 @@ export default function UploadNewChapter({
             type="text"
             className="form-control"
             id="chapterNumber"
-            placeholder="Nhập STT"
+            placeholder="Nhập STT, vd: 0,1,.."
             name="chapterNumber"
             value={data.chapterNumber}
             onChange={(e) =>

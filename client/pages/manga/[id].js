@@ -305,55 +305,82 @@ export default function Details({
                     </p>
                   </Link>
                 </div>
+                {console.log(
+                  currentEditedComment,
+                  userInfo.permission
+                )}
                 {currentEditedComment !== index && (
                   <div>
-                    {(currentEditedComment !== index &&
-                      userInfo.id === comment.userId &&
+                    {userInfo.id === comment.userId &&
+                    Array.isArray(userInfo.permission) &&
+                    userInfo.permission.includes(
+                      'comment.modifySelf'
+                    ) ? (
+                      <button
+                        className="btn"
+                        onClick={() => {
+                          setCurrentEditedComment(index);
+                          setCurrentEditedCommentContent(
+                            comment.comment
+                          );
+                          setInitialEditedCommentContent(
+                            comment.comment
+                          );
+                        }}
+                      >
+                        <FaEdit />
+                      </button>
+                    ) : (
                       Array.isArray(userInfo.permission) &&
                       userInfo.permission.includes(
-                        'comment.modifySelf'
-                      )) ||
-                      (Array.isArray(userInfo.permission) &&
-                        userInfo.permission.includes(
-                          'comment.modify'
-                        ) && (
-                          <button
-                            className="btn"
-                            onClick={() => {
-                              setCurrentEditedComment(
-                                index
-                              );
-                              setCurrentEditedCommentContent(
-                                comment.comment
-                              );
-                              setInitialEditedCommentContent(
-                                comment.comment
-                              );
-                            }}
-                          >
-                            <FaEdit />
-                          </button>
-                        ))}
-                    {(Array.isArray(userInfo.permission) &&
-                      userInfo.id === comment.userId &&
+                        'comment.modify'
+                      ) && (
+                        <button
+                          className="btn"
+                          onClick={() => {
+                            setCurrentEditedComment(index);
+                            setCurrentEditedCommentContent(
+                              comment.comment
+                            );
+                            setInitialEditedCommentContent(
+                              comment.comment
+                            );
+                          }}
+                        >
+                          <FaEdit />
+                        </button>
+                      )
+                    )}
+                    {Array.isArray(userInfo.permission) &&
+                    userInfo.id === comment.userId &&
+                    userInfo.permission.includes(
+                      'comment.deleteSelf'
+                    ) ? (
+                      <button
+                        className="btn"
+                        onClick={() => {
+                          deleteComment(comment.commentId);
+                        }}
+                      >
+                        <FaWindowClose />
+                      </button>
+                    ) : (
+                      Array.isArray(userInfo.permission) &&
                       userInfo.permission.includes(
-                        'comment.deleteSelf'
-                      )) ||
-                      (Array.isArray(userInfo.permission) &&
-                        userInfo.permission.includes(
-                          'comment.delete'
-                        ) && (
-                          <button
-                            className="btn"
-                            onClick={() => {
-                              deleteComment(
-                                comment.commentId
-                              );
-                            }}
-                          >
-                            <FaWindowClose />
-                          </button>
-                        ))}
+                        'comment.delete'
+                      ) && (
+                        <button
+                          className="btn"
+                          onClick={() => {
+                            deleteComment(
+                              comment.commentId
+                            );
+                          }}
+                        >
+                          <FaWindowClose />
+                        </button>
+                      )
+                    )}
                   </div>
                 )}
               </div>
@@ -937,7 +964,8 @@ export default function Details({
                           userInfo.permission.includes(
                             'chapter.modifySelf'
                           ) &&
-                          userInfo.id == manga.ownerId ? (
+                          userInfo.id ==
+                            chapter.userPosted.id ? (
                             <Link
                               href={
                                 '/edit-Chapter/' +
