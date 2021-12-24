@@ -18,6 +18,8 @@ import {
   FaWifi,
   FaWindowClose,
 } from 'react-icons/fa';
+import Switch from 'react-switch';
+
 import { BiDislike, BiLike, BiTime } from 'react-icons/bi';
 import ByWeek from '../../components/ranking-In-Manga-Page/by-Week';
 import ByMonth from '../../components/ranking-In-Manga-Page/by-Month';
@@ -73,6 +75,7 @@ export default function Details({
   const [pageNumber, setPageNumber] = useState(0);
   const cmtPerPage = 5;
   const pageVisited = pageNumber * cmtPerPage;
+  const [isFilterByUser, setFilterByUser] = useState(false);
   useEffect(() => {
     let arr =
       JSON.parse(localStorage.getItem('favorite')) ?? [];
@@ -89,6 +92,9 @@ export default function Details({
     setPageNumber(selected);
   };
 
+  const handleChange = (checked) => {
+    setFilterByUser(checked);
+  };
   const [likeState, setLikeState] = useState('unlike');
   function likeOperation(likeState) {
     fetchAuth({
@@ -170,6 +176,24 @@ export default function Details({
         position: 'bottom-left',
         autoClose: 2000,
       });
+      if (arr.length > 0) {
+        removeElementFavorite(bookGroupId);
+      }
+      let data = JSON.parse(
+        localStorage.getItem('history')
+      );
+
+      if (data) {
+        data.forEach((item, index) => {
+          if (bookGroupId == item.id) {
+            data.splice(index, 1);
+          }
+        });
+        localStorage.setItem(
+          'history',
+          JSON.stringify(data)
+        );
+      }
       router.replace('/');
     });
   };
@@ -643,7 +667,7 @@ export default function Details({
                       passHref
                     >
                       <button className="btn btn-dark me-2">
-                        <FaEdit></FaEdit>Sửa chap
+                        <FaEdit></FaEdit>Sửa truyện
                       </button>
                     </Link>
                   ) : (
@@ -658,7 +682,7 @@ export default function Details({
                         passHref
                       >
                         <button className="btn btn-dark me-2">
-                          <FaEdit></FaEdit>Sửa chap
+                          <FaEdit></FaEdit>Sửa truyện
                         </button>
                       </Link>
                     )
@@ -673,7 +697,7 @@ export default function Details({
                         data-bs-target="#deleteModal"
                       >
                         <FaWindowClose></FaWindowClose>Xoá
-                        chap
+                        truyện
                       </button>
                     )}
                 </div>
@@ -796,15 +820,31 @@ export default function Details({
               <p>{manga.description}</p>
             </div>
             <div className="mt-1">
-              <h5
-                style={{
-                  borderLeft: '5px solid #8e44ad',
-                  color: ' #8e44ad',
-                }}
-                className="ps-2"
-              >
-                DANH SÁCH CHAP
-              </h5>
+              <div className="d-flex justify-content-between mb-2">
+                <h5
+                  style={{
+                    borderLeft: '5px solid #8e44ad',
+                    color: ' #8e44ad',
+                  }}
+                  className="ps-2"
+                >
+                  DANH SÁCH CHAP
+                </h5>
+                {manga.chapters.filter(
+                  (chapter) =>
+                    chapter.userPosted.id == userInfo.id
+                ).length ? (
+                  <label>
+                    <span>Hiện chap bạn đăng</span>
+                    <Switch
+                      onChange={handleChange}
+                      checked={isFilterByUser}
+                    />
+                  </label>
+                ) : (
+                  ''
+                )}
+              </div>
 
               <div
                 className="row"
@@ -827,86 +867,77 @@ export default function Details({
               </div>
 
               <div className="list-chapter">
-                {manga.chapters.map((chapter, index) => (
-                  <div
-                    className="row"
-                    key={chapter.id}
-                    style={{
-                      borderBottom: '1px solid lightgrey',
-                    }}
-                  >
-                    <Link
-                      href={`/chapter/${chapter.id}`}
-                      passHref
+                {manga.chapters
+                  .filter(
+                    (chapter) =>
+                      !isFilterByUser ||
+                      chapter.userPosted.id == userInfo.id
+                  )
+                  .map((chapter, index) => (
+                    <div
+                      className="row"
+                      key={chapter.id}
+                      style={{
+                        borderBottom: '1px solid lightgrey',
+                      }}
                     >
-                      <div className="col-4">
-                        <p
-                          className={styles.object}
-                          onClick={() => {
-                            addToHistory(
-                              bookGroupId,
-                              chapter,
-                              manga
-                            );
-                          }}
-                        >
-                          Chapter
-                          {' ' +
-                            chapter.chapterNumber +
-                            ': ' +
-                            (chapter.name
-                              ? chapter.name
-                              : '')}
-                        </p>
-                      </div>
-                    </Link>
-
-                    <div className="col-2">
-                      <p>
-                        <RelativeTimestamp>
-                          {chapter.timePosted}
-                        </RelativeTimestamp>
-                      </p>
-                    </div>
-                    <Link
-                      href={`/user/${chapter.userPosted.id}`}
-                      passHref
-                    >
-                      <div className="col-3">
-                        <p className={styles.object}>
-                          {chapter.userPosted.name}
-                        </p>
-                      </div>
-                    </Link>
-                    <div className="col-1">
-                      <p>
-                        {chapter.views
-                          ? chapter.views
-                          : '0'}
-                      </p>
-                    </div>
-                    <div className="col-2">
-                      <div className="d-flex">
-                        {userInfo.permission &&
-                        userInfo.permission.includes(
-                          'chapter.modifySelf'
-                        ) &&
-                        userInfo.id == manga.ownerId ? (
-                          <Link
-                            href={
-                              '/edit-Chapter/' + chapter.id
-                            }
-                            passHref
+                      <Link
+                        href={`/chapter/${chapter.id}`}
+                        passHref
+                      >
+                        <div className="col-4">
+                          <p
+                            className={styles.object}
+                            onClick={() => {
+                              addToHistory(
+                                bookGroupId,
+                                chapter,
+                                manga
+                              );
+                            }}
                           >
-                            <button className="btn btn-dark me-2">
-                              <FaEdit></FaEdit>
-                            </button>
-                          </Link>
-                        ) : (
-                          userInfo.permission &&
+                            Chapter
+                            {' ' +
+                              chapter.chapterNumber +
+                              ': ' +
+                              (chapter.name
+                                ? chapter.name
+                                : '')}
+                          </p>
+                        </div>
+                      </Link>
+
+                      <div className="col-2">
+                        <p>
+                          <RelativeTimestamp>
+                            {chapter.timePosted}
+                          </RelativeTimestamp>
+                        </p>
+                      </div>
+                      <Link
+                        href={`/user/${chapter.userPosted.id}`}
+                        passHref
+                      >
+                        <div className="col-3">
+                          <p className={styles.object}>
+                            {chapter.userPosted.name}
+                          </p>
+                        </div>
+                      </Link>
+                      <div className="col-1">
+                        <p>
+                          {chapter.views
+                            ? chapter.views
+                            : '0'}
+                        </p>
+                      </div>
+                      <div className="col-2">
+                        <div className="d-flex">
+                          {userInfo.permission &&
                           userInfo.permission.includes(
-                            'chapter.modify'
-                          ) && (
+                            'chapter.modifySelf'
+                          ) &&
+                          userInfo.id == manga.ownerId ? (
                             <Link
                               href={
                                 '/edit-Chapter/' +
@@ -918,26 +949,30 @@ export default function Details({
                                 <FaEdit></FaEdit>
                               </button>
                             </Link>
-                          )
-                        )}
-                        {userInfo.permission &&
-                        userInfo.permission.includes(
-                          'chapter.deleteSelf'
-                        ) &&
-                        userInfo.id == manga.ownerId ? (
-                          <button
-                            className="btn btn-danger"
-                            onClick={() =>
-                              deleteChapter(chapter.id)
-                            }
-                          >
-                            <FaWindowClose></FaWindowClose>
-                          </button>
-                        ) : (
-                          userInfo.permission &&
+                          ) : (
+                            userInfo.permission &&
+                            userInfo.permission.includes(
+                              'chapter.modify'
+                            ) && (
+                              <Link
+                                href={
+                                  '/edit-Chapter/' +
+                                  chapter.id
+                                }
+                                passHref
+                              >
+                                <button className="btn btn-dark me-2">
+                                  <FaEdit></FaEdit>
+                                </button>
+                              </Link>
+                            )
+                          )}
+                          {userInfo.permission &&
                           userInfo.permission.includes(
-                            'chapter.delete'
-                          ) && (
+                            'chapter.deleteSelf'
+                          ) &&
+                          userInfo.id ==
+                            chapter.userPosted.id ? (
                             <button
                               className="btn btn-danger"
                               onClick={() =>
@@ -946,12 +981,25 @@ export default function Details({
                             >
                               <FaWindowClose></FaWindowClose>
                             </button>
-                          )
-                        )}
+                          ) : (
+                            userInfo.permission &&
+                            userInfo.permission.includes(
+                              'chapter.delete'
+                            ) && (
+                              <button
+                                className="btn btn-danger"
+                                onClick={() =>
+                                  deleteChapter(chapter.id)
+                                }
+                              >
+                                <FaWindowClose></FaWindowClose>
+                              </button>
+                            )
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
                 {userInfo.permission &&
                   userInfo.permission.includes(
                     'chapter.post'

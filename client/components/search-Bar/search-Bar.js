@@ -1,11 +1,10 @@
-import React from 'react';
-import { useState, useContext } from 'react';
-import Link from 'next/link';
+import React, { useContext, useState } from 'react';
 import { MangaContext } from '../../context/manga-Context';
 import NULL_CONSTANTS from '../../utilities/null-Constants';
 import { FaArrowRight } from 'react-icons/fa';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+
 export default function SearchBar() {
   const [searchWord, setSearchWord] = useState('');
   const { server } = useContext(MangaContext);
@@ -148,8 +147,10 @@ export default function SearchBar() {
                             >
                               <h5>{manga.title}</h5>
                               <p>
-                                Chapter
-                                {' ' + manga.latestChapter}
+                                {manga.latestChapter
+                                  ? 'Chapter ' +
+                                    manga.latestChapter
+                                  : 'Không có chapter'}
                               </p>
                             </div>
                           </div>

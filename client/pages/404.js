@@ -20,7 +20,6 @@ export default function NotFound() {
     >
       <h1>Oops...</h1>
       <h2>
-        {' '}
         Giữa biển người tấp nập, có lẽ chúng mình chẳng hề
         có duyên với nhau😢
       </h2>
