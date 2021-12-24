@@ -9,7 +9,6 @@ import NULL_CONSTANTS from '../../utilities/null-Constants';
 import WEB_CONSTANTS from '../../utilities/constants';
 import styles from './layout.module.css';
 import { useRouter } from 'next/router';
-import ScrollButton from '../../utilities/scrollButton';
 import axios from 'axios';
 import {
   fetchAuth,
@@ -18,6 +17,7 @@ import {
 } from '../../utilities/fetchAuth';
 import UserLogin from '../user-Login/user-Login';
 import { toast } from 'react-toastify';
+
 export default function Layout({ children }) {
   const { genres } = useContext(MangaContext);
   const { update, userInfo } = useContext(UserContext);
@@ -72,7 +72,10 @@ export default function Layout({ children }) {
     <div>
       <Head>
         <title>MangaReader</title>
-
+        <link
+          href="https://fonts.googleapis.com/css2?family=Lora&family=Poppins:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+          rel="stylesheet"
+        />
         <meta
           name="viewport"
           content="initial-scale=1.0, width=device-width"

@@ -1,6 +1,6 @@
 import DisplayImg from '../../components/display-Img/display-Img';
 import Link from 'next/link';
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { MangaContext } from '../../context/manga-Context';
 import ReactPaginate from 'react-paginate';
 import { UserContext } from '../../context/user-Context';
@@ -12,8 +12,6 @@ import {
   FaEye,
   FaHeart,
   FaNewspaper,
-  FaQuoteLeft,
-  FaQuoteRight,
   FaRegStar,
   FaTags,
   FaUser,
@@ -26,18 +24,15 @@ import ByMonth from '../../components/ranking-In-Manga-Page/by-Month';
 import ByYear from '../../components/ranking-In-Manga-Page/by-Year';
 import Image from 'next/image';
 import RelativeTimestamp from '../../utilities/to-Relative-Time-stamp';
-import {
-  fetchAuth,
-  refreshToken,
-} from '../../utilities/fetchAuth';
+import { fetchAuth } from '../../utilities/fetchAuth';
 import Router, { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
+import ScrollButton from '../../utilities/scrollButton';
 import {
-  addToHistory,
   addToFavorite,
+  addToHistory,
   removeElementFavorite,
 } from '../../utilities/localStorageFunction';
-import ScrollButton from '../../utilities/scrollButton';
 
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
@@ -79,7 +74,8 @@ export default function Details({
   const cmtPerPage = 5;
   const pageVisited = pageNumber * cmtPerPage;
   useEffect(() => {
-    let arr = JSON.parse(localStorage.getItem('favorite'));
+    let arr =
+      JSON.parse(localStorage.getItem('favorite')) ?? [];
 
     setArr(arr.filter((book) => book.id == bookGroupId));
   }, []);
@@ -133,6 +129,11 @@ export default function Details({
     setCurrentEditedCommentContent,
   ] = useState('');
 
+  const [
+    initialEditedCommentContent,
+    setInitialEditedCommentContent,
+  ] = useState('');
+
   const submit = () => {
     fetchAuth({
       url: `${server}/auth/comment?bookGroupId=${bookGroupId}`,
@@ -146,6 +147,7 @@ export default function Details({
           position: 'bottom-left',
           autoClose: 3000,
         });
+        setComment('');
 
         router.replace(router.asPath);
       })
@@ -181,6 +183,18 @@ export default function Details({
         autoClose: 3000,
       });
       router.push('/manga/' + bookGroupId);
+    });
+  };
+  const deleteChapter = (id) => {
+    fetchAuth({
+      url: `${server}/auth/chapter/${id}`,
+      method: 'DELETE',
+    }).then(() => {
+      toast.success('Xoá thành công', {
+        position: 'bottom-left',
+        autoClose: 3000,
+      });
+      router.replace(`/manga/${bookGroupId}`);
     });
   };
 
@@ -249,7 +263,7 @@ export default function Details({
                       color: 'black',
                     }}
                   >
-                    <BiTime></BiTime>
+                    <BiTime />
                     <RelativeTimestamp>
                       {comment.timePosted}
                     </RelativeTimestamp>
@@ -267,68 +281,56 @@ export default function Details({
                     </p>
                   </Link>
                 </div>
-                {userInfo.id === comment.userId &&
-                currentEditedComment !== index &&
-                userInfo.permission &&
-                userInfo.permission.includes(
-                  'comment.modifySelf'
-                ) ? (
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      setCurrentEditedComment(index);
-                      setCurrentEditedCommentContent(
-                        comment.comment
-                      );
-                    }}
-                  >
-                    <FaEdit></FaEdit>
-                  </button>
-                ) : (
-                  userInfo.permission &&
-                  userInfo.permission.includes(
-                    'comment.modify'
-                  ) && (
-                    <button
-                      className="btn"
-                      onClick={() => {
-                        setCurrentEditedComment(index);
-                        setCurrentEditedCommentContent(
-                          comment.comment
-                        );
-                      }}
-                    >
-                      <FaEdit></FaEdit>
-                    </button>
-                  )
-                )}
-                {userInfo.id === comment.userId &&
-                userInfo.permission &&
-                userInfo.permission.includes(
-                  'comment.deleteSelf'
-                ) ? (
-                  <button
-                    className="btn"
-                    onClick={() => {
-                      deleteComment(comment.commentId);
-                    }}
-                  >
-                    <FaWindowClose></FaWindowClose>
-                  </button>
-                ) : (
-                  userInfo.permission &&
-                  userInfo.permission.includes(
-                    'comment.delete'
-                  ) && (
-                    <button
-                      className="btn"
-                      onClick={() => {
-                        deleteComment(comment.commentId);
-                      }}
-                    >
-                      <FaWindowClose></FaWindowClose>
-                    </button>
-                  )
+                {currentEditedComment !== index && (
+                  <div>
+                    {(currentEditedComment !== index &&
+                      userInfo.id === comment.userId &&
+                      Array.isArray(userInfo.permission) &&
+                      userInfo.permission.includes(
+                        'comment.modifySelf'
+                      )) ||
+                      (Array.isArray(userInfo.permission) &&
+                        userInfo.permission.includes(
+                          'comment.modify'
+                        ) && (
+                          <button
+                            className="btn"
+                            onClick={() => {
+                              setCurrentEditedComment(
+                                index
+                              );
+                              setCurrentEditedCommentContent(
+                                comment.comment
+                              );
+                              setInitialEditedCommentContent(
+                                comment.comment
+                              );
+                            }}
+                          >
+                            <FaEdit />
+                          </button>
+                        ))}
+                    {(Array.isArray(userInfo.permission) &&
+                      userInfo.id === comment.userId &&
+                      userInfo.permission.includes(
+                        'comment.deleteSelf'
+                      )) ||
+                      (Array.isArray(userInfo.permission) &&
+                        userInfo.permission.includes(
+                          'comment.delete'
+                        ) && (
+                          <button
+                            className="btn"
+                            onClick={() => {
+                              deleteComment(
+                                comment.commentId
+                              );
+                            }}
+                          >
+                            <FaWindowClose />
+                          </button>
+                        ))}
+                  </div>
                 )}
               </div>
 
@@ -347,10 +349,11 @@ export default function Details({
                         e.target.value
                       )
                     }
+                    placeholder="Comment phải có từ 10 tới 500 ký tự"
                   />
                   <button
-                    className="btn btn-light"
-                    onClick={() =>
+                    className="btn "
+                    onClick={() => {
                       fetchAuth({
                         url: `${server}/auth/comment/${comment.commentId}`,
                         method: 'PATCH',
@@ -358,19 +361,34 @@ export default function Details({
                           comment:
                             currentEditedCommentContent,
                         },
-                      }).then(() => {
-                        toast.success(
-                          'Sửa comment thành công',
-                          {
-                            position: 'bottom-left',
-                            autoClose: 2000,
-                          }
-                        );
-                        router.replace(router.asPath);
                       })
+                        .then(() => {
+                          toast.success(
+                            'Sửa comment thành công',
+                            {
+                              position: 'bottom-left',
+                              autoClose: 2000,
+                            }
+                          );
+                        })
+                        .catch(() => {
+                          toast.error(
+                            'Sửa comment thất bại! Comment phải có từ 10 tới 500 ký tự',
+                            {
+                              position: 'bottom-left',
+                              autoClose: 2000,
+                            }
+                          );
+                        });
+                      setCurrentEditedComment(-1);
+                      router.replace(router.asPath);
+                    }}
+                    disabled={
+                      currentEditedCommentContent < 10 ||
+                      currentEditedCommentContent > 500
                     }
                   >
-                    Edit
+                    <FaEdit></FaEdit>
                   </button>
                 </div>
               )}
@@ -381,13 +399,15 @@ export default function Details({
   ) : (
     <div>Không có comment nào</div>
   );
+
   const sortByChapterNumber = () => {
-    let arr = manga.chapters && manga.chapters.slice(0);
-    arr &&
+    const arr = manga.chapters && manga.chapters.slice(0);
+    if (arr) {
       arr.sort(function (a, b) {
         return b.chapterNumber - a.chapterNumber;
       });
-    manga.chapters = arr;
+      manga.chapters = arr;
+    }
   };
   const triggerFavorite = () => {
     if (arr.length > 0) {
@@ -443,7 +463,7 @@ export default function Details({
                 ></DisplayImg>
               </div>
               <div
-                className="col-lg-6 col-12"
+                className="col-lg-7 col-12"
                 data-aos="fade-left"
               >
                 <div className="d-flex justify-content-around ">
@@ -623,7 +643,7 @@ export default function Details({
                       passHref
                     >
                       <button className="btn btn-dark me-2">
-                        <FaEdit></FaEdit>
+                        <FaEdit></FaEdit>Sửa chap
                       </button>
                     </Link>
                   ) : (
@@ -638,7 +658,7 @@ export default function Details({
                         passHref
                       >
                         <button className="btn btn-dark me-2">
-                          <FaEdit></FaEdit>
+                          <FaEdit></FaEdit>Sửa chap
                         </button>
                       </Link>
                     )
@@ -652,7 +672,8 @@ export default function Details({
                         data-bs-toggle="modal"
                         data-bs-target="#deleteModal"
                       >
-                        <FaWindowClose></FaWindowClose>
+                        <FaWindowClose></FaWindowClose>Xoá
+                        chap
                       </button>
                     )}
                 </div>
@@ -871,17 +892,32 @@ export default function Details({
                           'chapter.modifySelf'
                         ) &&
                         userInfo.id == manga.ownerId ? (
-                          <button className="btn btn-dark me-2">
-                            <FaEdit></FaEdit>
-                          </button>
+                          <Link
+                            href={
+                              '/edit-Chapter/' + chapter.id
+                            }
+                            passHref
+                          >
+                            <button className="btn btn-dark me-2">
+                              <FaEdit></FaEdit>
+                            </button>
+                          </Link>
                         ) : (
                           userInfo.permission &&
                           userInfo.permission.includes(
                             'chapter.modify'
                           ) && (
-                            <button className="btn btn-dark me-2">
-                              <FaEdit></FaEdit>
-                            </button>
+                            <Link
+                              href={
+                                '/edit-Chapter/' +
+                                chapter.id
+                              }
+                              passHref
+                            >
+                              <button className="btn btn-dark me-2">
+                                <FaEdit></FaEdit>
+                              </button>
+                            </Link>
                           )
                         )}
                         {userInfo.permission &&
@@ -889,7 +925,12 @@ export default function Details({
                           'chapter.deleteSelf'
                         ) &&
                         userInfo.id == manga.ownerId ? (
-                          <button className="btn btn-danger ">
+                          <button
+                            className="btn btn-danger"
+                            onClick={() =>
+                              deleteChapter(chapter.id)
+                            }
+                          >
                             <FaWindowClose></FaWindowClose>
                           </button>
                         ) : (
@@ -897,7 +938,12 @@ export default function Details({
                           userInfo.permission.includes(
                             'chapter.delete'
                           ) && (
-                            <button className="btn btn-danger ">
+                            <button
+                              className="btn btn-danger"
+                              onClick={() =>
+                                deleteChapter(chapter.id)
+                              }
+                            >
                               <FaWindowClose></FaWindowClose>
                             </button>
                           )
@@ -1227,6 +1273,7 @@ export default function Details({
           </div>
         </div>
       </div>
+
       <ScrollButton></ScrollButton>
     </div>
   );

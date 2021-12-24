@@ -1,25 +1,25 @@
 import React, {
-  useState,
-  useEffect,
   useContext,
+  useEffect,
+  useState,
 } from 'react';
 import {
+  arrayMove,
   SortableContainer,
   SortableElement,
 } from 'react-sortable-hoc';
 import { MangaContext } from '../../context/manga-Context';
 import { UserContext } from '../../context/user-Context';
-import { arrayMove } from 'react-sortable-hoc';
 import uploadImages from '../../utilities/upload-Images';
 import NULL_CONSTANTS from '../../utilities/null-Constants';
 import Image from 'next/image';
 import TagInput from '../../components/upload-Manga/reactTag';
 import { fetchAuth } from '../../utilities/fetchAuth';
 import { useRouter } from 'next/router';
-import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { FaAngry, FaSpinner } from 'react-icons/fa';
+import { FaAngry } from 'react-icons/fa';
 import ScrollButton from '../../utilities/scrollButton';
+
 export default function UploadManga() {
   const { server } = useContext(MangaContext);
   const { listAuthorsId } = useContext(UserContext);
@@ -176,66 +176,89 @@ export default function UploadManga() {
         autoClose: 2000,
       });
 
-      router.push(`/manage-Manga/${res.data.id}`);
+      router.replace(`/manage-Manga/${res.data.id}`);
     });
   };
   const SortableListItem = SortableElement(
     ({ image, stt }) => {
       return (
         <div>
-          {image.status === 'uploading' ? (
-            <div className="m-2">
-              <button className="btn btn-dark">
-                <FaSpinner></FaSpinner>Loading
-              </button>
-            </div>
-          ) : image.status === 'failed' ? (
-            <div className="m-2">
-              <button className="btn btn-danger">
-                <FaAngry></FaAngry>Error
-              </button>
-            </div>
-          ) : (
-            <div>
+          <div>
+            <div
+              className="card m-3"
+              style={{
+                aspectRatio: '3/4',
+                width: '150px',
+              }}
+            >
+              <Image
+                src={image.fileURL}
+                objectFit="cover"
+                layout="responsive"
+                width={'150'}
+                height={'200'}
+                alt=""
+              />
+              {image.status === 'uploading' ||
+                (image.status === 'failed' && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      zIndex: '20',
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: '#00000038',
+                    }}
+                  >
+                    {image.status === 'uploading' ? (
+                      <div
+                        className="spinner-border text-light"
+                        role="status"
+                      >
+                        <span className="visually-hidden">
+                          Loading...
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="m-2">
+                        <button className="btn btn-danger">
+                          <FaAngry />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
               <div
-                className="card m-3"
+                className="card-img-overlay"
                 style={{
-                  aspectRatio: '3/4',
-                  width: '150px',
+                  zIndex: '21',
                 }}
               >
-                <Image
-                  src={image.fileURL}
-                  objectFit="cover"
-                  layout="responsive"
-                  width={'150'}
-                  height={'200'}
-                  alt=""
-                />
-                <div className="card-img-overlay">
-                  <div className="d-flex justify-content-between mt-1">
-                    <p className="card-title">
-                      <span className="badge bg-primary">
-                        {stt + 1}
-                      </span>
-                    </p>
-                    <div>
-                      <button
-                        className="btn btn-danger"
-                        onClick={() => {
-                          let updated = [...images];
-                          updated.splice(stt, 1);
-                          setImages(updated);
-                        }}
-                      >
-                        X
-                      </button>
-                    </div>
+                <div className="d-flex justify-content-between mt-1">
+                  <p className="card-title">
+                    <span className="badge bg-primary">
+                      {stt + 1}
+                    </span>
+                  </p>
+                  <div>
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => {
+                        let updated = [...images];
+                        updated.splice(stt, 1);
+                        setImages(updated);
+                      }}
+                    >
+                      X
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       );
     }

@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { MangaContext } from '../../context/manga-Context';
 import { UserContext } from '../../context/user-Context';
@@ -17,10 +17,7 @@ import {
   FaRegEdit,
   FaWindowClose,
 } from 'react-icons/fa';
-import {
-  fetchAuth,
-  refreshToken,
-} from '../../utilities/fetchAuth';
+import { fetchAuth } from '../../utilities/fetchAuth';
 import styles from './[id].module.css';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
@@ -28,6 +25,7 @@ import RelativeTimestamp from '../../utilities/to-Relative-Time-stamp';
 import { BiLike } from 'react-icons/bi';
 import uploadImages from '../../utilities/upload-Images';
 import ScrollButton from '../../utilities/scrollButton';
+
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;
@@ -228,12 +226,13 @@ export default function User({ user, id }) {
       url: `${server}/auth/role`,
       method: 'PATCH',
       data: { userId: parseInt(id), role: role },
-    }).then(
+    }).then(() => {
       toast('Chỉnh sửa thành công', {
         position: 'bottom-left',
         autoClose: 2000,
-      })
-    );
+      });
+      router.replace(router.asPath);
+    });
   };
   return (
     <div>
@@ -265,7 +264,7 @@ export default function User({ user, id }) {
                 layout="fill"
                 objectFit="cover"
                 alt=""
-              ></Image>
+              />
             </div>
           </div>
           <div className="col-lg-8 col-12 ps-5 pt-2">
@@ -279,25 +278,25 @@ export default function User({ user, id }) {
                   style={{
                     border: '1px solid',
                     borderColor:
-                      userInfo.role != 'banned'
+                      userInfo.role !== 'banned'
                         ? '#1abc9c'
                         : '#c0392b',
                     padding: '0.25rem',
                     borderRadius: '0.75rem',
                     color:
-                      userInfo.role != 'banned'
+                      userInfo.role !== 'banned'
                         ? '#1abc9c'
                         : '#c0392b',
                     fontWeight: 'bold',
                     fontSize: '0.75rem',
                   }}
-                  disabled={userInfo.role != 'admin'}
+                  disabled={userInfo.role !== 'admin'}
                 >
                   {user.role}
                 </button>
               </div>
 
-              {userInfo.id == id && (
+              {userInfo.id === id && (
                 <button
                   className="btn btn-light mb-3 ms-3"
                   data-bs-toggle="modal"
@@ -594,6 +593,7 @@ export default function User({ user, id }) {
               <div className="d-flex justify-content-center mt-3">
                 <button
                   className="btn btn-dark"
+                  data-bs-dismiss="modal"
                   onClick={() => setRoleforUser()}
                 >
                   Submit

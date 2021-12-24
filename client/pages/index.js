@@ -1,5 +1,3 @@
-import Head from 'next/head';
-
 import Link from 'next/link';
 import { useContext } from 'react';
 import { MangaContext } from '../context/manga-Context';
@@ -14,12 +12,9 @@ import ByMonth from '../components/ranking-In-Manga-Page/by-Month';
 import '../public/images/null-Book.png';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
-import RelativeTimestamp from '../utilities/to-Relative-Time-stamp';
-import {
-  FaArrowCircleRight,
-  FaArrowRight,
-} from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 import ScrollButton from '../utilities/scrollButton';
+
 export default function Home() {
   const {
     latestManga,
@@ -173,12 +168,12 @@ export default function Home() {
                           ></DisplayImg>
                         </div>
                         <div className="col-6 mt-2">
-                          <p
+                          <h5
                             style={{ color: '#ff7043' }}
                             className={styles.object}
                           >
                             {randomBook.title}
-                          </p>
+                          </h5>
                           <p>{randomBook.views} lượt đọc</p>
                           <div className="list-chapter">
                             <p className="border-bottom">
