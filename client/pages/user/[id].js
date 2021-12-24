@@ -296,7 +296,7 @@ export default function User({ user, id }) {
                 </button>
               </div>
 
-              {userInfo.id === id && (
+              {userInfo.id == id && (
                 <button
                   className="btn btn-light mb-3 ms-3"
                   data-bs-toggle="modal"
