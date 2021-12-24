@@ -41,6 +41,15 @@ export const removeElementFavorite = (id) => {
   });
   localStorage.setItem('favorite', JSON.stringify(data));
 };
+export const removeElementHistory = (id) => {
+  let data = JSON.parse(localStorage.getItem('history'));
+  data.forEach((item, index) => {
+    if (id == item.id) {
+      data.splice(index, 1);
+    }
+  });
+  localStorage.setItem('history', JSON.stringify(data));
+};
 export const addToHistory = (
   bookGroupId,
   chapter,

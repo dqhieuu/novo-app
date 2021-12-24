@@ -185,8 +185,7 @@ export default function SignUp() {
             (window.location.href = `${server}/oauth/google`)
           }
         >
-          <FaGooglePlusG></FaGooglePlusG> Đăng nhập bằng
-          Gmail
+          <FaGooglePlusG></FaGooglePlusG> Đăng ký bằng Gmail
         </button>
       </div>
 

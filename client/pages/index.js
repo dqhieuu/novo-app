@@ -182,8 +182,7 @@ export default function Home() {
                             <div>
                               <Link
                                 href={
-                                  '/chapter/' +
-                                  randomBook.latestChapter
+                                  '/manga/' + randomBook.id
                                 }
                                 passHref
                               >

@@ -30,7 +30,8 @@ export default function OauthComplete() {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const submit = () => {
+  const submit = (e) => {
+    e.preventDefault();
     fetchAuth({
       url: `${server}/auth/complete-oauth-register`,
       method: `POST`,
@@ -44,7 +45,7 @@ export default function OauthComplete() {
           position: toast.POSITION.BOTTOM_LEFT,
           autoClose: 3000,
         });
-        router.push('/');
+        router.replace('/');
       })
       .catch((err) => {
         refreshToken(true);

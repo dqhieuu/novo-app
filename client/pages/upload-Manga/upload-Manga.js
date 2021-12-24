@@ -170,8 +170,7 @@ export default function UploadManga() {
           : null,
       },
     }).then((res) => {
-      console.log(res);
-      toast.success(`${res}`, {
+      toast.success(`Upload thành công`, {
         position: 'bottom-left',
         autoClose: 2000,
       });
