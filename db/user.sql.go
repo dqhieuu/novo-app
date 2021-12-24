@@ -41,7 +41,7 @@ FROM book_groups as bg
          LEFT JOIN images i on bg.primary_cover_art_id = i.id
 WHERE u.id = $1
 GROUP BY bg.id, bg.title, i.path, bct.latest_chapter, bct.last_updated, bct.views, bcm.comments, bgl.likes
-UNION ALL
+UNION
 SELECT bg.id,
        (array_agg(i.path))[1]   AS image,
        (array_agg(bg.title))[1] as title,
