@@ -1,5 +1,9 @@
 import Image from 'next/image';
-import React, { useState, useContext } from 'react';
+import React, {
+  useState,
+  useContext,
+  useEffect,
+} from 'react';
 import { useRouter } from 'next/router';
 import { UserContext } from '../../context/user-Context';
 import {
@@ -17,14 +21,18 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ScrollButton from '../../utilities/scrollButton';
 export default function OauthComplete() {
-  const { update } = useContext(UserContext);
+  const { update, userInfo } = useContext(UserContext);
   const router = useRouter();
   const server = WEB_CONSTANTS.SERVER;
   const [formData, setFormData] = useState({
     username: '',
   });
   const [userAvatar, setUserAvatar] = useState({});
-
+  useEffect(() => {
+    if (userInfo && userInfo.role !== 'oauth_incomplete') {
+      router.replace('/');
+    }
+  }, []);
   const {
     register,
     handleSubmit,
@@ -45,7 +53,6 @@ export default function OauthComplete() {
           autoClose: 3000,
         });
         router.replace('/');
-        console.log(res);
       })
       .catch((err) => {
         refreshToken(true);
@@ -84,7 +91,9 @@ export default function OauthComplete() {
     >
       <form
         className="p-3"
-        onSubmit={handleSubmit(submit())}
+        onSubmit={() => {
+          handleSubmit(submit());
+        }}
       >
         <div className="mb-3 mt-3">
           <label htmlFor="username" className="form-label">
@@ -184,3 +193,4 @@ export default function OauthComplete() {
     </div>
   );
 }
+1;
