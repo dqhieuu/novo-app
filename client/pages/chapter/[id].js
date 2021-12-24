@@ -4,17 +4,17 @@ import Link from 'next/link';
 import { useContext, useState } from 'react';
 import { MangaContext } from '../../context/manga-Context';
 import {
-  FaHome,
-  FaUser,
   FaAngleDoubleRight,
-  FaWifi,
-  FaNewspaper,
-  FaEye,
-  FaAngleRight,
   FaAngleLeft,
+  FaAngleRight,
+  FaEdit,
+  FaEye,
+  FaHome,
+  FaNewspaper,
   FaQuoteLeft,
   FaQuoteRight,
-  FaEdit,
+  FaUser,
+  FaWifi,
   FaWindowClose,
 } from 'react-icons/fa';
 import ReactPaginate from 'react-paginate';
@@ -28,6 +28,7 @@ import RelativeTimestamp from '../../utilities/to-Relative-Time-stamp';
 import { UserContext } from '../../context/user-Context';
 import { toast } from 'react-toastify';
 import ScrollButton from '../../utilities/scrollButton';
+
 export async function getServerSideProps(context) {
   const server = WEB_CONSTANTS.SERVER;
   const { params } = context;

@@ -1,4 +1,3 @@
-import axios from 'axios';
 import WEB_CONSTANTS from './constants';
 import { fetchAuth } from './fetchAuth';
 
@@ -23,7 +22,6 @@ export default async function uploadImages(
     });
   } catch (error) {
     res = null;
-    return res;
   }
 
   if (typeof callback === 'function') {

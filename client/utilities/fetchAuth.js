@@ -1,5 +1,6 @@
 import axios from 'axios';
 import WEB_CONSTANTS from './constants';
+
 export async function refreshToken(forced = false) {
   const expire = localStorage.getItem('tokenExpire');
   const token = localStorage.getItem('token');
@@ -24,7 +25,7 @@ export async function refreshToken(forced = false) {
         }
       );
       if (res) {
-        updateToken(response.data);
+        updateToken(res.data);
       }
     } catch {
       deleteToken();
