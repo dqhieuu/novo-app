@@ -52,6 +52,7 @@ export default function OauthComplete() {
           position: toast.POSITION.BOTTOM_LEFT,
           autoClose: 3000,
         });
+        // console.log(res);
         router.replace('/');
       })
       .catch((err) => {
